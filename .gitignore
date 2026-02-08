@@ -1,0 +1,15 @@
+*.out
+
+# Go build artifacts
+*.test
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# CI cache
+.cache/
+
+/coverage.txt
+/coverage.xml

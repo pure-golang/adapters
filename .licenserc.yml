@@ -1,0 +1,10 @@
+# License policy configuration
+disallowed_licenses:
+  - "GPL"
+  - "AGPL"
+  - "LGPL"
+  - "CC-BY"
+  - "Creative Commons Attribution"
+
+# Optional: whitelist specific packages if needed
+whitelisted_packages: []
