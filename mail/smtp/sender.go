@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/pure-golang/adapters/mail"
+
 	"github.com/pkg/errors"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
