@@ -20,10 +20,6 @@ cfg := cli.Config{
 }
 
 executor := cli.New(cfg)
-err := executor.Start()
-if err != nil {
-    log.Fatal(err)
-}
 defer executor.Close()
 ```
 
@@ -51,10 +47,6 @@ if err != nil {
 ```go
 cfg := cli.Config{Command: "ffmpeg"}
 executor := cli.New(cfg)
-err := executor.Start()
-if err != nil {
-    log.Fatal(err)
-}
 defer executor.Close()
 
 ctx := context.Background()
@@ -75,14 +67,10 @@ _, err = executor.Execute(ctx,
 ```go
 cfg := cli.Config{Command: "gsutil"}
 executor := cli.New(cfg)
-err := executor.Start()
-if err != nil {
-    log.Fatal(err)
-}
 defer executor.Close()
 
 ctx := context.Background()
-_, err = executor.Execute(ctx, "cp", "local-file.txt", "gs://bucket/remote-file.txt")
+_, err := executor.Execute(ctx, "cp", "local-file.txt", "gs://bucket/remote-file.txt")
 ```
 
 ### AWS CLI - управление S3
@@ -90,10 +78,6 @@ _, err = executor.Execute(ctx, "cp", "local-file.txt", "gs://bucket/remote-file.
 ```go
 cfg := cli.Config{Command: "aws"}
 executor := cli.New(cfg)
-err := executor.Start()
-if err != nil {
-    log.Fatal(err)
-}
 defer executor.Close()
 
 ctx := context.Background()
@@ -110,14 +94,10 @@ fmt.Println(string(output))
 ```go
 cfg := cli.Config{Command: "convert"}
 executor := cli.New(cfg)
-err := executor.Start()
-if err != nil {
-    log.Fatal(err)
-}
 defer executor.Close()
 
 ctx := context.Background()
-_, err = executor.Execute(ctx,
+_, err := executor.Execute(ctx,
     "input.jpg",
     "-resize", "800x600",
     "-quality", "85",
