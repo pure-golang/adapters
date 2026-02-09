@@ -6,7 +6,7 @@ This document provides essential information for agents working in the **adapter
 
 This is a Go library (module: `github.com/pure-golang/adapters`) that provides adapters and infrastructure for:
 - **L0 (Monitoring)**: Logger, Tracing, Metrics
-- **L1 (Service Drivers)**: PostgreSQL (sqlx and pgx implementations), RabbitMQ, gRPC, HTTP servers
+- **L1 (Service Drivers)**: PostgreSQL (sqlx and pgx implementations), RabbitMQ, gRPC, HTTP servers, CLI Executor
 
 The project follows a **two-level directory structure**: first level = service/interface, second level = provider/implementation.
 - Example: `queue/rabbitmq`, `db/pg/sqlx`, `db/pg/pgx`, `logger/stdjson`
@@ -73,6 +73,8 @@ adapters/
 ├── httpserver/
 │   ├── middleware/        # HTTP middleware (monitoring, recovery)
 │   └── std/               # Standard HTTP server implementation
+├── executor/
+│   └── cli/               # CLI executor for running external commands
 ├── logger/
 │   ├── stdjson/           # Structured JSON logger for production
 │   ├── devslog/           # Pretty-printed logger for development
@@ -210,6 +212,7 @@ result, err := db.NamedExec(ctx,
 - **Runner**: Interface for components that run indefinitely (in goroutines)
 - **RunableProvider**: Combines Provider and Runner
 - **Publisher/Subscriber**: Queue messaging pattern
+- **Executor**: Interface for executing external CLI commands
 
 ```go
 type Provider interface {
@@ -340,6 +343,7 @@ For gRPC/HTTP servers, middleware order matters:
 - `github.com/rabbitmq/amqp091-go`: RabbitMQ client
 - `google.golang.org/grpc`: gRPC framework
 - `github.com/gorilla/mux`: HTTP router
+- `os/exec`: Standard library for executing external commands (CLI executor)
 
 ### Observability
 - `go.opentelemetry.io/otel/*`: OpenTelemetry tracing
@@ -468,4 +472,26 @@ go sub.Listen(func(ctx context.Context, msg queue.Delivery) (bool, error) {
     fmt.Println("Received:", string(msg.Body))
     return false, nil // false = success, true = retry
 })
+```
+
+## Executor Patterns (CLI)
+```go
+// Create CLI executor
+cfg := cli.Config{
+    Command: "ffmpeg",
+}
+executor := cli.New(cfg)
+defer executor.Close()
+
+// Execute command
+ctx := context.Background()
+output, err := executor.Execute(ctx,
+    "-i", "input.mp4",
+    "-c:v", "libx264",
+    "-c:a", "aac",
+    "-y", "output.mp4",
+)
+if err != nil {
+    log.Fatal(err)
+}
 ```
