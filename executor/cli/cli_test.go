@@ -89,3 +89,27 @@ func TestExecutor_Run_Closed(t *testing.T) {
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "executor is closed")
 }
+
+func TestExecutor_Run_WithError(t *testing.T) {
+	skipShort(t)
+	t.Parallel()
+
+	cfg := Config{
+		Command: "sh",
+	}
+
+	executor := New(cfg)
+	t.Cleanup(func() {
+		executor.Close()
+	})
+
+	ctx := context.Background()
+
+	// Тест с командой, которая завершается с ошибкой и пишет в stderr
+	// sh -c "echo 'error message' >&2; exit 1" - выводит в stderr и завершается с кодом 1
+	output, err := executor.Execute(ctx, "-c", "echo 'error message' >&2; exit 1")
+
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "error message")
+	assert.Empty(t, output)
+}
