@@ -24,6 +24,14 @@ func New(cfg Config) *Executor {
 	}
 }
 
+// Start проверяет наличие команды в системе
+func (e *Executor) Start() error {
+	if _, err := exec.LookPath(e.cmd); err != nil {
+		return errors.Wrapf(err, "command %s not found", e.cmd)
+	}
+	return nil
+}
+
 // Execute выполняет команду с заданным контекстом и аргументами
 func (e *Executor) Execute(ctx context.Context, args ...string) ([]byte, error) {
 	stdout, stderr, err := e.executeWithOutput(ctx, args)

@@ -29,6 +29,53 @@ func TestNew(t *testing.T) {
 	})
 }
 
+func TestExecutor_Start(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name        string
+		command     string
+		wantErr     bool
+		errContains string
+	}{
+		{
+			name:    "success",
+			command: "echo",
+			wantErr: false,
+		},
+		{
+			name:        "command_not_found",
+			command:     "nonexistent_command_12345",
+			wantErr:     true,
+			errContains: "command nonexistent_command_12345 not found",
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			cfg := Config{
+				Command: tt.command,
+			}
+
+			executor := New(cfg)
+			t.Cleanup(func() {
+				executor.Close()
+			})
+
+			err := executor.Start()
+			if tt.wantErr {
+				require.Error(t, err)
+				assert.Contains(t, err.Error(), tt.errContains)
+			} else {
+				require.NoError(t, err)
+			}
+		})
+	}
+}
+
 func TestExecutor_Run(t *testing.T) {
 	skipShort(t)
 	t.Parallel()

@@ -23,6 +23,18 @@ executor := cli.New(cfg)
 defer executor.Close()
 ```
 
+### Проверка наличия команды
+
+Метод `Start()` проверяет, что команда доступна в системе (в PATH):
+
+```go
+// Проверка наличия команды перед использованием
+err := executor.Start()
+if err != nil {
+    log.Fatalf("Команда не найдена: %v", err)
+}
+```
+
 ### Выполнение команды
 
 ```go
@@ -49,6 +61,11 @@ cfg := cli.Config{Command: "ffmpeg"}
 executor := cli.New(cfg)
 defer executor.Close()
 
+// Проверка наличия FFmpeg
+if err := executor.Start(); err != nil {
+    log.Fatalf("FFmpeg не установлен: %v", err)
+}
+
 ctx := context.Background()
 _, err = executor.Execute(ctx,
     "-i", "input.avi",
@@ -69,6 +86,11 @@ cfg := cli.Config{Command: "gsutil"}
 executor := cli.New(cfg)
 defer executor.Close()
 
+// Проверка наличия gsutil
+if err := executor.Start(); err != nil {
+    log.Fatalf("gsutil не установлен: %v", err)
+}
+
 ctx := context.Background()
 _, err := executor.Execute(ctx, "cp", "local-file.txt", "gs://bucket/remote-file.txt")
 ```
@@ -79,6 +101,11 @@ _, err := executor.Execute(ctx, "cp", "local-file.txt", "gs://bucket/remote-file
 cfg := cli.Config{Command: "aws"}
 executor := cli.New(cfg)
 defer executor.Close()
+
+// Проверка наличия AWS CLI
+if err := executor.Start(); err != nil {
+    log.Fatalf("AWS CLI не установлен: %v", err)
+}
 
 ctx := context.Background()
 output, err := executor.Execute(ctx, "s3", "ls", "s3://my-bucket/")
@@ -96,6 +123,11 @@ cfg := cli.Config{Command: "convert"}
 executor := cli.New(cfg)
 defer executor.Close()
 
+// Проверка наличия ImageMagick
+if err := executor.Start(); err != nil {
+    log.Fatalf("ImageMagick не установлен: %v", err)
+}
+
 ctx := context.Background()
 _, err := executor.Execute(ctx,
     "input.jpg",
@@ -111,6 +143,10 @@ _, err := executor.Execute(ctx,
 // Создайте mock executor для тестов
 type mockExecutor struct{}
 
+func (m *mockExecutor) Start() error {
+    return nil
+}
+
 func (m *mockExecutor) Execute(ctx context.Context, args ...string) ([]byte, error) {
     return []byte("mock output"), nil
 }
@@ -123,6 +159,13 @@ func (m *mockExecutor) Close() error {
 ## Обработка ошибок
 
 ```go
+// Проверка наличия команды
+err := executor.Start()
+if err != nil {
+    log.Printf("Команда не найдена: %v\n", err)
+    return
+}
+
 ctx := context.Background()
 output, err := executor.Execute(ctx, args...)
 if err != nil {
