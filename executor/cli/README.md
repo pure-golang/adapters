@@ -115,10 +115,6 @@ func (m *mockExecutor) Execute(ctx context.Context, args ...string) ([]byte, err
     return []byte("mock output"), nil
 }
 
-func (m *mockExecutor) Start() error {
-    return nil
-}
-
 func (m *mockExecutor) Close() error {
     return nil
 }
