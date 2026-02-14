@@ -37,6 +37,13 @@ tasks:
     cmds:
       - lsof -ti:{{.CLI_ARGS}} | xargs kill -9
 
+  coverage:
+    desc: "Run coverage"
+    summary: |
+      Run coverage.
+    cmds: 
+      - ./script/coverage.sh
+
   bench:
     desc: "Run all benchmarks"
     cmds:
