@@ -1,0 +1,94 @@
+version: "2"
+run:
+  modules-download-mode: readonly
+  allow-parallel-runners: true
+linters:
+  enable:
+    - bodyclose # проверяет, что тело HTTP-ответа закрыто
+    - copyloopvar # сообщает о переменных цикла, которые копируются
+    - gosec # проверяет исходный код на наличие проблем безопасности
+    - prealloc # сообщает о объявлениях срезов, которые могут быть предварительно выделены
+    - gocritic # самый предвзятый линтер исходного кода Go
+    - revive # полноценная замена golint
+    - unconvert # обнаруживает ненужные преобразования в if-выражениях
+  disable:
+    - unused # отключение предупреждений о неиспользуемых функциях
+  settings:
+    gocritic:
+      enabled-checks:
+        - hugeParam
+    revive:
+      severity: error
+      rules:
+        - name: atomic # часто ошибочное использование пакета sync/atomic
+        - name: bare-return # голые (a.k.a. naked) return-выражения
+        - name: comment-spacings # интервал в комментариях
+        - name: constant-logical-expr # логические выражения, которые всегда оцениваются в одно и то же значение
+        - name: context-as-argument # должен быть первым параметром функции
+        - name: context-keys-type # базовые типы не должны использоваться в качестве ключа в `context.WithValue`
+        # - name: cyclomatic # цикломатическая сложность — это мера сложности кода
+        - name: datarace # потенциальные гонки данных
+        - name: defer # некоторые распространённые ошибки при использовании defer
+        - name: early-return # чтобы избежать конструкций if-then-else
+        - name: error-return # ошибки должны быть последними в списке возвращаемых значений функции
+        - name: errorf # используйте `fmt.Errorf()` вместо `errors.New(fmt.Sprintf())`
+        - name: filename-format # обеспечивает соблюдение соглашений об именах исходных файлов
+          arguments: ["^[_a-z][_a-z0-9]*\\.go$"]
+        - name: get-return # функции с именами, начинающимися с Get, должны возвращать значение
+        - name: identical-branches # условный оператор if-then-else с идентичной реализацией в обеих ветвях является ошибкой
+        - name: if-return # проверка ошибки на nil только для того, чтобы сразу вернуть ошибку или nil, избыточна
+        - name: import-alias-naming # обеспечивает чёткие и строчные псевдонимы импорта, псевдонимы с подчёркиваниями ("_") всегда разрешены
+          arguments: ["^[a-z][A-Za-z0-9]{0,}$"]
+        - name: increment-decrement # находит выражения типа `i += 1` и `i -= 1` и предлагает заменить их на `i++` и `i--`
+        - name: indent-error-flow # выделяет избыточные else-блоки, которые можно устранить из кода
+        - name: modifies-parameter # функция изменяет один или несколько своих параметров
+        - name: modifies-value-receiver # метод изменяет свой получатель
+        - name: range # предлагает более короткий способ записи диапазонов, которые не используют второе значение
+        - name: receiver-naming # имена получателей в методе должны отражать их суть
+        - name: redefines-builtin-id # переопределение этих встроенных имён может привести к ошибкам, которые очень сложно обнаружить
+        # - name: redundant-import-alias # псевдоним в операторе импорта соответствует имени импортируемого пакета
+        - name: string-of-int # `string(42)` — это не `"42"`
+        - name: time-equal # использование `==` и `!=` для проверки равенства `time.Time` некорректно, используйте `time.Equal()` вместо этого
+        # - name: unchecked-type-assertion # проверяет, проверен ли результат проверки типа (значение ok)
+        - name: unconditional-recursion # обнаруживает и предупреждает о безусловных (прямых) рекурсивных вызовах
+        - name: unexported-return # экспортируемая функция или метод возвращает значение неэкспортируемого типа
+        - name: unnecessary-stmt # избыточные операторы, такие как break в конце блока case
+        - name: unreachable-code # недостижимый код
+        # - name: unused-parameter # неиспользуемый параметр в параметрах функции
+        # - name: unused-receiver # неиспользуемый получатель
+        - name: use-any # предлагает заменить экземпляры `interface{}` на `any`
+        - name: useless-break # оператор `break` не нужен в операторе switch-case
+        - name: waitgroup-by-value # `sync.WaitGroup` ожидается как параметр по значению в функции или методе
+  exclusions:
+    generated: lax
+    presets:
+      - comments
+      - common-false-positives
+      - legacy
+      - std-error-handling
+    paths:
+      - .*_mock.go$
+      - mocks
+      - testing
+      - third_party$
+      - builtin$
+      - examples$
+formatters:
+  enable:
+    - gci # включить пользовательский порядок секций
+  settings:
+    gci:
+      sections:
+        - standard
+        - default
+        - prefix(github.com/pure-golang/adapters)
+      custom-order: true
+  exclusions:
+    generated: lax
+    paths:
+      - .*_mock.go$
+      - mocks
+      - testing
+      - third_party$
+      - builtin$
+      - examples$
