@@ -100,6 +100,10 @@ adapters/
   return errors.Wrap(err, "failed to connect to PostgreSQL")
   ```
 - Use `errors.As()` for type assertion of wrapped errors
+- Use `%q` for quoting values in error messages:
+  ```go
+  errors.Wrapf(err, "command %q not found", e.cmd)
+  ```
 - Database adapters provide helper functions for constraint violations:
   ```go
   // PostgreSQL constraint checks
@@ -266,6 +270,12 @@ func TestMain(m *testing.M) {
 - `assert.NoError(t, err)`: Fail immediately on error
 - `require.NoError(t, err)`: Continue test, fail at end
 - `assert.ErrorIs(t, err, expectedErr)`: Check for specific error
+
+### Cleanup with t.Cleanup
+For proper resource cleanup in tests, prefer `t.Cleanup()` over `defer`
+
+### Context Timeout in Tests
+In integration tests use `context.WithTimeout(context.Background(), 5*time.Second)` instead of plain `context.Background()`
 
 ### Common Test Patterns
 ```go
