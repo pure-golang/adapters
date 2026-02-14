@@ -42,7 +42,7 @@ func New(cfg Config, stdout, stderr io.Writer) *Executor {
 		tmpStderr = stderr
 	}
 	return &Executor{
-		logger: slog.Default().WithGroup("executor/cli"),
+		logger: slog.Default().With("executor/cli", cfg.Command),
 		cmd:    cfg.Command,
 		stdout: tmpStdout,
 		stderr: tmpStderr,
