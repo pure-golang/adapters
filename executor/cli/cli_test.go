@@ -48,7 +48,6 @@ func TestExecutor_Start(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -586,7 +585,7 @@ func TestExecutor_CloseWhileExecuting(t *testing.T) {
 	require.NoError(t, err)
 
 	// Получаем результат выполнения (может быть ошибка контекста)
-	_ = <-errChan
+	<-errChan
 }
 
 // TestExecutor_ExecuteWithEmptyArgs проверяет выполнение команды без аргументов
