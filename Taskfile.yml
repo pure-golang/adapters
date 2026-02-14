@@ -1,9 +1,8 @@
 version: '3'
 
 includes:
-  mail:
-    taskfile: ./mail/Taskfile.yml
-    dir: ./mail
+  mail: ./mail/Taskfile.yml
+  grpc: ./grpc/Taskfile.yml
 
 tasks:
   default:

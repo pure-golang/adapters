@@ -1,0 +1,23 @@
+version: '3'
+
+tasks:
+  gen:
+    desc: "Generage GRPC"
+    summary: |
+      Generage GRPC.
+
+      EXAMPLE:
+        task grpc:gen -- <path/file.proto>
+    cmds:
+      - protoc --go_out=paths=source_relative:. --go-grpc_out=paths=source_relative:. {{.CLI_ARGS}}
+
+  list:
+    desc: "List GRPC services"
+    summary: |
+      List GRPC services.
+
+      EXAMPLE:
+        task grpc:list -- 8888
+    cmds:
+      - grpcurl -plaintext localhost:{{.CLI_ARGS}} list
+
