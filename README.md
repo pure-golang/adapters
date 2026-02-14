@@ -1,6 +1,6 @@
 # adapters
 
-[![coverage](https://img.shields.io/badge/coverage-80.8%25-brightgreen)](https://htmlpreview.github.io/?https://github.com/pure-golang/adapters/blob/main/.coverage/.html)
+[![coverage](https://img.shields.io/badge/coverage-78.2%25-brightgreen)](https://htmlpreview.github.io/?https://github.com/pure-golang/adapters/blob/main/.coverage/.html)
 
 Первый уровень каталога - поставляемая услуга (интерфейс), второй - поставщик-услуги. Например:
 - queue/rabbitmq
