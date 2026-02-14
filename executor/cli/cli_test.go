@@ -260,7 +260,8 @@ func TestExecutor_ConcurrentExecution(t *testing.T) {
 		executor.Close()
 	})
 
-	ctx := context.Background()
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	t.Cleanup(cancel)
 
 	// Запускаем несколько команд параллельно
 	numGoroutines := 10
@@ -294,7 +295,8 @@ func TestExecutor_ConcurrentExecutionWithDifferentArgs(t *testing.T) {
 		executor.Close()
 	})
 
-	ctx := context.Background()
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	t.Cleanup(cancel)
 
 	// Запускаем несколько команд с разными аргументами
 	numGoroutines := 5
@@ -328,7 +330,8 @@ func TestExecutor_RaceCondition(t *testing.T) {
 		executor.Close()
 	})
 
-	ctx := context.Background()
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	t.Cleanup(cancel)
 
 	// Запускаем много горутин
 	numGoroutines := 100
@@ -362,7 +365,8 @@ func TestExecutor_ConcurrentExecutionDifferentCommands(t *testing.T) {
 	exec2 := New(cfg2, nil, nil)
 	defer exec2.Close()
 
-	ctx := context.Background()
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	t.Cleanup(cancel)
 
 	errChan := make(chan error, 2)
 
@@ -394,7 +398,8 @@ func TestExecutor_LongRunningCommand(t *testing.T) {
 	executor := New(cfg, nil, nil)
 	defer executor.Close()
 
-	ctx := context.Background()
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	t.Cleanup(cancel)
 
 	// Команда sleep 1 должна выполниться успешно
 	start := time.Now()
@@ -419,7 +424,8 @@ func TestExecutor_ExecuteWithMultipleArgs(t *testing.T) {
 	executor := New(cfg, nil, nil)
 	defer executor.Close()
 
-	ctx := context.Background()
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	t.Cleanup(cancel)
 
 	// Команда с множеством аргументов
 	err := executor.Execute(ctx, "%s", "%s", "%s", "hello", "world", "42")
@@ -442,7 +448,8 @@ func TestExecutor_ExecuteWithStderrWriter(t *testing.T) {
 	executor := New(cfg, nil, &stderrBuf)
 	defer executor.Close()
 
-	ctx := context.Background()
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	t.Cleanup(cancel)
 
 	// Команда, которая пишет в stderr
 	err := executor.Execute(ctx, "-c", "echo 'stderr message' >&2")
@@ -464,7 +471,8 @@ func TestExecutor_ExecuteWithComplexCommand(t *testing.T) {
 	executor := New(cfg, nil, nil)
 	defer executor.Close()
 
-	ctx := context.Background()
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	t.Cleanup(cancel)
 
 	// Сложная команда с конвейером
 	err := executor.Execute(ctx, "-c", "echo 'test' | grep test")
@@ -490,7 +498,8 @@ func TestExecutor_StartAndExecute(t *testing.T) {
 	require.NoError(t, err)
 
 	// Затем выполняем команду
-	ctx := context.Background()
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	t.Cleanup(cancel)
 	err = executor.Execute(ctx, "test")
 	require.NoError(t, err)
 }
@@ -509,7 +518,8 @@ func TestExecutor_MultipleExecutors(t *testing.T) {
 	defer exec1.Close()
 	defer exec2.Close()
 
-	ctx := context.Background()
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	t.Cleanup(cancel)
 
 	// Проверяем оба executor
 	err1 := exec1.Start()
@@ -537,7 +547,8 @@ func TestExecutor_ExecuteWithVeryLongArgs(t *testing.T) {
 	executor := New(cfg, nil, nil)
 	defer executor.Close()
 
-	ctx := context.Background()
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	t.Cleanup(cancel)
 
 	// Создаём очень длинную строку
 	longStr := ""
@@ -591,7 +602,8 @@ func TestExecutor_ExecuteWithEmptyArgs(t *testing.T) {
 	executor := New(cfg, nil, nil)
 	defer executor.Close()
 
-	ctx := context.Background()
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	t.Cleanup(cancel)
 
 	// Выполняем команду без аргументов
 	err := executor.Execute(ctx)
@@ -611,7 +623,8 @@ func TestExecutor_ExecuteWithSpecialChars(t *testing.T) {
 	executor := New(cfg, nil, nil)
 	defer executor.Close()
 
-	ctx := context.Background()
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	t.Cleanup(cancel)
 
 	// Команда с спецсимволами
 	err := executor.Execute(ctx, "-c", "echo '$HOME && $PATH'")
