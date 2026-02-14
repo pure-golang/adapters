@@ -375,6 +375,7 @@ For gRPC/HTTP servers, middleware order matters:
 ## Code Style Notes
 
 - Comments and documentation are in Russian
+- Log messages and error messages are in English with lowercase first letter
 - Struct fields use PascalCase
 - Private fields use lowercase (not exported)
 - Interface methods use descriptive names (e.g., `Connect`, `Publish`, `Listen`)
