@@ -46,7 +46,6 @@ jobs:
           rm .coverage/.out
           go tool cover -func=.coverage/.tmp -o=.coverage/.txt
           go tool cover -html=.coverage/.tmp -o=.coverage/.html
-          rm .coverage/.tmp
 
       - name: Go Coverage Badge
         uses: tj-actions/coverage-badge-go@v2
