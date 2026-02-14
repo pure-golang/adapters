@@ -10,12 +10,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func skipShort(t *testing.T) {
-	if testing.Short() {
-		t.Skip("skipping integration test in short mode")
-	}
-}
-
 func TestNew(t *testing.T) {
 	t.Parallel()
 
@@ -79,8 +73,9 @@ func TestExecutor_Start(t *testing.T) {
 }
 
 func TestExecutor_Run(t *testing.T) {
-	skipShort(t)
-	t.Parallel()
+	if testing.Short() {
+		t.Skip("skipping integration test in short mode")
+	}
 
 	cfg := Config{
 		Command: "echo",
@@ -141,8 +136,9 @@ func TestExecutor_Run_Closed(t *testing.T) {
 }
 
 func TestExecutor_Run_WithError(t *testing.T) {
-	skipShort(t)
-	t.Parallel()
+	if testing.Short() {
+		t.Skip("skipping integration test in short mode")
+	}
 
 	cfg := Config{
 		Command: "sh",
@@ -164,8 +160,9 @@ func TestExecutor_Run_WithError(t *testing.T) {
 }
 
 func TestExecutor_Run_WithWriter(t *testing.T) {
-	skipShort(t)
-	t.Parallel()
+	if testing.Short() {
+		t.Skip("skipping integration test in short mode")
+	}
 
 	var stdout, stderr bytes.Buffer
 
@@ -191,8 +188,9 @@ func TestExecutor_Run_WithWriter(t *testing.T) {
 
 // TestExecutor_Run_WithTimeout проверяет обработку таймаута выполнения команды
 func TestExecutor_Run_WithTimeout(t *testing.T) {
-	skipShort(t)
-	t.Parallel()
+	if testing.Short() {
+		t.Skip("skipping integration test in short mode")
+	}
 
 	cfg := Config{
 		Command: "sleep",
@@ -216,8 +214,9 @@ func TestExecutor_Run_WithTimeout(t *testing.T) {
 
 // TestExecutor_Run_WithCancelledContext проверяет обработку отмены контекста
 func TestExecutor_Run_WithCancelledContext(t *testing.T) {
-	skipShort(t)
-	t.Parallel()
+	if testing.Short() {
+		t.Skip("skipping integration test in short mode")
+	}
 
 	cfg := Config{
 		Command: "sleep",
@@ -248,8 +247,9 @@ func TestExecutor_Run_WithCancelledContext(t *testing.T) {
 
 // TestExecutor_ConcurrentExecution проверяет конкурентное выполнение команд
 func TestExecutor_ConcurrentExecution(t *testing.T) {
-	skipShort(t)
-	t.Parallel()
+	if testing.Short() {
+		t.Skip("skipping integration test in short mode")
+	}
 
 	cfg := Config{
 		Command: "echo",
@@ -281,8 +281,9 @@ func TestExecutor_ConcurrentExecution(t *testing.T) {
 
 // TestExecutor_ConcurrentExecutionWithDifferentArgs проверяет конкурентное выполнение с разными аргументами
 func TestExecutor_ConcurrentExecutionWithDifferentArgs(t *testing.T) {
-	skipShort(t)
-	t.Parallel()
+	if testing.Short() {
+		t.Skip("skipping integration test in short mode")
+	}
 
 	cfg := Config{
 		Command: "echo",
@@ -314,8 +315,9 @@ func TestExecutor_ConcurrentExecutionWithDifferentArgs(t *testing.T) {
 
 // TestExecutor_RaceCondition проверяет отсутствие race condition при конкурентном доступе
 func TestExecutor_RaceCondition(t *testing.T) {
-	skipShort(t)
-	t.Parallel()
+	if testing.Short() {
+		t.Skip("skipping integration test in short mode")
+	}
 
 	cfg := Config{
 		Command: "echo",
@@ -347,8 +349,9 @@ func TestExecutor_RaceCondition(t *testing.T) {
 
 // TestExecutor_ConcurrentExecutionDifferentCommands проверяет конкурентное выполнение разных команд
 func TestExecutor_ConcurrentExecutionDifferentCommands(t *testing.T) {
-	skipShort(t)
-	t.Parallel()
+	if testing.Short() {
+		t.Skip("skipping integration test in short mode")
+	}
 
 	cfg1 := Config{Command: "echo"}
 	cfg2 := Config{Command: "printf"}
@@ -380,8 +383,9 @@ func TestExecutor_ConcurrentExecutionDifferentCommands(t *testing.T) {
 
 // TestExecutor_LongRunningCommand проверяет выполнение длительной команды
 func TestExecutor_LongRunningCommand(t *testing.T) {
-	skipShort(t)
-	t.Parallel()
+	if testing.Short() {
+		t.Skip("skipping integration test in short mode")
+	}
 
 	cfg := Config{
 		Command: "sleep",
@@ -404,8 +408,9 @@ func TestExecutor_LongRunningCommand(t *testing.T) {
 
 // TestExecutor_ExecuteWithMultipleArgs проверяет выполнение команды с множеством аргументов
 func TestExecutor_ExecuteWithMultipleArgs(t *testing.T) {
-	skipShort(t)
-	t.Parallel()
+	if testing.Short() {
+		t.Skip("skipping integration test in short mode")
+	}
 
 	cfg := Config{
 		Command: "printf",
@@ -424,8 +429,9 @@ func TestExecutor_ExecuteWithMultipleArgs(t *testing.T) {
 
 // TestExecutor_ExecuteWithStderrWriter проверяет выполнение команды с кастомным Stderr
 func TestExecutor_ExecuteWithStderrWriter(t *testing.T) {
-	skipShort(t)
-	t.Parallel()
+	if testing.Short() {
+		t.Skip("skipping integration test in short mode")
+	}
 
 	var stderrBuf bytes.Buffer
 
@@ -447,8 +453,9 @@ func TestExecutor_ExecuteWithStderrWriter(t *testing.T) {
 
 // TestExecutor_ExecuteWithComplexCommand проверяет выполнение сложной команды через sh
 func TestExecutor_ExecuteWithComplexCommand(t *testing.T) {
-	skipShort(t)
-	t.Parallel()
+	if testing.Short() {
+		t.Skip("skipping integration test in short mode")
+	}
 
 	cfg := Config{
 		Command: "sh",
@@ -467,8 +474,9 @@ func TestExecutor_ExecuteWithComplexCommand(t *testing.T) {
 
 // TestExecutor_StartAndExecute проверяет последовательный вызов Start и Execute
 func TestExecutor_StartAndExecute(t *testing.T) {
-	skipShort(t)
-	t.Parallel()
+	if testing.Short() {
+		t.Skip("skipping integration test in short mode")
+	}
 
 	cfg := Config{
 		Command: "echo",
@@ -489,8 +497,9 @@ func TestExecutor_StartAndExecute(t *testing.T) {
 
 // TestExecutor_MultipleExecutors проверяет работу нескольких экземпляров executor
 func TestExecutor_MultipleExecutors(t *testing.T) {
-	skipShort(t)
-	t.Parallel()
+	if testing.Short() {
+		t.Skip("skipping integration test in short mode")
+	}
 
 	cfg1 := Config{Command: "echo"}
 	cfg2 := Config{Command: "printf"}
@@ -517,8 +526,9 @@ func TestExecutor_MultipleExecutors(t *testing.T) {
 
 // TestExecutor_ExecuteWithVeryLongArgs проверяет выполнение команды с очень длинными аргументами
 func TestExecutor_ExecuteWithVeryLongArgs(t *testing.T) {
-	skipShort(t)
-	t.Parallel()
+	if testing.Short() {
+		t.Skip("skipping integration test in short mode")
+	}
 
 	cfg := Config{
 		Command: "echo",
@@ -541,8 +551,9 @@ func TestExecutor_ExecuteWithVeryLongArgs(t *testing.T) {
 
 // TestExecutor_CloseWhileExecuting проверяет закрытие executor во время выполнения
 func TestExecutor_CloseWhileExecuting(t *testing.T) {
-	skipShort(t)
-	t.Parallel()
+	if testing.Short() {
+		t.Skip("skipping integration test in short mode")
+	}
 
 	cfg := Config{
 		Command: "sleep",
@@ -569,8 +580,9 @@ func TestExecutor_CloseWhileExecuting(t *testing.T) {
 
 // TestExecutor_ExecuteWithEmptyArgs проверяет выполнение команды без аргументов
 func TestExecutor_ExecuteWithEmptyArgs(t *testing.T) {
-	skipShort(t)
-	t.Parallel()
+	if testing.Short() {
+		t.Skip("skipping integration test in short mode")
+	}
 
 	cfg := Config{
 		Command: "echo",
@@ -588,8 +600,9 @@ func TestExecutor_ExecuteWithEmptyArgs(t *testing.T) {
 
 // TestExecutor_ExecuteWithSpecialChars проверяет выполнение команды с спецсимволами
 func TestExecutor_ExecuteWithSpecialChars(t *testing.T) {
-	skipShort(t)
-	t.Parallel()
+	if testing.Short() {
+		t.Skip("skipping integration test in short mode")
+	}
 
 	cfg := Config{
 		Command: "sh",
