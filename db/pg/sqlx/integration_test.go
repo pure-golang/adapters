@@ -12,10 +12,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ory/dockertest/v3"
-	"github.com/ory/dockertest/v3/docker"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/testcontainers/testcontainers-go"
+	"github.com/testcontainers/testcontainers-go/wait"
 )
 
 var testDB *Connection
@@ -30,44 +30,54 @@ func TestMain(m *testing.M) {
 		os.Exit(0)
 	}
 
-	// Создаем пул для Docker
-	pool, err := dockertest.NewPool("")
-	if err != nil {
-		panic(fmt.Sprintf("Could not connect to docker: %s", err))
+	ctx := context.Background()
+
+	// Создаем контейнер PostgreSQL
+	req := testcontainers.ContainerRequest{
+		Image:        "postgres:15",
+		ExposedPorts: []string{"5432/tcp"},
+		Env: map[string]string{
+			"POSTGRES_PASSWORD": "secret",
+			"POSTGRES_USER":     "test_user",
+			"POSTGRES_DB":       "test_db",
+		},
+		WaitingFor: wait.ForLog("database system is ready to accept connections"),
 	}
 
-	// Запускаем контейнер PostgreSQL
-	resource, err := pool.RunWithOptions(&dockertest.RunOptions{
-		Repository: "postgres",
-		Tag:        "15",
-		Env: []string{
-			"POSTGRES_PASSWORD=secret",
-			"POSTGRES_USER=test_user",
-			"POSTGRES_DB=test_db",
-		},
-	}, func(config *docker.HostConfig) {
-		config.AutoRemove = true
-		config.RestartPolicy = docker.RestartPolicy{Name: "no"}
+	container, err := testcontainers.GenericContainer(ctx, testcontainers.GenericContainerRequest{
+		ContainerRequest: req,
+		Started:          true,
 	})
 	if err != nil {
-		panic(fmt.Sprintf("Could not start resource: %s", err))
+		panic(fmt.Sprintf("Could not start container: %s", err))
 	}
 
 	// Очищаем ресурсы после тестов
 	defer func() {
-		if err := pool.Purge(resource); err != nil {
-			fmt.Printf("Warning: could not purge resource: %s\n", err)
+		if err := container.Terminate(ctx); err != nil {
+			fmt.Printf("Warning: could not terminate container: %s\n", err)
 		}
 	}()
 
-	// Конфигурация для подключения к тестовой БД
-	port, err := strconv.Atoi(resource.GetPort("5432/tcp"))
+	// Получаем порт
+	host, err := container.Host(ctx)
+	if err != nil {
+		panic(fmt.Sprintf("Could not get container host: %s", err))
+	}
+
+	mappedPort, err := container.MappedPort(ctx, "5432")
+	if err != nil {
+		panic(fmt.Sprintf("Could not get container port: %s", err))
+	}
+
+	port, err := strconv.Atoi(mappedPort.Port())
 	if err != nil {
 		panic(fmt.Sprintf("Could not parse port: %s", err))
 	}
 
+	// Конфигурация для подключения к тестовой БД
 	cfg := Config{
-		Host:           "localhost",
+		Host:           host,
 		Port:           port,
 		User:           "test_user",
 		Password:       "secret",
@@ -77,13 +87,19 @@ func TestMain(m *testing.M) {
 		QueryTimeout:   30 * time.Second,
 	}
 
-	// Ждем готовности БД
-	if err := pool.Retry(func() error {
-		var err error
-		testDB, err = Connect(context.Background(), cfg)
-		return err
-	}); err != nil {
-		panic(fmt.Sprintf("Could not connect to docker: %s", err))
+	// Ждем готовности БД и подключаемся
+	maxRetries := 30
+	retryInterval := 500 * time.Millisecond
+
+	for i := 0; i < maxRetries; i++ {
+		testDB, err = Connect(ctx, cfg)
+		if err == nil {
+			break
+		}
+		if i == maxRetries-1 {
+			panic(fmt.Sprintf("Could not connect to database after %d retries: %s", maxRetries, err))
+		}
+		time.Sleep(retryInterval)
 	}
 
 	// Запускаем тесты после успешного подключения
