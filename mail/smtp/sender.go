@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/tls"
 	"fmt"
+	"net"
 	"net/smtp"
 	"strings"
 	"sync"
@@ -104,9 +105,9 @@ func (s *Sender) send(ctx context.Context, email mail.Email) error {
 
 	var err error
 	if s.cfg.TLS {
-		err = s.sendWithTLS(ctx, addr, auth, from, append(toAddresses, ccAddresses...), bccAddresses, msg)
+		err = s.sendMailWithTLS(ctx, addr, auth, from, append(toAddresses, ccAddresses...), bccAddresses, msg)
 	} else {
-		err = smtp.SendMail(addr, auth, from, append(toAddresses, ccAddresses...), msg)
+		err = s.sendMail(ctx, addr, auth, from, append(toAddresses, ccAddresses...), bccAddresses, msg)
 	}
 
 	if err != nil {
@@ -119,8 +120,93 @@ func (s *Sender) send(ctx context.Context, email mail.Email) error {
 	return nil
 }
 
-// sendWithTLS sends email using STARTTLS.
-func (s *Sender) sendWithTLS(ctx context.Context, addr string, auth smtp.Auth, from string, to, bcc []string, msg []byte) error {
+// sendMail sends email without TLS (plain connection).
+func (s *Sender) sendMail(ctx context.Context, addr string, auth smtp.Auth, from string, to, bcc []string, msg []byte) error {
+	ctx, span := tracer.Start(ctx, "SMTP.SendMail")
+	defer span.End()
+
+	span.SetAttributes(
+		attribute.String("smtp.address", addr),
+		attribute.String("smtp.from", from),
+		attribute.Int("smtp.recipients_count", len(to)+len(bcc)),
+		attribute.Bool("smtp.auth", auth != nil),
+	)
+
+	// Connect to server using DialContext for proper context support
+	dialer := &net.Dialer{}
+	conn, err := dialer.DialContext(ctx, "tcp", addr)
+	if err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, "failed to connect")
+		return errors.Wrap(err, "failed to connect to SMTP server")
+	}
+
+	// Use hostname for SMTP client (needed for TLS verification and auth)
+	hostname := s.cfg.Host
+	client, err := smtp.NewClient(conn, hostname)
+	if err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, "failed to create SMTP client")
+		return errors.Wrap(err, "failed to create SMTP client")
+	}
+	defer func() {
+		if err := client.Close(); err != nil {
+			_ = err
+		}
+	}()
+
+	// Authenticate if credentials provided
+	if auth != nil {
+		if err := client.Auth(auth); err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, "failed to authenticate")
+			return errors.Wrap(err, "failed to authenticate")
+		}
+	}
+
+	// Set sender
+	if err := client.Mail(from); err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, "failed to set sender")
+		return errors.Wrap(err, "failed to set sender")
+	}
+
+	// Set recipients
+	allRecipients := append(to, bcc...)
+	for _, addr := range allRecipients {
+		if err := client.Rcpt(addr); err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, "failed to set recipient")
+			return errors.Wrapf(err, "failed to set recipient: %s", addr)
+		}
+	}
+
+	// Send data
+	writer, err := client.Data()
+	if err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, "failed to get data writer")
+		return errors.Wrap(err, "failed to get data writer")
+	}
+	defer func() {
+		if err := writer.Close(); err != nil {
+			_ = err
+		}
+	}()
+
+	_, err = writer.Write(msg)
+	if err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, "failed to write message")
+		return errors.Wrap(err, "failed to write message")
+	}
+
+	span.SetStatus(codes.Ok, "")
+	return nil
+}
+
+// sendMailWithTLS sends email using STARTTLS.
+func (s *Sender) sendMailWithTLS(ctx context.Context, addr string, auth smtp.Auth, from string, to, bcc []string, msg []byte) error {
 	ctx, span := tracer.Start(ctx, "SMTP.SendWithTLS")
 	defer span.End()
 
@@ -139,12 +225,22 @@ func (s *Sender) sendWithTLS(ctx context.Context, addr string, auth smtp.Auth, f
 	default:
 	}
 
-	// Connect to server
-	client, err := smtp.Dial(addr)
+	// Connect to server using DialContext for proper context support
+	dialer := &net.Dialer{}
+	conn, err := dialer.DialContext(ctx, "tcp", addr)
 	if err != nil {
 		span.RecordError(err)
 		span.SetStatus(codes.Error, "failed to connect")
 		return errors.Wrap(err, "failed to connect to SMTP server")
+	}
+
+	// Use hostname for SMTP client (needed for TLS verification and auth)
+	hostname := s.cfg.Host
+	client, err := smtp.NewClient(conn, hostname)
+	if err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, "failed to create SMTP client")
+		return errors.Wrap(err, "failed to create SMTP client")
 	}
 	defer func() {
 		if err := client.Close(); err != nil {

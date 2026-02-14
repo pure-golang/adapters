@@ -16,3 +16,17 @@ L0 - Мониторинг:
 L1 - Драйвера сервисов:
 - Postgres
 - RabbitMQ
+
+## Старт
+
+```bash
+make
+task test
+```
+
+### Настройка автодополнения для task
+
+```bash
+echo 'eval "$(task --completion zsh)"' >> ~/.zshrc
+source ~/.zshrc
+```

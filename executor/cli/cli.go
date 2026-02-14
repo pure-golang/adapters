@@ -11,7 +11,11 @@ import (
 
 	"github.com/pkg/errors"
 	"go.opentelemetry.io/otel/codes"
+
+	"github.com/pure-golang/adapters/executor"
 )
+
+var _ executor.Executor = (*Executor)(nil)
 
 // Executor реализует интерфейс executor.Executor для CLI утилит
 type Executor struct {
@@ -38,7 +42,7 @@ func New(cfg Config, stdout, stderr io.Writer) *Executor {
 		tmpStderr = stderr
 	}
 	return &Executor{
-		logger: slog.Default().WithGroup("executor/cli"),
+		logger: slog.Default().With("executor/cli", cfg.Command),
 		cmd:    cfg.Command,
 		stdout: tmpStdout,
 		stderr: tmpStderr,
@@ -69,6 +73,7 @@ func (e *Executor) Execute(ctx context.Context, args ...string) error {
 		return errors.New("executor is closed")
 	}
 	// Создание команды
+	//nolint:gosec // G204: Subprocess launched with a potential tainted input or cmd arguments - e.cmd is validated in Start(), args are user-controlled but not shell-expanded
 	cmd := exec.CommandContext(ctx, e.cmd, args...)
 	cmd.Stdout = e.stdout
 	cmd.Stderr = e.stderr
@@ -77,7 +82,7 @@ func (e *Executor) Execute(ctx context.Context, args ...string) error {
 	// 2. ВЫПОЛНЕНИЕ (параллельно, без блокировки мьютекса)
 	e.logger.Info("executing command", "command", e.cmd, "args", args)
 
-	ctx, span := tracer.Start(ctx, "executor.Execute")
+	_, span := tracer.Start(ctx, "executor.Execute")
 	defer span.End()
 
 	startTime := time.Now()

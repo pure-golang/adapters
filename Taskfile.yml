@@ -1,0 +1,63 @@
+version: '3'
+
+includes:
+  mail: ./mail/Taskfile.yml
+  grpc: ./grpc/Taskfile.yml
+
+tasks:
+  default:
+    # Эта задача выполняется по умолчанию при вызове 'task' без аргументов.
+    # Она скрыта из списка, так как у нее нет 'desc'.
+    cmds:
+      - task --list
+      - echo "task <name> --summary"
+    silent: true
+
+  mod:
+    desc: "Sync go.mod"
+    cmds:
+      - go mod download
+      - go mod tidy
+
+  lint:
+    desc: "Run linters"
+    summary: |
+      Run linters.
+    cmds:
+      - golangci-lint run
+    silent: true
+
+  kill-port:
+    desc: "Kill specific port"
+    summary: |
+      Kill specific port.
+
+      EXAMPLE:
+        task kill-port -- 7171
+    cmds:
+      - lsof -ti:{{.CLI_ARGS}} | xargs kill -9
+
+  bench:
+    desc: "Run all benchmarks"
+    cmds:
+      - go test -bench=. -run=^$ ./...
+
+  bench-mem:
+    desc: "Run all benchmarks with memory profiling"
+    cmds:
+      - go test -bench=. -run=^$ -benchmem ./...
+
+  test:
+    desc: "Run all tests"
+    cmds:
+      - go test -race -failfast -count=1 ./...
+
+  test-v:
+    desc: "Run all tests with verbose output"
+    cmds:
+      - go test -v -race -failfast -count=1 ./...
+
+  test-short:
+    desc: "Run short tests"
+    cmds:
+      - go test -v -short -failfast -count=1 ./mail/try/...

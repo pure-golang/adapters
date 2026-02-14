@@ -100,6 +100,10 @@ adapters/
   return errors.Wrap(err, "failed to connect to PostgreSQL")
   ```
 - Use `errors.As()` for type assertion of wrapped errors
+- Use `%q` for quoting values in error messages:
+  ```go
+  errors.Wrapf(err, "command %q not found", e.cmd)
+  ```
 - Database adapters provide helper functions for constraint violations:
   ```go
   // PostgreSQL constraint checks
@@ -267,6 +271,12 @@ func TestMain(m *testing.M) {
 - `require.NoError(t, err)`: Continue test, fail at end
 - `assert.ErrorIs(t, err, expectedErr)`: Check for specific error
 
+### Cleanup with t.Cleanup
+For proper resource cleanup in tests, prefer `t.Cleanup()` over `defer`
+
+### Context Timeout in Tests
+In integration tests use `context.WithTimeout(context.Background(), 5*time.Second)` instead of plain `context.Background()`
+
 ### Common Test Patterns
 ```go
 func TestConnection_Exec(t *testing.T) {
@@ -342,7 +352,6 @@ For gRPC/HTTP servers, middleware order matters:
 - `github.com/jackc/pgx/v5`: Modern PostgreSQL driver with connection pooling
 - `github.com/rabbitmq/amqp091-go`: RabbitMQ client
 - `google.golang.org/grpc`: gRPC framework
-- `github.com/gorilla/mux`: HTTP router
 - `os/exec`: Standard library for executing external commands (CLI executor)
 
 ### Observability
@@ -365,6 +374,7 @@ For gRPC/HTTP servers, middleware order matters:
 ## Code Style Notes
 
 - Comments and documentation are in Russian
+- Log messages and error messages are in English with lowercase first letter
 - Struct fields use PascalCase
 - Private fields use lowercase (not exported)
 - Interface methods use descriptive names (e.g., `Connect`, `Publish`, `Listen`)
