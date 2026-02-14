@@ -1,5 +1,10 @@
 version: '3'
 
+includes:
+  mail:
+    taskfile: ./mail/Taskfile.yml
+    dir: ./mail
+
 tasks:
   default:
     # Эта задача выполняется по умолчанию при вызове 'task' без аргументов.
@@ -57,4 +62,3 @@ tasks:
     desc: "Run short tests"
     cmds:
       - go test -v -short -failfast -count=1 ./mail/try/...
-
