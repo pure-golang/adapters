@@ -9,9 +9,13 @@ import (
 	"sync"
 	"time"
 
+	"github.com/pure-golang/adapters/executor"
+
 	"github.com/pkg/errors"
 	"go.opentelemetry.io/otel/codes"
 )
+
+var _ executor.Executor = (*Executor)(nil)
 
 // Executor реализует интерфейс executor.Executor для CLI утилит
 type Executor struct {
