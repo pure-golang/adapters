@@ -3,9 +3,9 @@ set -e  # выход при любой ошибке
 set -o pipefail  # выход при ошибке в любой команде пайплайна
 
 if [ -f ".coverage/.tmp" ]; then
-    COVERAGE=$(go tool cover -func=.coverage/.tmp | tail -1 | awk '{print $NF}')
+    COVER=$(go tool cover -func=.coverage/.tmp | tail -1 | awk '{print $NF}')
     echo ""
-    echo "📊 Общее покрытие кода: $COVERAGE"
+    echo "📊 Общее покрытие кода: $COVER"
     echo ""
     echo "🎯 Для применения в VSCode:"
     echo "1. Нажмите Ctrl+Shift+P (Cmd+Shift+P на Mac)"
