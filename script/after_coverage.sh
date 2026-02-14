@@ -7,7 +7,7 @@ if [ -f ".coverage/.tmp" ]; then
     echo ""
     echo "📊 Общее покрытие кода: $COVERAGE"
     echo ""
-    echo "🎯 Для применения в Cursor:"
+    echo "🎯 Для применения в VSCode:"
     echo "1. Нажмите Ctrl+Shift+P (Cmd+Shift+P на Mac)"
     echo "2. Введите 'Go: Apply Cover Profile'"
     echo "3. Укажите путь: $(pwd)/.coverage/.tmp"
