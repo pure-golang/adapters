@@ -352,7 +352,6 @@ For gRPC/HTTP servers, middleware order matters:
 - `github.com/jackc/pgx/v5`: Modern PostgreSQL driver with connection pooling
 - `github.com/rabbitmq/amqp091-go`: RabbitMQ client
 - `google.golang.org/grpc`: gRPC framework
-- `github.com/gorilla/mux`: HTTP router
 - `os/exec`: Standard library for executing external commands (CLI executor)
 
 ### Observability
