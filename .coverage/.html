@@ -171,7 +171,7 @@
 				
 				<option value="file57">github.com/pure-golang/adapters/storage/minio/presigned.go (69.7%)</option>
 				
-				<option value="file58">github.com/pure-golang/adapters/storage/minio/storage.go (53.5%)</option>
+				<option value="file58">github.com/pure-golang/adapters/storage/minio/storage.go (50.0%)</option>
 				
 				<option value="file59">github.com/pure-golang/adapters/tracing/jaeger/jaeger.go (72.2%)</option>
 				
@@ -462,7 +462,7 @@ type Connection struct {
 }
 
 // Connect создает новое соединение с базой данных PostgreSQL
-func Connect(ctx context.Context, cfg Config) (*Connection, error) <span class="cov10" title="4">{
+func Connect(ctx context.Context, cfg Config) (*Connection, error) <span class="cov10" title="3">{
         ctx, span := tracer.Start(ctx, "sqlx.Connect")
         defer span.End()
 
@@ -479,45 +479,45 @@ func Connect(ctx context.Context, cfg Config) (*Connection, error) <span class="
                 cfg.Host, cfg.Port, cfg.User, cfg.Password, cfg.Database, cfg.SSLMode,
         )
 
-        if cfg.ConnectTimeout &gt; 0 </span><span class="cov10" title="4">{
+        if cfg.ConnectTimeout &gt; 0 </span><span class="cov10" title="3">{
                 dsn += fmt.Sprintf(" connect_timeout=%d", cfg.ConnectTimeout)
         }</span>
 
-        <span class="cov10" title="4">dsn += " application_name=sqlx"
+        <span class="cov10" title="3">dsn += " application_name=sqlx"
 
         db, err := sqlx.ConnectContext(ctx, "postgres", dsn)
-        if err != nil </span><span class="cov5" title="2">{
+        if err != nil </span><span class="cov1" title="1">{
                 span.RecordError(err)
                 return nil, errors.Wrap(err, "failed to connect to PostgreSQL")
         }</span>
 
-        <span class="cov5" title="2">if cfg.MaxOpenConns &gt; 0 </span><span class="cov0" title="0">{
+        <span class="cov6" title="2">if cfg.MaxOpenConns &gt; 0 </span><span class="cov0" title="0">{
                 db.SetMaxOpenConns(cfg.MaxOpenConns)
                 span.SetAttributes(attribute.Int("db.max_open_conns", cfg.MaxOpenConns))
         }</span>
 
-        <span class="cov5" title="2">if cfg.MaxIdleConns &gt; 0 </span><span class="cov0" title="0">{
+        <span class="cov6" title="2">if cfg.MaxIdleConns &gt; 0 </span><span class="cov0" title="0">{
                 db.SetMaxIdleConns(cfg.MaxIdleConns)
                 span.SetAttributes(attribute.Int("db.max_idle_conns", cfg.MaxIdleConns))
         }</span>
 
-        <span class="cov5" title="2">if cfg.ConnMaxLifetime &gt; 0 </span><span class="cov0" title="0">{
+        <span class="cov6" title="2">if cfg.ConnMaxLifetime &gt; 0 </span><span class="cov0" title="0">{
                 db.SetConnMaxLifetime(cfg.ConnMaxLifetime)
                 span.SetAttributes(attribute.String("db.conn_max_lifetime", cfg.ConnMaxLifetime.String()))
         }</span>
 
-        <span class="cov5" title="2">if cfg.ConnMaxIdleTime &gt; 0 </span><span class="cov0" title="0">{
+        <span class="cov6" title="2">if cfg.ConnMaxIdleTime &gt; 0 </span><span class="cov0" title="0">{
                 db.SetConnMaxIdleTime(cfg.ConnMaxIdleTime)
                 span.SetAttributes(attribute.String("db.conn_max_idle_time", cfg.ConnMaxIdleTime.String()))
         }</span>
 
         // Проверка соединения
-        <span class="cov5" title="2">if err := db.PingContext(ctx); err != nil </span><span class="cov0" title="0">{
+        <span class="cov6" title="2">if err := db.PingContext(ctx); err != nil </span><span class="cov0" title="0">{
                 span.RecordError(err)
                 return nil, errors.Wrap(err, "failed to ping PostgreSQL")
         }</span>
 
-        <span class="cov5" title="2">return &amp;Connection{
+        <span class="cov6" title="2">return &amp;Connection{
                 DB:  db,
                 cfg: cfg,
         }, nil</span>
@@ -3841,7 +3841,7 @@ func (s *Metrics) Start() error <span class="cov7" title="8">{
                 return errors.Wrap(err, "failed to init prometheus")
         }</span>
 
-        <span class="cov7" title="8">go func() </span><span class="cov7" title="7">{
+        <span class="cov7" title="8">go func() </span><span class="cov7" title="8">{
                 if err := s.server.ListenAndServe(); err != nil &amp;&amp; !errors.Is(err, http.ErrServerClosed) </span><span class="cov0" title="0">{
                         slog.Default().Warn("metrics server failed", "error", err.Error())
                 }</span>
@@ -5055,9 +5055,9 @@ func (s *Subscriber) listen(handler queue.Handler) (bool, error) <span class="co
                 return true, errors.Wrapf(err, "failed to start consuming from %q", s.queueName)
         }</span>
 
-        <span class="cov1" title="2">for </span><span class="cov10" title="57548">{
+        <span class="cov1" title="2">for </span><span class="cov10" title="64377">{
                 select </span>{
-                case &lt;-s.close:<span class="cov9" title="57546">
+                case &lt;-s.close:<span class="cov9" title="64375">
                         if err := channel.Cancel(s.name, false); err != nil </span><span class="cov1" title="2">{
                                 return true, errors.Wrapf(err, "cancel consumer %q", s.name)
                         }</span>
@@ -5265,11 +5265,11 @@ type StorageError struct {
         Key     string
 }
 
-func (e *StorageError) Error() string <span class="cov10" title="663">{
+func (e *StorageError) Error() string <span class="cov10" title="668">{
         if e.Err != nil </span><span class="cov1" title="1">{
                 return fmt.Sprintf("storage.%s: %s (bucket=%s, key=%s): %v", e.Code, e.Message, e.Bucket, e.Key, e.Err)
         }</span>
-        <span class="cov9" title="662">return fmt.Sprintf("storage.%s: %s (bucket=%s, key=%s)", e.Code, e.Message, e.Bucket, e.Key)</span>
+        <span class="cov9" title="667">return fmt.Sprintf("storage.%s: %s (bucket=%s, key=%s)", e.Code, e.Message, e.Bucket, e.Key)</span>
 }
 
 func (e *StorageError) Unwrap() error <span class="cov1" title="2">{
@@ -5969,9 +5969,9 @@ import (
         "log/slog"
         "strings"
 
-        "github.com/pure-golang/adapters/storage"
         "github.com/minio/minio-go/v7"
         "github.com/pkg/errors"
+        "github.com/pure-golang/adapters/storage"
         "go.opentelemetry.io/otel"
         "go.opentelemetry.io/otel/attribute"
         "go.opentelemetry.io/otel/codes"
@@ -5996,15 +5996,15 @@ type StorageOptions struct {
 }
 
 // NewStorage creates a new S3 Storage instance.
-func NewStorage(client *Client, opts *StorageOptions) *Storage <span class="cov7" title="123">{
-        if opts == nil </span><span class="cov7" title="119">{
+func NewStorage(client *Client, opts *StorageOptions) *Storage <span class="cov7" title="126">{
+        if opts == nil </span><span class="cov7" title="122">{
                 opts = &amp;StorageOptions{}
         }</span>
-        <span class="cov7" title="123">if opts.Logger == nil </span><span class="cov7" title="121">{
+        <span class="cov7" title="126">if opts.Logger == nil </span><span class="cov7" title="124">{
                 opts.Logger = slog.Default()
         }</span>
 
-        <span class="cov7" title="123">return &amp;Storage{
+        <span class="cov7" title="126">return &amp;Storage{
                 client: client,
                 cfg:    client.cfg,
                 logger: opts.Logger.WithGroup("storage").With("backend", "s3"),
@@ -6021,8 +6021,8 @@ func NewDefault(cfg Config) (*Storage, error) <span class="cov1" title="2">{
 }
 
 // getClient returns the underlying minio client with validation.
-func (s *Storage) getClient() (*minio.Client, error) <span class="cov10" title="579">{
-        if s.client == nil || s.client.client == nil </span><span class="cov9" title="578">{
+func (s *Storage) getClient() (*minio.Client, error) <span class="cov10" title="582">{
+        if s.client == nil || s.client.client == nil </span><span class="cov9" title="581">{
                 return nil, &amp;storage.StorageError{
                         Code:    storage.CodeInternalError,
                         Message: "minio client is not initialized",
@@ -6287,6 +6287,57 @@ func (s *Storage) List(ctx context.Context, bucket string, opts *storage.ListOpt
         span.SetStatus(codes.Ok, "")
 
         return result, nil</span>
+}
+
+// GetFileHeader retrieves the first 4096 bytes of an object from S3-compatible storage.
+func (s *Storage) GetFileHeader(ctx context.Context, bucket, key string) ([]byte, error) <span class="cov2" title="3">{
+        ctx, span := tracer.Start(ctx, "S3.GetFileHeader", trace.WithSpanKind(trace.SpanKindClient))
+        defer span.End()
+
+        if bucket == "" </span><span class="cov0" title="0">{
+                bucket = s.cfg.DefaultBucket
+        }</span>
+
+        <span class="cov2" title="3">span.SetAttributes(
+                attribute.String("bucket", bucket),
+                attribute.String("key", key),
+        )
+
+        // Get the minio client
+        client, err := s.getClient()
+        if err != nil </span><span class="cov2" title="3">{
+                span.RecordError(err)
+                span.SetStatus(codes.Error, err.Error())
+                return nil, err
+        }</span>
+
+        // Prepare range options to read first 4096 bytes (bytes 0-4095 inclusive)
+        <span class="cov0" title="0">opts := minio.GetObjectOptions{}
+        opts.SetRange(0, 4095) // 4096 bytes: 0..4095 in inclusive range
+
+        obj, err := client.GetObject(ctx, bucket, key, opts)
+        if err != nil </span><span class="cov0" title="0">{
+                span.RecordError(err)
+                span.SetStatus(codes.Error, err.Error())
+                return nil, toStorageError(err, bucket, key)
+        }</span>
+        <span class="cov0" title="0">defer obj.Close()
+
+        head := make([]byte, 4096)
+        n, err := io.ReadFull(obj, head)
+        if err != nil &amp;&amp; err != io.EOF &amp;&amp; err != io.ErrUnexpectedEOF </span><span class="cov0" title="0">{
+                span.RecordError(err)
+                span.SetStatus(codes.Error, err.Error())
+                return nil, errors.Wrapf(err, "failed to read object header %s/%s", bucket, key)
+        }</span>
+
+        <span class="cov0" title="0">span.SetAttributes(
+                attribute.Int("bytes_read", n),
+        )
+        span.SetStatus(codes.Ok, "")
+
+        // Return only the actual bytes read (handles files shorter than 4096 bytes)
+        return head[:n], nil</span>
 }
 
 // Close closes the storage connection.

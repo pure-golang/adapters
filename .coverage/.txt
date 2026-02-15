@@ -260,9 +260,10 @@ github.com/pure-golang/adapters/storage/minio/storage.go:124:			Get				37.0%
 github.com/pure-golang/adapters/storage/minio/storage.go:184:			Delete				55.6%
 github.com/pure-golang/adapters/storage/minio/storage.go:218:			Exists				50.0%
 github.com/pure-golang/adapters/storage/minio/storage.go:255:			List				48.1%
-github.com/pure-golang/adapters/storage/minio/storage.go:330:			Close				100.0%
+github.com/pure-golang/adapters/storage/minio/storage.go:330:			GetFileHeader			33.3%
+github.com/pure-golang/adapters/storage/minio/storage.go:381:			Close				100.0%
 github.com/pure-golang/adapters/tracing/jaeger/jaeger.go:29:			Close				50.0%
 github.com/pure-golang/adapters/tracing/jaeger/jaeger.go:44:			NewProviderBuilder		90.0%
 github.com/pure-golang/adapters/tracing/tracing.go:21:				Init				100.0%
 github.com/pure-golang/adapters/tracing/tracing.go:36:				Close				100.0%
-total:										(statements)			80.8%
+total:										(statements)			80.1%
