@@ -6,9 +6,9 @@ import (
 	"log/slog"
 	"strings"
 
-	"github.com/pure-golang/adapters/storage"
 	"github.com/minio/minio-go/v7"
 	"github.com/pkg/errors"
+	"github.com/pure-golang/adapters/storage"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
@@ -324,6 +324,57 @@ func (s *Storage) List(ctx context.Context, bucket string, opts *storage.ListOpt
 	span.SetStatus(codes.Ok, "")
 
 	return result, nil
+}
+
+// GetFileHeader retrieves the first 4096 bytes of an object from S3-compatible storage.
+func (s *Storage) GetFileHeader(ctx context.Context, bucket, key string) ([]byte, error) {
+	ctx, span := tracer.Start(ctx, "S3.GetFileHeader", trace.WithSpanKind(trace.SpanKindClient))
+	defer span.End()
+
+	if bucket == "" {
+		bucket = s.cfg.DefaultBucket
+	}
+
+	span.SetAttributes(
+		attribute.String("bucket", bucket),
+		attribute.String("key", key),
+	)
+
+	// Get the minio client
+	client, err := s.getClient()
+	if err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
+		return nil, err
+	}
+
+	// Prepare range options to read first 4096 bytes (bytes 0-4095 inclusive)
+	opts := minio.GetObjectOptions{}
+	opts.SetRange(0, 4095) // 4096 bytes: 0..4095 in inclusive range
+
+	obj, err := client.GetObject(ctx, bucket, key, opts)
+	if err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
+		return nil, toStorageError(err, bucket, key)
+	}
+	defer obj.Close()
+
+	head := make([]byte, 4096)
+	n, err := io.ReadFull(obj, head)
+	if err != nil && err != io.EOF && err != io.ErrUnexpectedEOF {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
+		return nil, errors.Wrapf(err, "failed to read object header %s/%s", bucket, key)
+	}
+
+	span.SetAttributes(
+		attribute.Int("bytes_read", n),
+	)
+	span.SetStatus(codes.Ok, "")
+
+	// Return only the actual bytes read (handles files shorter than 4096 bytes)
+	return head[:n], nil
 }
 
 // Close closes the storage connection.

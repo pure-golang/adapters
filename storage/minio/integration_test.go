@@ -420,4 +420,64 @@ func TestIntegrationWithTestcontainers(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, len(largeContent), len(data))
 	})
+
+	t.Run("GetFileHeader", func(t *testing.T) {
+		ctx := context.Background()
+		key := "header-test.txt"
+		content := []byte("Hello, MinIO! This is a test file for GetFileHeader.")
+
+		// Put object
+		err := stor.Put(ctx, bucket, key, bytes.NewReader(content), &storage.PutOptions{
+			ContentType: "text/plain",
+		})
+		require.NoError(t, err)
+
+		// Get file header
+		header, err := stor.GetFileHeader(ctx, bucket, key)
+		require.NoError(t, err)
+
+		// Verify header size (should be full content since it's less than 4096 bytes)
+		assert.Len(t, header, len(content))
+
+		// Verify header content matches first bytes
+		assert.Equal(t, content, header)
+	})
+
+	t.Run("GetFileHeaderLargeFile", func(t *testing.T) {
+		ctx := context.Background()
+		key := "header-large-test.bin"
+
+		// Create a file larger than 4096 bytes
+		largeContent := bytes.Repeat([]byte("X"), 10*1024) // 10KB
+
+		// Put object
+		err := stor.Put(ctx, bucket, key, bytes.NewReader(largeContent), &storage.PutOptions{
+			ContentType: "application/octet-stream",
+		})
+		require.NoError(t, err)
+
+		// Get file header (should return first 4096 bytes)
+		header, err := stor.GetFileHeader(ctx, bucket, key)
+		require.NoError(t, err)
+
+		// Verify header size is exactly 4096 bytes
+		assert.Len(t, header, 4096)
+
+		// Verify header content matches first 4096 bytes
+		assert.Equal(t, largeContent[:4096], header)
+	})
+
+	t.Run("GetFileHeaderNotFound", func(t *testing.T) {
+		ctx := context.Background()
+
+		// Try to get header of non-existent file
+		header, err := stor.GetFileHeader(ctx, bucket, "non-existent-file.txt")
+		assert.Error(t, err)
+		assert.Nil(t, header)
+
+		// Verify it's a NotFound error
+		storageErr, ok := err.(*storage.StorageError)
+		require.True(t, ok, "error should be StorageError type")
+		assert.Equal(t, storage.CodeNotFound, storageErr.Code)
+	})
 }

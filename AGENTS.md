@@ -6,7 +6,7 @@ This document provides essential information for agents working in the **adapter
 
 This is a Go library (module: `github.com/pure-golang/adapters`) that provides adapters and infrastructure for:
 - **L0 (Monitoring)**: Logger, Tracing, Metrics
-- **L1 (Service Drivers)**: PostgreSQL (sqlx and pgx implementations), RabbitMQ, gRPC, HTTP servers, CLI Executor
+- **L1 (Service Drivers)**: PostgreSQL (sqlx and pgx implementations), RabbitMQ, gRPC, HTTP servers, CLI Executor, S3-compatible Storage (MinIO, Yandex Cloud, AWS S3)
 
 The project follows a **two-level directory structure**: first level = service/interface, second level = provider/implementation.
 - Example: `queue/rabbitmq`, `db/pg/sqlx`, `db/pg/pgx`, `logger/stdjson`
@@ -83,6 +83,14 @@ adapters/
 │   └── jaeger/            # OpenTelemetry Jaeger tracer
 ├── metrics/
 │   └── prometheus.go      # Prometheus metrics integration
+├── storage/
+│   └── minio/             # S3-compatible storage adapter (MinIO, Yandex Cloud, AWS S3)
+│       ├── client.go      # MinIO client wrapper
+│       ├── config.go      # Configuration with envconfig tags
+│       ├── storage.go     # Storage interface implementation
+│       ├── multipart.go   # Multipart upload support
+│       ├── presigned.go   # Presigned URL generation
+│       └── errors.go      # Storage-specific error handling
 └── env/                   # Environment configuration utilities
 ```
 
@@ -371,6 +379,9 @@ For gRPC/HTTP servers, middleware order matters:
 - `github.com/kelseyhightower/envconfig`: Environment variable parsing
 - `github.com/pkg/errors`: Error wrapping and context
 
+### Storage
+- `github.com/minio/minio-go/v7`: S3-compatible client library
+
 ## Code Style Notes
 
 - Comments and documentation are in Russian
@@ -404,6 +415,15 @@ POSTGRES_QUERY_TIMEOUT=10s
 RABBITMQ_URL=amqp://guest:guest@localhost:5672/
 RABBITMQ_DEFAULT_QUEUE=default_queue
 
+# S3 Storage (MinIO/Yandex Cloud/AWS S3)
+S3_ENDPOINT=localhost:9000
+S3_ACCESS_KEY=minioadmin
+S3_SECRET_KEY=minioadmin
+S3_REGION=us-east-1
+S3_BUCKET=my-bucket
+S3_SECURE=false
+S3_TIMEOUT=30
+
 # Logger
 LOG_PROVIDER=std_json
 LOG_LEVEL=info
@@ -422,6 +442,105 @@ When adding a new adapter:
 7. Add unit tests for core functionality
 8. Add integration tests with `dockertest` (if external service)
 9. Add to this AGENTS.md if new patterns introduced
+
+## Storage Patterns (S3/MinIO)
+
+### Basic Operations
+```go
+// Create storage instance
+cfg := minio.Config{
+    Endpoint:  "localhost:9000",
+    AccessKey: "minioadmin",
+    SecretKey: "minioadmin",
+    Secure:    false,
+}
+storage, err := minio.NewDefault(cfg)
+defer storage.Close()
+
+// Put object
+err = storage.Put(ctx, "my-bucket", "my-key", bytes.NewReader(data), &storage.PutOptions{
+    ContentType: "application/json",
+    Metadata:    map[string]string{"author": "user1"},
+})
+
+// Get object
+reader, info, err := storage.Get(ctx, "my-bucket", "my-key")
+defer reader.Close()
+
+// Check existence
+exists, err := storage.Exists(ctx, "my-bucket", "my-key")
+
+// Delete object
+err = storage.Delete(ctx, "my-bucket", "my-key")
+```
+
+### Range Requests
+```go
+// GetFileHeader retrieves first 4096 bytes using range request
+// Useful for file type detection without downloading entire file
+header, err := storage.GetFileHeader(ctx, "my-bucket", "large-file.bin")
+if err != nil {
+    return err
+}
+
+// Detect file type from header (e.g., images, videos, documents)
+fileType := http.DetectContentType(header)
+fmt.Printf("Detected content type: %s\n", fileType)
+```
+
+### Presigned URLs
+```go
+// Generate temporary URL for direct client access
+url, err := storage.GetPresignedURL(ctx, "my-bucket", "my-key", &storage.PresignedURLOptions{
+    Method: "GET",
+    Expiry: 15 * time.Minute,
+})
+// Client can now download directly from this URL
+```
+
+### Multipart Upload
+```go
+// For large files (> 5MB recommended)
+upload, err := storage.CreateMultipartUpload(ctx, "bucket", "large-file.bin", nil)
+
+// Upload parts in parallel
+parts := make([]storage.UploadedPart, 0)
+for i := 0; i < numParts; i++ {
+    part, err := storage.UploadPart(ctx, "bucket", "large-file.bin", upload.UploadID,
+        int32(i+1), partReader)
+    if err != nil {
+        storage.AbortMultipartUpload(ctx, "bucket", "large-file.bin", upload.UploadID)
+        return err
+    }
+    parts = append(parts, *part)
+}
+
+// Complete upload
+info, err := storage.CompleteMultipartUpload(ctx, "bucket", "large-file.bin",
+    upload.UploadID, &storage.CompleteMultipartUploadOptions{Parts: parts})
+```
+
+### List Objects
+```go
+// List with prefix
+result, err := storage.List(ctx, "my-bucket", &storage.ListOptions{
+    Prefix:    "photos/2024/",
+    Recursive: true,
+    MaxKeys:   1000,
+})
+
+for _, obj := range result.Objects {
+    fmt.Printf("%s (%d bytes)\n", obj.Key, obj.Size)
+}
+```
+
+### Important Notes for Storage
+- **Range requests** are efficient for partial reads (headers, thumbnails, previews)
+- **GetFileHeader** reads exactly 4096 bytes (or less for small files) using `opts.SetRange(0, 4095)`
+- Use **presigned URLs** for direct client access to avoid proxying through your server
+- **Multipart upload** is recommended for files > 5MB
+- All operations support **context cancellation** and **OpenTelemetry tracing**
+- Span naming pattern: `S3.operation` (e.g., `S3.GetFileHeader`, `S3.Put`, `S3.Get`)
 
 ## Troubleshooting
 
@@ -445,6 +564,13 @@ When adding a new adapter:
 - Check connection URL format: `amqp://user:pass@host:port/`
 - Verify user permissions and queue existence
 - Check firewall rules for port 5672
+
+### S3 Storage Connection Errors
+- Verify S3-compatible storage is running and accessible
+- Check endpoint URL format (e.g., `localhost:9000` for MinIO, `storage.yandexcloud.net` for Yandex Cloud)
+- Verify access key and secret key are correct
+- Check bucket exists and you have permissions
+- Check firewall rules for the S3 port (default: 9000 for MinIO, 443 for AWS S3/Yandex Cloud)
 
 ## Queue Patterns (Kafka)
 ```go

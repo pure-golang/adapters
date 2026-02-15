@@ -1,6 +1,6 @@
 # minio
 
-Package minio provides a unified S3-compatible adapter for the storage interface.
+Package minio provides a unified S3-compatible adapter for storage interface.
 
 Supports:
 - **MinIO** - Local/development S3-compatible storage
@@ -94,6 +94,14 @@ url, err := storage.GetPresignedURL(ctx, "my-bucket", "my-key", &storage.Presign
     Method: "GET",
     Expiry: 15 * time.Minute,
 })
+
+// Get file header (first 4096 bytes)
+header, err := storage.GetFileHeader(ctx, "my-bucket", "my-key")
+if err != nil {
+    log.Printf("Failed to get file header: %v", err)
+} else {
+    fmt.Printf("First 4096 bytes: %v", header)
+}
 ```
 
 ## Environment Variables
@@ -151,6 +159,10 @@ type StorageOptions struct {
 - `NewDefaultClient(cfg Config) (*Client, error)` - Create a client with default options
 - `NewStorage(client *Client, opts *StorageOptions) *Storage` - Create storage from client
 - `NewDefault(cfg Config) (*Storage, error)` - Create storage with new client and default options
+
+## Methods
+
+- `GetFileHeader(ctx context.Context, bucket, key string) ([]byte, error)` - Retrieve first 4096 bytes of an object using range request
 
 ## Features
 

@@ -81,6 +81,9 @@ type Storage interface {
 	// GetPresignedURL generates a presigned URL for direct access.
 	GetPresignedURL(ctx context.Context, bucket, key string, opts *PresignedURLOptions) (string, error)
 
+	// GetFileHeader retrieves the first 4096 bytes of an object using range request.
+	GetFileHeader(ctx context.Context, bucket, key string) ([]byte, error)
+
 	// CreateMultipartUpload initiates a multipart upload.
 	CreateMultipartUpload(ctx context.Context, bucket, key string, opts *PutOptions) (*MultipartUpload, error)
 
