@@ -187,7 +187,7 @@ func (s *Sender) sendMail(ctx context.Context, addr string, auth smtp.Auth, from
 	}
 	defer func() {
 		if err := client.Close(); err != nil {
-			_ = err
+			span.RecordError(errors.Wrap(err, "failed to close SMTP client"))
 		}
 	}()
 
@@ -226,7 +226,7 @@ func (s *Sender) sendMail(ctx context.Context, addr string, auth smtp.Auth, from
 	}
 	defer func() {
 		if err := writer.Close(); err != nil {
-			_ = err
+			span.RecordError(errors.Wrap(err, "failed to close data writer"))
 		}
 	}()
 
@@ -282,7 +282,7 @@ func (s *Sender) sendMailWithTLS(ctx context.Context, addr string, auth smtp.Aut
 		if err := client.Close(); err != nil {
 			// Error closing SMTP connection is not critical here as the message has already been sent.
 			// The connection will be cleaned up by the server.
-			_ = err // Explicitly ignore to satisfy linters
+			span.RecordError(errors.Wrap(err, "failed to close SMTP client"))
 		}
 	}()
 
@@ -338,8 +338,7 @@ func (s *Sender) sendMailWithTLS(ctx context.Context, addr string, auth smtp.Aut
 	}
 	defer func() {
 		if err := writer.Close(); err != nil {
-			// Error closing data writer is not critical as the message has already been sent.
-			_ = err // Explicitly ignore to satisfy linters
+			span.RecordError(errors.Wrap(err, "failed to close data writer"))
 		}
 	}()
 
