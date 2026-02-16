@@ -569,52 +569,22 @@ func ExampleStorage() {
 
 // TestStorage_GetFileHeader tests the GetFileHeader method.
 func TestStorage_GetFileHeader(t *testing.T) {
-	t.Run("get file header with nil client returns error", func(t *testing.T) {
+	t.Run("get file header with uninitialized client returns error", func(t *testing.T) {
+		// Arrange
 		client := &Client{
-			client: nil, // nil client to trigger error
+			client: nil,
 			cfg:    Config{DefaultBucket: "bucket"},
 			logger: slog.Default(),
 		}
 		stor := NewStorage(client, nil)
+		ctx := context.Background()
 
-		data, err := stor.GetFileHeader(context.Background(), "bucket", "key")
-		assert.Error(t, err)
-		assert.Nil(t, data)
-		assert.Contains(t, err.Error(), "not initialized")
+		// Act
+		data, err := stor.GetFileHeader(ctx, "my-bucket", "my-file.txt")
+
+		// Assert
+		assert.Error(t, err, "expected error when client is not initialized")
+		assert.Nil(t, data, "expected nil data when error occurs")
+		assert.Contains(t, err.Error(), "not initialized", "expected error message to indicate client is not initialized")
 	})
-
-	t.Run("get file header with nil minio client returns error", func(t *testing.T) {
-		client := &Client{
-			client: nil, // nil minio client to trigger error in getClient
-			cfg:    Config{DefaultBucket: "bucket"},
-			logger: slog.Default(),
-		}
-		stor := NewStorage(client, nil)
-
-		// This should fail because the underlying minio client is nil
-		data, err := stor.GetFileHeader(context.Background(), "bucket", "key")
-		assert.Error(t, err)
-		assert.Nil(t, data)
-		assert.Contains(t, err.Error(), "not initialized")
-	})
-}
-
-// TestStorage_GetFileHeaderExamples provides examples of GetFileHeader usage.
-func TestStorage_GetFileHeaderExamples(t *testing.T) {
-	// This test demonstrates how to use the GetFileHeader method
-	client := &Client{
-		client: nil, // This would normally be a real client
-		cfg:    Config{DefaultBucket: "bucket"},
-		logger: slog.Default(),
-	}
-	stor := NewStorage(client, nil)
-
-	// Example: Attempt to get the first 4096 bytes of a file
-	// In a real scenario, this would require a properly initialized client
-	// and an existing file in the storage system
-	_, err := stor.GetFileHeader(context.Background(), "my-bucket", "my-file.txt")
-	if err != nil {
-		// Handle error appropriately
-		_ = err
-	}
 }
