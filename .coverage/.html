@@ -77,7 +77,7 @@
 				
 				<option value="file10">github.com/pure-golang/adapters/env/env.go (100.0%)</option>
 				
-				<option value="file11">github.com/pure-golang/adapters/executor/cli/cli.go (100.0%)</option>
+				<option value="file11">github.com/pure-golang/adapters/executor/cli/cli.go (90.7%)</option>
 				
 				<option value="file12">github.com/pure-golang/adapters/executor/cli/config.go (0.0%)</option>
 				
@@ -127,7 +127,7 @@
 				
 				<option value="file35">github.com/pure-golang/adapters/mail/noop/noop.go (100.0%)</option>
 				
-				<option value="file36">github.com/pure-golang/adapters/mail/smtp/sender.go (77.0%)</option>
+				<option value="file36">github.com/pure-golang/adapters/mail/smtp/sender.go (73.7%)</option>
 				
 				<option value="file37">github.com/pure-golang/adapters/metrics/metrics.go (80.0%)</option>
 				
@@ -1077,6 +1077,7 @@ func InitConfig(config any) error <span class="cov10" title="24">{
 
 import (
         "context"
+        "fmt"
         "io"
         "log/slog"
         "os"
@@ -1100,34 +1101,55 @@ type Executor struct {
         stderr io.Writer
         closed bool
         mx     sync.Mutex
+        ssh    SSHConfig
 }
 
 // New создаёт новый CLI executor
-func New(cfg Config, stdout, stderr io.Writer) *Executor <span class="cov6" title="26">{
+func New(cfg Config, stdout, stderr io.Writer) *Executor <span class="cov7" title="33">{
         var tmpStdout io.Writer
-        if stdout == nil </span><span class="cov6" title="25">{
+        if stdout == nil </span><span class="cov7" title="32">{
                 tmpStdout = os.Stdout
         }</span> else<span class="cov1" title="1"> {
                 tmpStdout = stdout
         }</span>
-        <span class="cov6" title="26">var tmpStderr io.Writer
-        if stderr == nil </span><span class="cov6" title="24">{
+        <span class="cov7" title="33">var tmpStderr io.Writer
+        if stderr == nil </span><span class="cov7" title="31">{
                 tmpStderr = os.Stderr
         }</span> else<span class="cov2" title="2"> {
                 tmpStderr = stderr
         }</span>
-        <span class="cov6" title="26">return &amp;Executor{
+        <span class="cov7" title="33">return &amp;Executor{
                 logger: slog.Default().With("executor/cli", cfg.Command),
                 cmd:    cfg.Command,
                 stdout: tmpStdout,
                 stderr: tmpStderr,
                 closed: false,
+                ssh:    cfg.SSH,
         }</span>
 }
 
 // Start проверяет наличие команды в системе
-func (e *Executor) Start() error <span class="cov3" title="5">{
-        e.logger.Info("checking command availability", "command", e.cmd)
+func (e *Executor) Start() error <span class="cov4" title="6">{
+        if e.ssh.Host != "" </span><span class="cov1" title="1">{
+                e.logger.Info("checking ssh availability", "host", e.ssh.Host)
+
+                if _, err := exec.LookPath("ssh"); err != nil </span><span class="cov0" title="0">{
+                        e.logger.Error("ssh not found", "error", err)
+                        return errors.Wrap(err, "ssh not found")
+                }</span>
+
+                <span class="cov1" title="1">if e.ssh.Password != "" </span><span class="cov0" title="0">{
+                        if _, err := exec.LookPath("sshpass"); err != nil </span><span class="cov0" title="0">{
+                                e.logger.Error("sshpass not found (required for password auth)", "error", err)
+                                return errors.Wrap(err, "sshpass not found (required for password authentication)")
+                        }</span>
+                }
+
+                <span class="cov1" title="1">e.logger.Info("ssh found", "host", e.ssh.Host)
+                return nil</span>
+        }
+
+        <span class="cov3" title="5">e.logger.Info("checking command availability", "command", e.cmd)
 
         if _, err := exec.LookPath(e.cmd); err != nil </span><span class="cov1" title="1">{
                 e.logger.Error("command not found", "command", e.cmd, "error", err)
@@ -1140,7 +1162,7 @@ func (e *Executor) Start() error <span class="cov3" title="5">{
 
 // Execute выполняет команду с заданным контекстом и аргументами
 func (e *Executor) Execute(ctx context.Context, args ...string) error <span class="cov10" title="134">{
-        // 1. КРИТИЧЕСКАЯ СЕКЦИЯ (только проверка и регистрация)
+        // КРИТИЧЕСКАЯ СЕКЦИЯ (только проверка и регистрация)
         e.mx.Lock()
         if e.closed </span><span class="cov1" title="1">{
                 e.mx.Unlock()
@@ -1148,13 +1170,19 @@ func (e *Executor) Execute(ctx context.Context, args ...string) error <span clas
                 return errors.New("executor is closed")
         }</span>
         // Создание команды
-        //nolint:gosec // G204: Subprocess launched with a potential tainted input or cmd arguments - e.cmd is validated in Start(), args are user-controlled but not shell-expanded
-        <span class="cov9" title="133">cmd := exec.CommandContext(ctx, e.cmd, args...)
-        cmd.Stdout = e.stdout
+        <span class="cov9" title="133">var cmd *exec.Cmd
+        if e.ssh.Host != "" </span><span class="cov0" title="0">{
+                sshCmd, sshArgs := e.buildSSHCommand(args...)
+                //nolint:gosec // G204: Subprocess launched with a potential tainted input or cmd arguments - validated in Start()
+                cmd = exec.CommandContext(ctx, sshCmd, sshArgs...)
+        }</span> else<span class="cov9" title="133"> {
+                //nolint:gosec // G204: Subprocess launched with a potential tainted input or cmd arguments - e.cmd is validated in Start(), args are user-controlled but not shell-expanded
+                cmd = exec.CommandContext(ctx, e.cmd, args...)
+        }</span>
+        <span class="cov9" title="133">cmd.Stdout = e.stdout
         cmd.Stderr = e.stderr
         e.mx.Unlock()
 
-        // 2. ВЫПОЛНЕНИЕ (параллельно, без блокировки мьютекса)
         e.logger.Info("executing command", "command", e.cmd, "args", args)
 
         _, span := tracer.Start(ctx, "executor.Execute")
@@ -1177,14 +1205,43 @@ func (e *Executor) Execute(ctx context.Context, args ...string) error <span clas
         return nil</span>
 }
 
+// buildSSHCommand формирует команду и аргументы для выполнения через SSH
+func (e *Executor) buildSSHCommand(args ...string) (string, []string) <span class="cov4" title="6">{
+        var sshArgs []string
+
+        baseCmd := "ssh"
+
+        if e.ssh.Password != "" </span><span class="cov1" title="1">{
+                baseCmd = "sshpass"
+                sshArgs = append(sshArgs, "-p", e.ssh.Password, "ssh")
+        }</span>
+
+        <span class="cov4" title="6">if e.ssh.User != "" </span><span class="cov3" title="4">{
+                sshArgs = append(sshArgs, "-l", e.ssh.User)
+        }</span>
+
+        <span class="cov4" title="6">if e.ssh.KeyPath != "" </span><span class="cov1" title="1">{
+                sshArgs = append(sshArgs, "-i", e.ssh.KeyPath)
+        }</span>
+
+        <span class="cov4" title="6">if e.ssh.Port != 0 &amp;&amp; e.ssh.Port != 22 </span><span class="cov1" title="1">{
+                sshArgs = append(sshArgs, "-p", fmt.Sprintf("%d", e.ssh.Port))
+        }</span>
+
+        <span class="cov4" title="6">sshArgs = append(sshArgs, e.ssh.Host, e.cmd)
+        sshArgs = append(sshArgs, args...)
+
+        return baseCmd, sshArgs</span>
+}
+
 // Close закрывает executor
-func (e *Executor) Close() error <span class="cov7" title="27">{
+func (e *Executor) Close() error <span class="cov7" title="34">{
         e.mx.Lock()
         if e.closed </span><span class="cov1" title="1">{
                 e.mx.Unlock()
                 return errors.New("executor is already closed")
         }</span>
-        <span class="cov6" title="26">e.closed = true
+        <span class="cov7" title="33">e.closed = true
         e.mx.Unlock()
 
         return nil</span>
@@ -1197,11 +1254,23 @@ import (
         "github.com/kelseyhightower/envconfig"
 )
 
+// SSHConfig содержит параметры для удалённого выполнения команд через SSH
+type SSHConfig struct {
+        Host     string `envconfig:"SSH_HOST"`
+        Port     int    `envconfig:"SSH_PORT" default:"22"`
+        User     string `envconfig:"SSH_USER"`
+        KeyPath  string `envconfig:"SSH_KEY_PATH"`
+        Password string `envconfig:"SSH_PASSWORD"`
+}
+
 // Config содержит конфигурацию CLI executor
 type Config struct {
         // Command - имя исполняемой команды (например, "ffmpeg", "gsutil", "aws")
         // Загружается из переменной окружения CLI_COMMAND
         Command string `envconfig:"CLI_COMMAND" required:"true"`
+
+        // SSH - параметры для удалённого выполнения команд
+        SSH SSHConfig
 }
 
 // InitConfig загружает конфигурацию из переменных окружения
@@ -3487,12 +3556,48 @@ func (s *Sender) send(ctx context.Context, email mail.Email) error <span class="
                 auth = smtp.PlainAuth("", s.cfg.Username, s.cfg.Password, s.cfg.Host)
         }</span>
 
-        <span class="cov7" title="31">var err error
-        if s.cfg.TLS </span><span class="cov6" title="15">{
-                err = s.sendMailWithTLS(ctx, addr, auth, from, append(toAddresses, ccAddresses...), bccAddresses, msg)
-        }</span> else<span class="cov6" title="16"> {
-                err = s.sendMail(ctx, addr, auth, from, append(toAddresses, ccAddresses...), bccAddresses, msg)
+        <span class="cov7" title="31">allTo := append(toAddresses, ccAddresses...)
+
+        maxRetries := s.cfg.MaxRetries
+        if maxRetries &lt;= 0 </span><span class="cov7" title="31">{
+                maxRetries = 1
         }</span>
+
+        <span class="cov7" title="31">span.SetAttributes(attribute.Int("smtp.max_retries", maxRetries))
+
+        var err error
+        for attempt := 0; attempt &lt; maxRetries; attempt++ </span><span class="cov7" title="31">{
+                if attempt &gt; 0 </span><span class="cov0" title="0">{
+                        backoff := calcBackoff(attempt)
+
+                        span.AddEvent("smtp.retry", trace.WithAttributes(
+                                attribute.Int("smtp.retry_attempt", attempt),
+                                attribute.String("smtp.backoff", backoff.String()),
+                        ))
+
+                        select </span>{
+                        case &lt;-ctx.Done():<span class="cov0" title="0">
+                                span.RecordError(ctx.Err())
+                                span.SetStatus(codes.Error, "context canceled during retry backoff")
+                                return errors.Wrap(ctx.Err(), "context canceled during retry backoff")</span>
+                        case &lt;-time.After(backoff):<span class="cov0" title="0"></span>
+                        }
+                }
+
+                <span class="cov7" title="31">if s.cfg.TLS </span><span class="cov6" title="15">{
+                        err = s.sendMailWithTLS(ctx, addr, auth, from, allTo, bccAddresses, msg)
+                }</span> else<span class="cov6" title="16"> {
+                        err = s.sendMail(ctx, addr, auth, from, allTo, bccAddresses, msg)
+                }</span>
+
+                <span class="cov7" title="31">if err == nil </span><span class="cov6" title="17">{
+                        break</span>
+                }
+
+                <span class="cov5" title="14">span.RecordError(err, trace.WithAttributes(
+                        attribute.Int("smtp.attempt", attempt+1),
+                ))</span>
+        }
 
         <span class="cov7" title="31">if err != nil </span><span class="cov5" title="14">{
                 span.RecordError(err)
@@ -3535,7 +3640,7 @@ func (s *Sender) sendMail(ctx context.Context, addr string, auth smtp.Auth, from
         }</span>
         <span class="cov5" title="10">defer func() </span><span class="cov5" title="10">{
                 if err := client.Close(); err != nil </span><span class="cov0" title="0">{
-                        _ = err
+                        span.RecordError(errors.Wrap(err, "failed to close SMTP client"))
                 }</span>
         }()
 
@@ -3574,7 +3679,7 @@ func (s *Sender) sendMail(ctx context.Context, addr string, auth smtp.Auth, from
         }</span>
         <span class="cov5" title="10">defer func() </span><span class="cov5" title="10">{
                 if err := writer.Close(); err != nil </span><span class="cov0" title="0">{
-                        _ = err
+                        span.RecordError(errors.Wrap(err, "failed to close data writer"))
                 }</span>
         }()
 
@@ -3630,7 +3735,7 @@ func (s *Sender) sendMailWithTLS(ctx context.Context, addr string, auth smtp.Aut
                 if err := client.Close(); err != nil </span><span class="cov0" title="0">{
                         // Error closing SMTP connection is not critical here as the message has already been sent.
                         // The connection will be cleaned up by the server.
-                        _ = err // Explicitly ignore to satisfy linters
+                        span.RecordError(errors.Wrap(err, "failed to close SMTP client"))
                 }</span>
         }()
 
@@ -3686,8 +3791,7 @@ func (s *Sender) sendMailWithTLS(ctx context.Context, addr string, auth smtp.Aut
         }</span>
         <span class="cov4" title="7">defer func() </span><span class="cov4" title="7">{
                 if err := writer.Close(); err != nil </span><span class="cov0" title="0">{
-                        // Error closing data writer is not critical as the message has already been sent.
-                        _ = err // Explicitly ignore to satisfy linters
+                        span.RecordError(errors.Wrap(err, "failed to close data writer"))
                 }</span>
         }()
 
@@ -3780,6 +3884,18 @@ func (s *Sender) getEmailAddresses(addrs []mail.Address) []string <span class="c
                 result[i] = addr.Address
         }</span>
         <span class="cov9" title="103">return result</span>
+}
+
+// calcBackoff returns the exponential backoff duration for the given retry attempt (1-based).
+func calcBackoff(attempt int) time.Duration <span class="cov0" title="0">{
+        backoff := defaultInitialBackoff
+        for i := 1; i &lt; attempt; i++ </span><span class="cov0" title="0">{
+                backoff *= time.Duration(defaultBackoffMultiplier)
+                if backoff &gt; defaultMaxBackoff </span><span class="cov0" title="0">{
+                        return defaultMaxBackoff
+                }</span>
+        }
+        <span class="cov0" title="0">return backoff</span>
 }
 
 // Close closes the sender.
@@ -5055,9 +5171,9 @@ func (s *Subscriber) listen(handler queue.Handler) (bool, error) <span class="co
                 return true, errors.Wrapf(err, "failed to start consuming from %q", s.queueName)
         }</span>
 
-        <span class="cov1" title="2">for </span><span class="cov10" title="64377">{
+        <span class="cov1" title="2">for </span><span class="cov10" title="63175">{
                 select </span>{
-                case &lt;-s.close:<span class="cov9" title="64375">
+                case &lt;-s.close:<span class="cov9" title="63173">
                         if err := channel.Cancel(s.name, false); err != nil </span><span class="cov1" title="2">{
                                 return true, errors.Wrapf(err, "cancel consumer %q", s.name)
                         }</span>
@@ -5265,11 +5381,11 @@ type StorageError struct {
         Key     string
 }
 
-func (e *StorageError) Error() string <span class="cov10" title="668">{
+func (e *StorageError) Error() string <span class="cov10" title="665">{
         if e.Err != nil </span><span class="cov1" title="1">{
                 return fmt.Sprintf("storage.%s: %s (bucket=%s, key=%s): %v", e.Code, e.Message, e.Bucket, e.Key, e.Err)
         }</span>
-        <span class="cov9" title="667">return fmt.Sprintf("storage.%s: %s (bucket=%s, key=%s)", e.Code, e.Message, e.Bucket, e.Key)</span>
+        <span class="cov9" title="664">return fmt.Sprintf("storage.%s: %s (bucket=%s, key=%s)", e.Code, e.Message, e.Bucket, e.Key)</span>
 }
 
 func (e *StorageError) Unwrap() error <span class="cov1" title="2">{
@@ -5996,15 +6112,15 @@ type StorageOptions struct {
 }
 
 // NewStorage creates a new S3 Storage instance.
-func NewStorage(client *Client, opts *StorageOptions) *Storage <span class="cov7" title="126">{
-        if opts == nil </span><span class="cov7" title="122">{
+func NewStorage(client *Client, opts *StorageOptions) *Storage <span class="cov7" title="124">{
+        if opts == nil </span><span class="cov7" title="120">{
                 opts = &amp;StorageOptions{}
         }</span>
-        <span class="cov7" title="126">if opts.Logger == nil </span><span class="cov7" title="124">{
+        <span class="cov7" title="124">if opts.Logger == nil </span><span class="cov7" title="122">{
                 opts.Logger = slog.Default()
         }</span>
 
-        <span class="cov7" title="126">return &amp;Storage{
+        <span class="cov7" title="124">return &amp;Storage{
                 client: client,
                 cfg:    client.cfg,
                 logger: opts.Logger.WithGroup("storage").With("backend", "s3"),
@@ -6021,8 +6137,8 @@ func NewDefault(cfg Config) (*Storage, error) <span class="cov1" title="2">{
 }
 
 // getClient returns the underlying minio client with validation.
-func (s *Storage) getClient() (*minio.Client, error) <span class="cov10" title="582">{
-        if s.client == nil || s.client.client == nil </span><span class="cov9" title="581">{
+func (s *Storage) getClient() (*minio.Client, error) <span class="cov10" title="580">{
+        if s.client == nil || s.client.client == nil </span><span class="cov9" title="579">{
                 return nil, &amp;storage.StorageError{
                         Code:    storage.CodeInternalError,
                         Message: "minio client is not initialized",
@@ -6290,7 +6406,7 @@ func (s *Storage) List(ctx context.Context, bucket string, opts *storage.ListOpt
 }
 
 // GetFileHeader retrieves the first 4096 bytes of an object from S3-compatible storage.
-func (s *Storage) GetFileHeader(ctx context.Context, bucket, key string) ([]byte, error) <span class="cov2" title="3">{
+func (s *Storage) GetFileHeader(ctx context.Context, bucket, key string) ([]byte, error) <span class="cov1" title="1">{
         ctx, span := tracer.Start(ctx, "S3.GetFileHeader", trace.WithSpanKind(trace.SpanKindClient))
         defer span.End()
 
@@ -6298,14 +6414,14 @@ func (s *Storage) GetFileHeader(ctx context.Context, bucket, key string) ([]byte
                 bucket = s.cfg.DefaultBucket
         }</span>
 
-        <span class="cov2" title="3">span.SetAttributes(
+        <span class="cov1" title="1">span.SetAttributes(
                 attribute.String("bucket", bucket),
                 attribute.String("key", key),
         )
 
         // Get the minio client
         client, err := s.getClient()
-        if err != nil </span><span class="cov2" title="3">{
+        if err != nil </span><span class="cov1" title="1">{
                 span.RecordError(err)
                 span.SetStatus(codes.Error, err.Error())
                 return nil, err
