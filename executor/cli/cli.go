@@ -2,6 +2,7 @@ package cli
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"log/slog"
 	"os"
@@ -25,6 +26,7 @@ type Executor struct {
 	stderr io.Writer
 	closed bool
 	mx     sync.Mutex
+	ssh    SSHConfig
 }
 
 // New создаёт новый CLI executor
@@ -47,11 +49,31 @@ func New(cfg Config, stdout, stderr io.Writer) *Executor {
 		stdout: tmpStdout,
 		stderr: tmpStderr,
 		closed: false,
+		ssh:    cfg.SSH,
 	}
 }
 
 // Start проверяет наличие команды в системе
 func (e *Executor) Start() error {
+	if e.ssh.Host != "" {
+		e.logger.Info("checking ssh availability", "host", e.ssh.Host)
+
+		if _, err := exec.LookPath("ssh"); err != nil {
+			e.logger.Error("ssh not found", "error", err)
+			return errors.Wrap(err, "ssh not found")
+		}
+
+		if e.ssh.Password != "" {
+			if _, err := exec.LookPath("sshpass"); err != nil {
+				e.logger.Error("sshpass not found (required for password auth)", "error", err)
+				return errors.Wrap(err, "sshpass not found (required for password authentication)")
+			}
+		}
+
+		e.logger.Info("ssh found", "host", e.ssh.Host)
+		return nil
+	}
+
 	e.logger.Info("checking command availability", "command", e.cmd)
 
 	if _, err := exec.LookPath(e.cmd); err != nil {
@@ -65,7 +87,7 @@ func (e *Executor) Start() error {
 
 // Execute выполняет команду с заданным контекстом и аргументами
 func (e *Executor) Execute(ctx context.Context, args ...string) error {
-	// 1. КРИТИЧЕСКАЯ СЕКЦИЯ (только проверка и регистрация)
+	// КРИТИЧЕСКАЯ СЕКЦИЯ (только проверка и регистрация)
 	e.mx.Lock()
 	if e.closed {
 		e.mx.Unlock()
@@ -73,13 +95,19 @@ func (e *Executor) Execute(ctx context.Context, args ...string) error {
 		return errors.New("executor is closed")
 	}
 	// Создание команды
-	//nolint:gosec // G204: Subprocess launched with a potential tainted input or cmd arguments - e.cmd is validated in Start(), args are user-controlled but not shell-expanded
-	cmd := exec.CommandContext(ctx, e.cmd, args...)
+	var cmd *exec.Cmd
+	if e.ssh.Host != "" {
+		sshCmd, sshArgs := e.buildSSHCommand(args...)
+		//nolint:gosec // G204: Subprocess launched with a potential tainted input or cmd arguments - validated in Start()
+		cmd = exec.CommandContext(ctx, sshCmd, sshArgs...)
+	} else {
+		//nolint:gosec // G204: Subprocess launched with a potential tainted input or cmd arguments - e.cmd is validated in Start(), args are user-controlled but not shell-expanded
+		cmd = exec.CommandContext(ctx, e.cmd, args...)
+	}
 	cmd.Stdout = e.stdout
 	cmd.Stderr = e.stderr
 	e.mx.Unlock()
 
-	// 2. ВЫПОЛНЕНИЕ (параллельно, без блокировки мьютекса)
 	e.logger.Info("executing command", "command", e.cmd, "args", args)
 
 	_, span := tracer.Start(ctx, "executor.Execute")
@@ -100,6 +128,35 @@ func (e *Executor) Execute(ctx context.Context, args ...string) error {
 	span.SetStatus(codes.Ok, "")
 	recordExecution(e.cmd, "success", duration)
 	return nil
+}
+
+// buildSSHCommand формирует команду и аргументы для выполнения через SSH
+func (e *Executor) buildSSHCommand(args ...string) (string, []string) {
+	var sshArgs []string
+
+	baseCmd := "ssh"
+
+	if e.ssh.Password != "" {
+		baseCmd = "sshpass"
+		sshArgs = append(sshArgs, "-p", e.ssh.Password, "ssh")
+	}
+
+	if e.ssh.User != "" {
+		sshArgs = append(sshArgs, "-l", e.ssh.User)
+	}
+
+	if e.ssh.KeyPath != "" {
+		sshArgs = append(sshArgs, "-i", e.ssh.KeyPath)
+	}
+
+	if e.ssh.Port != 0 && e.ssh.Port != 22 {
+		sshArgs = append(sshArgs, "-p", fmt.Sprintf("%d", e.ssh.Port))
+	}
+
+	sshArgs = append(sshArgs, e.ssh.Host, e.cmd)
+	sshArgs = append(sshArgs, args...)
+
+	return baseCmd, sshArgs
 }
 
 // Close закрывает executor
