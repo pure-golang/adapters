@@ -103,11 +103,47 @@ func (s *Sender) send(ctx context.Context, email mail.Email) error {
 		auth = smtp.PlainAuth("", s.cfg.Username, s.cfg.Password, s.cfg.Host)
 	}
 
+	allTo := append(toAddresses, ccAddresses...)
+
+	maxRetries := s.cfg.MaxRetries
+	if maxRetries <= 0 {
+		maxRetries = 1
+	}
+
+	span.SetAttributes(attribute.Int("smtp.max_retries", maxRetries))
+
 	var err error
-	if s.cfg.TLS {
-		err = s.sendMailWithTLS(ctx, addr, auth, from, append(toAddresses, ccAddresses...), bccAddresses, msg)
-	} else {
-		err = s.sendMail(ctx, addr, auth, from, append(toAddresses, ccAddresses...), bccAddresses, msg)
+	for attempt := 0; attempt < maxRetries; attempt++ {
+		if attempt > 0 {
+			backoff := calcBackoff(attempt)
+
+			span.AddEvent("smtp.retry", trace.WithAttributes(
+				attribute.Int("smtp.retry_attempt", attempt),
+				attribute.String("smtp.backoff", backoff.String()),
+			))
+
+			select {
+			case <-ctx.Done():
+				span.RecordError(ctx.Err())
+				span.SetStatus(codes.Error, "context canceled during retry backoff")
+				return errors.Wrap(ctx.Err(), "context canceled during retry backoff")
+			case <-time.After(backoff):
+			}
+		}
+
+		if s.cfg.TLS {
+			err = s.sendMailWithTLS(ctx, addr, auth, from, allTo, bccAddresses, msg)
+		} else {
+			err = s.sendMail(ctx, addr, auth, from, allTo, bccAddresses, msg)
+		}
+
+		if err == nil {
+			break
+		}
+
+		span.RecordError(err, trace.WithAttributes(
+			attribute.Int("smtp.attempt", attempt+1),
+		))
 	}
 
 	if err != nil {
@@ -396,6 +432,18 @@ func (s *Sender) getEmailAddresses(addrs []mail.Address) []string {
 		result[i] = addr.Address
 	}
 	return result
+}
+
+// calcBackoff returns the exponential backoff duration for the given retry attempt (1-based).
+func calcBackoff(attempt int) time.Duration {
+	backoff := defaultInitialBackoff
+	for i := 1; i < attempt; i++ {
+		backoff *= time.Duration(defaultBackoffMultiplier)
+		if backoff > defaultMaxBackoff {
+			return defaultMaxBackoff
+		}
+	}
+	return backoff
 }
 
 // Close closes the sender.
