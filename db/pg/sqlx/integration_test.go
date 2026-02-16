@@ -6,6 +6,7 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"log"
 	"os"
 	"strconv"
 	"sync"
@@ -49,7 +50,7 @@ func TestMain(m *testing.M) {
 		Started:          true,
 	})
 	if err != nil {
-		panic(fmt.Sprintf("Could not start container: %s", err))
+		log.Fatalf("Could not start container: %s", err)
 	}
 
 	// Очищаем ресурсы после тестов
@@ -62,17 +63,17 @@ func TestMain(m *testing.M) {
 	// Получаем порт
 	host, err := container.Host(ctx)
 	if err != nil {
-		panic(fmt.Sprintf("Could not get container host: %s", err))
+		log.Fatalf("Could not get container host: %s", err)
 	}
 
 	mappedPort, err := container.MappedPort(ctx, "5432")
 	if err != nil {
-		panic(fmt.Sprintf("Could not get container port: %s", err))
+		log.Fatalf("Could not get container port: %s", err)
 	}
 
 	port, err := strconv.Atoi(mappedPort.Port())
 	if err != nil {
-		panic(fmt.Sprintf("Could not parse port: %s", err))
+		log.Fatalf("Could not parse port: %s", err)
 	}
 
 	// Конфигурация для подключения к тестовой БД
@@ -97,7 +98,7 @@ func TestMain(m *testing.M) {
 			break
 		}
 		if i == maxRetries-1 {
-			panic(fmt.Sprintf("Could not connect to database after %d retries: %s", maxRetries, err))
+			log.Fatalf("Could not connect to database after %d retries: %s", maxRetries, err)
 		}
 		time.Sleep(retryInterval)
 	}
