@@ -616,7 +616,7 @@ go sub.Listen(func(ctx context.Context, msg queue.Delivery) (bool, error) {
 cfg := cli.Config{
     Command: "ffmpeg",
 }
-executor := cli.New(cfg)
+executor := cli.New(cfg, nil, nil)
 defer executor.Close()
 
 // Execute command
