@@ -11,6 +11,7 @@ import (
 
 // TestMessage_EncodeValue_NilBody tests EncodeValue with nil body.
 func TestMessage_EncodeValue_NilBody(t *testing.T) {
+	t.Parallel()
 	msg := &Message{
 		Topic:   "test-topic",
 		Headers: map[string]string{"key": "value"},
@@ -28,6 +29,7 @@ func TestMessage_EncodeValue_NilBody(t *testing.T) {
 
 // TestMessage_EncodeValue_ValidBody_JSON tests EncodeValue with valid body using JSON encoder.
 func TestMessage_EncodeValue_ValidBody_JSON(t *testing.T) {
+	t.Parallel()
 	type TestStruct struct {
 		Name  string `json:"name"`
 		Value int    `json:"value"`
@@ -54,6 +56,7 @@ func TestMessage_EncodeValue_ValidBody_JSON(t *testing.T) {
 
 // TestMessage_EncodeValue_ValidBody_Text tests EncodeValue with valid body using Text encoder.
 func TestMessage_EncodeValue_ValidBody_Text(t *testing.T) {
+	t.Parallel()
 	msg := &Message{
 		Topic:   "test-topic",
 		Headers: map[string]string{"key": "value"},
@@ -72,6 +75,7 @@ func TestMessage_EncodeValue_ValidBody_Text(t *testing.T) {
 
 // TestMessage_EncodeValue_ValidBody_ByteArray tests EncodeValue with byte array body using Text encoder.
 func TestMessage_EncodeValue_ValidBody_ByteArray(t *testing.T) {
+	t.Parallel()
 	msg := &Message{
 		Topic:   "test-topic",
 		Headers: map[string]string{"key": "value"},
@@ -89,6 +93,7 @@ func TestMessage_EncodeValue_ValidBody_ByteArray(t *testing.T) {
 
 // TestMessage_EncodeValue_EncoderError tests EncodeValue when encoder returns an error.
 func TestMessage_EncodeValue_EncoderError(t *testing.T) {
+	t.Parallel()
 	// Use Text encoder with an unsupported type to trigger an error
 	msg := &Message{
 		Topic:   "test-topic",
@@ -108,6 +113,7 @@ func TestMessage_EncodeValue_EncoderError(t *testing.T) {
 
 // TestMessage_EncodeValue_ComplexObject tests EncodeValue with a complex nested object.
 func TestMessage_EncodeValue_ComplexObject(t *testing.T) {
+	t.Parallel()
 	type Address struct {
 		City    string `json:"city"`
 		Country string `json:"country"`
@@ -152,6 +158,7 @@ func TestMessage_EncodeValue_ComplexObject(t *testing.T) {
 
 // TestMessage_EncodeValue_JSONEncoderError tests EncodeValue with JSON encoder error.
 func TestMessage_EncodeValue_JSONEncoderError(t *testing.T) {
+	t.Parallel()
 	// Use a channel which is not supported by json.Marshal
 	msg := &Message{
 		Topic: "test-topic",
@@ -170,6 +177,7 @@ func TestMessage_EncodeValue_JSONEncoderError(t *testing.T) {
 
 // TestMessage_Fields tests Message struct fields.
 func TestMessage_Fields(t *testing.T) {
+	t.Parallel()
 	headers := map[string]string{"content-type": "application/json", "x-custom": "value"}
 	body := "test body"
 	ttl := 30 * time.Second
@@ -189,6 +197,7 @@ func TestMessage_Fields(t *testing.T) {
 
 // TestMessage_EncodeValue_EmptyMessage tests EncodeValue on message with empty values.
 func TestMessage_EncodeValue_EmptyMessage(t *testing.T) {
+	t.Parallel()
 	msg := &Message{}
 
 	encoder := encoders.JSON{}
@@ -201,6 +210,7 @@ func TestMessage_EncodeValue_EmptyMessage(t *testing.T) {
 
 // TestMessage_EncodeValue_StringWithJSON tests EncodeValue with string body and JSON encoder.
 func TestMessage_EncodeValue_StringWithJSON(t *testing.T) {
+	t.Parallel()
 	msg := &Message{
 		Topic: "test-topic",
 		Body:  "plain string",
@@ -217,6 +227,7 @@ func TestMessage_EncodeValue_StringWithJSON(t *testing.T) {
 
 // TestMessage_EncodeValue_WithHeaders tests that headers are preserved during encoding.
 func TestMessage_EncodeValue_WithHeaders(t *testing.T) {
+	t.Parallel()
 	headers := map[string]string{
 		"content-type": "application/json",
 		"x-trace-id":   "12345",
@@ -244,6 +255,7 @@ func TestMessage_EncodeValue_WithHeaders(t *testing.T) {
 
 // TestDelivery_Fields tests Delivery struct fields.
 func TestDelivery_Fields(t *testing.T) {
+	t.Parallel()
 	headers := map[string]string{"content-type": "application/json"}
 	body := []byte(`{"test": "data"}`)
 
@@ -258,6 +270,7 @@ func TestDelivery_Fields(t *testing.T) {
 
 // TestDelivery_EmptyFields tests Delivery with empty fields.
 func TestDelivery_EmptyFields(t *testing.T) {
+	t.Parallel()
 	delivery := Delivery{
 		Headers: map[string]string{},
 		Body:    []byte{},
@@ -270,6 +283,7 @@ func TestDelivery_EmptyFields(t *testing.T) {
 
 // TestDelivery_NilFields tests Delivery with nil fields.
 func TestDelivery_NilFields(t *testing.T) {
+	t.Parallel()
 	delivery := Delivery{
 		Headers: nil,
 		Body:    nil,

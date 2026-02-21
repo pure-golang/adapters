@@ -19,6 +19,7 @@ import (
 
 // TestGetMessageSize_ProtoMessage tests getMessageSize with protobuf messages
 func TestGetMessageSize_ProtoMessage(t *testing.T) {
+	t.Parallel()
 	testCases := []struct {
 		name     string
 		msg      interface{}
@@ -53,6 +54,7 @@ func TestGetMessageSize_ProtoMessage(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
 			size := getMessageSize(tc.msg)
 			assert.Equal(t, tc.expected, size)
 		})
@@ -61,6 +63,7 @@ func TestGetMessageSize_ProtoMessage(t *testing.T) {
 
 // TestGetMessageSize_NonProtoMessage tests getMessageSize with non-protobuf messages
 func TestGetMessageSize_NonProtoMessage(t *testing.T) {
+	t.Parallel()
 	testCases := []struct {
 		name     string
 		msg      interface{}
@@ -100,6 +103,7 @@ func TestGetMessageSize_NonProtoMessage(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
 			size := getMessageSize(tc.msg)
 			assert.Equal(t, tc.expected, size)
 		})
@@ -258,6 +262,7 @@ func TestMetricsUnaryInterceptor_DifferentStatusCodes(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
 			info := &grpc.UnaryServerInfo{
 				FullMethod: "/test.service/" + tc.name,
 			}
@@ -402,6 +407,7 @@ func TestMetricsStreamInterceptor_StreamTypes(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
 			ss := &mockServerStreamForMetrics{ctx: context.Background()}
 
 			handler := func(srv interface{}, stream grpc.ServerStream) error {
@@ -474,6 +480,7 @@ func TestMetricsUnaryInterceptor_DifferentMessageSizes(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
 			handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 				return wrapperspb.String("response"), nil
 			}
@@ -565,6 +572,7 @@ func TestMetricsUnaryInterceptor_WithErrorInProto(t *testing.T) {
 
 // TestGetMessageSize_WithNilProto tests getMessageSize with nil proto message
 func TestGetMessageSize_WithNilProto(t *testing.T) {
+	t.Parallel()
 	// This test verifies that getMessageSize handles nil gracefully
 	var msg proto.Message = nil
 
@@ -614,6 +622,7 @@ func TestMetricsStreamInterceptor_DifferentStatusCodes(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
 			info := &grpc.StreamServerInfo{
 				FullMethod: "/test.service/Stream" + tc.name,
 			}

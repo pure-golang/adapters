@@ -10,6 +10,7 @@ import (
 )
 
 func TestSender_Send(t *testing.T) {
+	t.Parallel()
 	sender := NewSender()
 
 	ctx := context.Background()
@@ -27,6 +28,7 @@ func TestSender_Send(t *testing.T) {
 }
 
 func TestSender_Send_EmptyList(t *testing.T) {
+	t.Parallel()
 	sender := NewSender()
 
 	ctx := context.Background()
@@ -35,6 +37,7 @@ func TestSender_Send_EmptyList(t *testing.T) {
 }
 
 func TestSender_Close(t *testing.T) {
+	t.Parallel()
 	sender := NewSender()
 
 	err := sender.Close()

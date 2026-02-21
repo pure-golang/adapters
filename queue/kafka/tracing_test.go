@@ -7,6 +7,7 @@ import (
 )
 
 func TestHeadersCarrier(t *testing.T) {
+	t.Parallel()
 	carrier := make(headersCarrier)
 
 	// Тест Set и Get
@@ -25,6 +26,7 @@ func TestHeadersCarrier(t *testing.T) {
 }
 
 func TestHeadersCarrier_Empty(t *testing.T) {
+	t.Parallel()
 	carrier := make(headersCarrier)
 
 	// Тест на пустом carries

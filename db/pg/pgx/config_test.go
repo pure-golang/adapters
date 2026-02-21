@@ -9,6 +9,7 @@ import (
 )
 
 func TestConfig_URL_DefaultPort(t *testing.T) {
+	t.Parallel()
 	cfg := Config{
 		User:     "testuser",
 		Password: "testpass",
@@ -39,6 +40,7 @@ func TestConfig_URL_DefaultPort(t *testing.T) {
 }
 
 func TestConfig_URL_CustomPort(t *testing.T) {
+	t.Parallel()
 	cfg := Config{
 		User:     "testuser",
 		Password: "testpass",
@@ -65,6 +67,7 @@ func TestConfig_URL_CustomPort(t *testing.T) {
 }
 
 func TestConfig_URL_WithSSLCert(t *testing.T) {
+	t.Parallel()
 	cfg := Config{
 		User:     "testuser",
 		Password: "testpass",
@@ -87,6 +90,7 @@ func TestConfig_URL_WithSSLCert(t *testing.T) {
 }
 
 func TestConfig_URL_WithoutSSLCert(t *testing.T) {
+	t.Parallel()
 	cfg := Config{
 		User:     "testuser",
 		Password: "testpass",
@@ -108,6 +112,7 @@ func TestConfig_URL_WithoutSSLCert(t *testing.T) {
 }
 
 func TestConfig_URL_FullURLBuilding(t *testing.T) {
+	t.Parallel()
 	cfg := Config{
 		User:     "dbuser",
 		Password: "dbpassword",
@@ -145,6 +150,7 @@ func TestConfig_URL_FullURLBuilding(t *testing.T) {
 }
 
 func TestConfig_URL_SpecialCharactersInPassword(t *testing.T) {
+	t.Parallel()
 	cfg := Config{
 		User:     "user@example.com",
 		Password: "p@ss:w0rd/123",
@@ -175,6 +181,7 @@ func TestConfig_URL_SpecialCharactersInPassword(t *testing.T) {
 }
 
 func TestConfig_URL_EmptyCertPath(t *testing.T) {
+	t.Parallel()
 	cfg := Config{
 		User:     "testuser",
 		Password: "testpass",
@@ -194,6 +201,7 @@ func TestConfig_URL_EmptyCertPath(t *testing.T) {
 }
 
 func TestConfig_URL_NonDefaultPort(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name     string
 		port     int
@@ -208,6 +216,7 @@ func TestConfig_URL_NonDefaultPort(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			cfg := Config{
 				User:     "testuser",
 				Password: "testpass",

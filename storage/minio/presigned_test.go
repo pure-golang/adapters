@@ -13,6 +13,7 @@ import (
 
 // TestGetPresignedURL_UnsupportedMethod tests GetPresignedURL with unsupported HTTP methods.
 func TestGetPresignedURL_UnsupportedMethod(t *testing.T) {
+	t.Parallel()
 	client := &Client{
 		cfg:    Config{DefaultBucket: "bucket"},
 		logger: slog.Default(),
@@ -32,6 +33,7 @@ func TestGetPresignedURL_UnsupportedMethod(t *testing.T) {
 
 	for _, method := range unsupportedMethods {
 		t.Run("method_"+method, func(t *testing.T) {
+			t.Parallel()
 			opts := &storage.PresignedURLOptions{
 				Method: method,
 				Expiry: 15 * time.Minute,
@@ -46,6 +48,7 @@ func TestGetPresignedURL_UnsupportedMethod(t *testing.T) {
 
 // TestGetPresignedURL_NilClient tests GetPresignedURL with nil minio client.
 func TestGetPresignedURL_NilClient(t *testing.T) {
+	t.Parallel()
 	client := &Client{
 		cfg:    Config{DefaultBucket: "bucket"},
 		logger: slog.Default(),
@@ -53,6 +56,7 @@ func TestGetPresignedURL_NilClient(t *testing.T) {
 	stor := NewStorage(client, nil)
 
 	t.Run("GET method with nil client", func(t *testing.T) {
+		t.Parallel()
 		opts := &storage.PresignedURLOptions{
 			Method: "GET",
 			Expiry: 15 * time.Minute,
@@ -64,6 +68,7 @@ func TestGetPresignedURL_NilClient(t *testing.T) {
 	})
 
 	t.Run("PUT method with nil client", func(t *testing.T) {
+		t.Parallel()
 		opts := &storage.PresignedURLOptions{
 			Method: "PUT",
 			Expiry: 15 * time.Minute,
@@ -75,6 +80,7 @@ func TestGetPresignedURL_NilClient(t *testing.T) {
 	})
 
 	t.Run("empty method defaults to GET with nil client", func(t *testing.T) {
+		t.Parallel()
 		opts := &storage.PresignedURLOptions{
 			Method: "",
 			Expiry: 15 * time.Minute,
@@ -88,6 +94,7 @@ func TestGetPresignedURL_NilClient(t *testing.T) {
 
 // TestGetPresignedURL_NilOptions tests GetPresignedURL with nil options.
 func TestGetPresignedURL_NilOptions(t *testing.T) {
+	t.Parallel()
 	client := &Client{
 		cfg:    Config{DefaultBucket: "bucket"},
 		logger: slog.Default(),
@@ -102,6 +109,7 @@ func TestGetPresignedURL_NilOptions(t *testing.T) {
 
 // TestGetPresignedURL_DefaultBucket tests GetPresignedURL with default bucket.
 func TestGetPresignedURL_DefaultBucket(t *testing.T) {
+	t.Parallel()
 	client := &Client{
 		cfg:    Config{DefaultBucket: "default-bucket"},
 		logger: slog.Default(),
@@ -109,6 +117,7 @@ func TestGetPresignedURL_DefaultBucket(t *testing.T) {
 	stor := NewStorage(client, nil)
 
 	t.Run("empty bucket uses default", func(t *testing.T) {
+		t.Parallel()
 		opts := &storage.PresignedURLOptions{
 			Method: "GET",
 			Expiry: 15 * time.Minute,
@@ -120,6 +129,7 @@ func TestGetPresignedURL_DefaultBucket(t *testing.T) {
 	})
 
 	t.Run("explicit bucket overrides default", func(t *testing.T) {
+		t.Parallel()
 		opts := &storage.PresignedURLOptions{
 			Method: "GET",
 			Expiry: 15 * time.Minute,
@@ -133,6 +143,7 @@ func TestGetPresignedURL_DefaultBucket(t *testing.T) {
 
 // TestGetPresignedURL_DefaultExpiry tests that default expiry is applied.
 func TestGetPresignedURL_DefaultExpiry(t *testing.T) {
+	t.Parallel()
 	client := &Client{
 		cfg:    Config{DefaultBucket: "bucket"},
 		logger: slog.Default(),
@@ -140,6 +151,7 @@ func TestGetPresignedURL_DefaultExpiry(t *testing.T) {
 	stor := NewStorage(client, nil)
 
 	t.Run("zero expiry uses default", func(t *testing.T) {
+		t.Parallel()
 		opts := &storage.PresignedURLOptions{
 			Method: "GET",
 			Expiry: 0,
@@ -150,6 +162,7 @@ func TestGetPresignedURL_DefaultExpiry(t *testing.T) {
 	})
 
 	t.Run("custom expiry is used", func(t *testing.T) {
+		t.Parallel()
 		opts := &storage.PresignedURLOptions{
 			Method: "GET",
 			Expiry: 30 * time.Minute,
@@ -162,6 +175,7 @@ func TestGetPresignedURL_DefaultExpiry(t *testing.T) {
 
 // TestGetPresignedURL_DefaultMethod tests that default method is applied.
 func TestGetPresignedURL_DefaultMethod(t *testing.T) {
+	t.Parallel()
 	client := &Client{
 		cfg:    Config{DefaultBucket: "bucket"},
 		logger: slog.Default(),
@@ -169,6 +183,7 @@ func TestGetPresignedURL_DefaultMethod(t *testing.T) {
 	stor := NewStorage(client, nil)
 
 	t.Run("empty method defaults to GET", func(t *testing.T) {
+		t.Parallel()
 		opts := &storage.PresignedURLOptions{
 			Method: "",
 			Expiry: 15 * time.Minute,
@@ -183,6 +198,7 @@ func TestGetPresignedURL_DefaultMethod(t *testing.T) {
 
 // TestGetPresignedURL_VariousExpiries tests various expiry durations.
 func TestGetPresignedURL_VariousExpiries(t *testing.T) {
+	t.Parallel()
 	client := &Client{
 		cfg:    Config{DefaultBucket: "bucket"},
 		logger: slog.Default(),
@@ -199,6 +215,7 @@ func TestGetPresignedURL_VariousExpiries(t *testing.T) {
 
 	for _, expiry := range expiries {
 		t.Run("expiry_"+expiry.String(), func(t *testing.T) {
+			t.Parallel()
 			opts := &storage.PresignedURLOptions{
 				Method: "GET",
 				Expiry: expiry,
@@ -212,6 +229,7 @@ func TestGetPresignedURL_VariousExpiries(t *testing.T) {
 
 // TestGetPresignedURL_BucketAndKey tests various bucket and key combinations.
 func TestGetPresignedURL_BucketAndKey(t *testing.T) {
+	t.Parallel()
 	client := &Client{
 		cfg:    Config{DefaultBucket: "default-bucket"},
 		logger: slog.Default(),
@@ -235,6 +253,7 @@ func TestGetPresignedURL_BucketAndKey(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
 			opts := &storage.PresignedURLOptions{
 				Method: "GET",
 				Expiry: 15 * time.Minute,
@@ -248,18 +267,22 @@ func TestGetPresignedURL_BucketAndKey(t *testing.T) {
 
 // TestPresignedURLOptions tests PresignedURLOptions defaults and validation.
 func TestPresignedURLOptions(t *testing.T) {
+	t.Parallel()
 	t.Run("nil options", func(t *testing.T) {
+		t.Parallel()
 		var opts *storage.PresignedURLOptions
 		assert.Nil(t, opts)
 	})
 
 	t.Run("empty options", func(t *testing.T) {
+		t.Parallel()
 		opts := &storage.PresignedURLOptions{}
 		assert.Equal(t, "", opts.Method)
 		assert.Equal(t, time.Duration(0), opts.Expiry)
 	})
 
 	t.Run("GET options", func(t *testing.T) {
+		t.Parallel()
 		opts := &storage.PresignedURLOptions{
 			Method: "GET",
 			Expiry: 15 * time.Minute,
@@ -269,6 +292,7 @@ func TestPresignedURLOptions(t *testing.T) {
 	})
 
 	t.Run("PUT options", func(t *testing.T) {
+		t.Parallel()
 		opts := &storage.PresignedURLOptions{
 			Method: "PUT",
 			Expiry: 30 * time.Minute,
@@ -280,6 +304,7 @@ func TestPresignedURLOptions(t *testing.T) {
 
 // TestGetPresignedURL_ErrorPriority tests that method validation happens before client validation.
 func TestGetPresignedURL_ErrorPriority(t *testing.T) {
+	t.Parallel()
 	client := &Client{
 		cfg:    Config{DefaultBucket: "bucket"},
 		logger: slog.Default(),
@@ -287,6 +312,7 @@ func TestGetPresignedURL_ErrorPriority(t *testing.T) {
 	stor := NewStorage(client, nil)
 
 	t.Run("invalid method returns error before client check", func(t *testing.T) {
+		t.Parallel()
 		opts := &storage.PresignedURLOptions{
 			Method: "DELETE",
 			Expiry: 15 * time.Minute,
@@ -301,6 +327,7 @@ func TestGetPresignedURL_ErrorPriority(t *testing.T) {
 	})
 
 	t.Run("valid method checks client first", func(t *testing.T) {
+		t.Parallel()
 		opts := &storage.PresignedURLOptions{
 			Method: "GET",
 			Expiry: 15 * time.Minute,
@@ -315,6 +342,7 @@ func TestGetPresignedURL_ErrorPriority(t *testing.T) {
 
 // TestPresignedURL_Context tests context handling.
 func TestPresignedURL_Context(t *testing.T) {
+	t.Parallel()
 	client := &Client{
 		cfg:    Config{DefaultBucket: "bucket"},
 		logger: slog.Default(),
@@ -322,6 +350,7 @@ func TestPresignedURL_Context(t *testing.T) {
 	stor := NewStorage(client, nil)
 
 	t.Run("with cancelled context", func(t *testing.T) {
+		t.Parallel()
 		ctx, cancel := context.WithCancel(context.Background())
 		cancel() // Cancel immediately
 
@@ -336,6 +365,7 @@ func TestPresignedURL_Context(t *testing.T) {
 	})
 
 	t.Run("with timeout context", func(t *testing.T) {
+		t.Parallel()
 		ctx, cancel := context.WithTimeout(context.Background(), 1*time.Nanosecond)
 		defer cancel()
 
@@ -354,6 +384,7 @@ func TestPresignedURL_Context(t *testing.T) {
 
 // TestGetPresignedURL_PutMethod tests PUT method specifically.
 func TestGetPresignedURL_PutMethod(t *testing.T) {
+	t.Parallel()
 	client := &Client{
 		cfg:    Config{DefaultBucket: "bucket"},
 		logger: slog.Default(),
@@ -361,6 +392,7 @@ func TestGetPresignedURL_PutMethod(t *testing.T) {
 	stor := NewStorage(client, nil)
 
 	t.Run("PUT method with nil client", func(t *testing.T) {
+		t.Parallel()
 		opts := &storage.PresignedURLOptions{
 			Method: "PUT",
 			Expiry: 15 * time.Minute,
@@ -372,6 +404,7 @@ func TestGetPresignedURL_PutMethod(t *testing.T) {
 	})
 
 	t.Run("PUT with lowercase put", func(t *testing.T) {
+		t.Parallel()
 		opts := &storage.PresignedURLOptions{
 			Method: "put", // lowercase
 			Expiry: 15 * time.Minute,
@@ -386,6 +419,7 @@ func TestGetPresignedURL_PutMethod(t *testing.T) {
 
 // TestPresignedURL_CaseSensitivity tests case sensitivity of HTTP methods.
 func TestPresignedURL_CaseSensitivity(t *testing.T) {
+	t.Parallel()
 	client := &Client{
 		cfg:    Config{DefaultBucket: "bucket"},
 		logger: slog.Default(),
@@ -396,6 +430,7 @@ func TestPresignedURL_CaseSensitivity(t *testing.T) {
 
 	for _, method := range methods {
 		t.Run("method_"+method, func(t *testing.T) {
+			t.Parallel()
 			opts := &storage.PresignedURLOptions{
 				Method: method,
 				Expiry: 15 * time.Minute,
@@ -419,6 +454,7 @@ func TestPresignedURL_CaseSensitivity(t *testing.T) {
 
 // TestGetPresignedURL_EmptyKey tests with empty key.
 func TestGetPresignedURL_EmptyKey(t *testing.T) {
+	t.Parallel()
 	client := &Client{
 		cfg:    Config{DefaultBucket: "bucket"},
 		logger: slog.Default(),
@@ -426,6 +462,7 @@ func TestGetPresignedURL_EmptyKey(t *testing.T) {
 	stor := NewStorage(client, nil)
 
 	t.Run("empty key with GET method", func(t *testing.T) {
+		t.Parallel()
 		opts := &storage.PresignedURLOptions{
 			Method: "GET",
 			Expiry: 15 * time.Minute,
@@ -436,6 +473,7 @@ func TestGetPresignedURL_EmptyKey(t *testing.T) {
 	})
 
 	t.Run("empty key with PUT method", func(t *testing.T) {
+		t.Parallel()
 		opts := &storage.PresignedURLOptions{
 			Method: "PUT",
 			Expiry: 15 * time.Minute,
@@ -448,6 +486,7 @@ func TestGetPresignedURL_EmptyKey(t *testing.T) {
 
 // TestPresignedURL_StringCases tests various string edge cases.
 func TestPresignedURL_StringCases(t *testing.T) {
+	t.Parallel()
 	client := &Client{
 		cfg:    Config{DefaultBucket: "bucket"},
 		logger: slog.Default(),
@@ -468,6 +507,7 @@ func TestPresignedURL_StringCases(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
 			opts := &storage.PresignedURLOptions{
 				Method: "GET",
 				Expiry: 15 * time.Minute,

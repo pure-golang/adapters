@@ -9,6 +9,7 @@ import (
 
 // TestJSON_Encode_ValidObject tests encoding with a valid object.
 func TestJSON_Encode_ValidObject(t *testing.T) {
+	t.Parallel()
 	encoder := JSON{}
 
 	type TestStruct struct {
@@ -29,6 +30,7 @@ func TestJSON_Encode_ValidObject(t *testing.T) {
 
 // TestJSON_Encode_Nil tests encoding with nil.
 func TestJSON_Encode_Nil(t *testing.T) {
+	t.Parallel()
 	encoder := JSON{}
 
 	result, err := encoder.Encode(nil)
@@ -39,6 +41,7 @@ func TestJSON_Encode_Nil(t *testing.T) {
 
 // TestJSON_Encode_ComplexObject tests encoding with a complex nested object.
 func TestJSON_Encode_ComplexObject(t *testing.T) {
+	t.Parallel()
 	encoder := JSON{}
 
 	type Address struct {
@@ -79,6 +82,7 @@ func TestJSON_Encode_ComplexObject(t *testing.T) {
 
 // TestJSON_Encode_WithInvalidType tests error handling when encoding an unmarshalable type.
 func TestJSON_Encode_WithInvalidType(t *testing.T) {
+	t.Parallel()
 	encoder := JSON{}
 
 	// Using a channel which is not supported by json.Marshal
@@ -93,6 +97,7 @@ func TestJSON_Encode_WithInvalidType(t *testing.T) {
 
 // TestJSON_ContentType tests the ContentType method.
 func TestJSON_ContentType(t *testing.T) {
+	t.Parallel()
 	encoder := JSON{}
 
 	assert.Equal(t, "application/json", encoder.ContentType())
@@ -100,6 +105,7 @@ func TestJSON_ContentType(t *testing.T) {
 
 // TestText_Encode_ByteSlice tests encoding with a byte slice.
 func TestText_Encode_ByteSlice(t *testing.T) {
+	t.Parallel()
 	encoder := Text{}
 
 	input := []byte("hello world")
@@ -113,6 +119,7 @@ func TestText_Encode_ByteSlice(t *testing.T) {
 
 // TestText_Encode_ByteSlice tests encoding with an empty byte slice.
 func TestText_Encode_EmptyByteSlice(t *testing.T) {
+	t.Parallel()
 	encoder := Text{}
 
 	input := []byte{}
@@ -126,6 +133,7 @@ func TestText_Encode_EmptyByteSlice(t *testing.T) {
 
 // TestText_Encode_String tests encoding with a string.
 func TestText_Encode_String(t *testing.T) {
+	t.Parallel()
 	encoder := Text{}
 
 	input := "hello world"
@@ -139,6 +147,7 @@ func TestText_Encode_String(t *testing.T) {
 
 // TestText_Encode_EmptyString tests encoding with an empty string.
 func TestText_Encode_EmptyString(t *testing.T) {
+	t.Parallel()
 	encoder := Text{}
 
 	input := ""
@@ -151,6 +160,7 @@ func TestText_Encode_EmptyString(t *testing.T) {
 
 // TestText_Encode_UnsupportedType tests error handling for unsupported types.
 func TestText_Encode_UnsupportedType(t *testing.T) {
+	t.Parallel()
 	encoder := Text{}
 
 	type UnsupportedStruct struct {
@@ -168,6 +178,7 @@ func TestText_Encode_UnsupportedType(t *testing.T) {
 
 // TestText_Encode_Int tests error handling for integer type.
 func TestText_Encode_Int(t *testing.T) {
+	t.Parallel()
 	encoder := Text{}
 
 	input := 42
@@ -181,6 +192,7 @@ func TestText_Encode_Int(t *testing.T) {
 
 // TestText_ContentType tests the ContentType method.
 func TestText_ContentType(t *testing.T) {
+	t.Parallel()
 	encoder := Text{}
 
 	assert.Equal(t, "text/plain", encoder.ContentType())

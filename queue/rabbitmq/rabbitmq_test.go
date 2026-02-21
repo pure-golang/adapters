@@ -18,14 +18,14 @@ type RabbitMQSuite struct {
 }
 
 func TestRabbitMQSuite(t *testing.T) {
+	if testing.Short() {
+		t.Skip("integration test")
+	}
 	suite.Run(t, new(RabbitMQSuite))
 }
 
 func (s *RabbitMQSuite) SetupSuite() {
 	t := s.T()
-	if testing.Short() {
-		t.Skip("integration test")
-	}
 
 	pool, err := dockertest.NewPool("")
 	require.NoError(t, err)

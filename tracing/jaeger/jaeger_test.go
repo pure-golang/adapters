@@ -13,6 +13,7 @@ import (
 // TestNewProviderBuilderWithValidConfig tests that NewProviderBuilder with valid config
 // creates a builder function that returns a Provider.
 func TestNewProviderBuilderWithValidConfig(t *testing.T) {
+	t.Parallel()
 	config := Config{
 		EndPoint:    "http://localhost:14268/api/traces",
 		ServiceName: "test-service",
@@ -39,6 +40,7 @@ func TestNewProviderBuilderWithValidConfig(t *testing.T) {
 // TestNewProviderBuilderWithEmptyEndpoint tests that NewProviderBuilder with empty endpoint
 // returns an error.
 func TestNewProviderBuilderWithEmptyEndpoint(t *testing.T) {
+	t.Parallel()
 	config := Config{
 		EndPoint:    "",
 		ServiceName: "test-service",
@@ -57,6 +59,7 @@ func TestNewProviderBuilderWithEmptyEndpoint(t *testing.T) {
 // TestNewProviderBuilderWithEmptyServiceName tests that NewProviderBuilder with empty service name
 // returns an error.
 func TestNewProviderBuilderWithEmptyServiceName(t *testing.T) {
+	t.Parallel()
 	config := Config{
 		EndPoint:    "http://localhost:14268/api/traces",
 		ServiceName: "",
@@ -75,6 +78,7 @@ func TestNewProviderBuilderWithEmptyServiceName(t *testing.T) {
 // TestNewProviderBuilderWithBothEmpty tests that NewProviderBuilder with both empty endpoint
 // and empty service name returns an error about empty endpoint first.
 func TestNewProviderBuilderWithBothEmpty(t *testing.T) {
+	t.Parallel()
 	config := Config{
 		EndPoint:    "",
 		ServiceName: "",
@@ -94,6 +98,7 @@ func TestNewProviderBuilderWithBothEmpty(t *testing.T) {
 // TestProviderCloseWithForceFlushError tests that Provider Close handles ForceFlush error
 // and still calls Shutdown.
 func TestProviderCloseWithForceFlushError(t *testing.T) {
+	t.Parallel()
 	// Create a mock provider that will fail on ForceFlush
 	mockTP := tracesdk.NewTracerProvider()
 
@@ -110,6 +115,7 @@ func TestProviderCloseWithForceFlushError(t *testing.T) {
 
 // TestProviderCloseSuccess tests that Provider Close succeeds without error.
 func TestProviderCloseSuccess(t *testing.T) {
+	t.Parallel()
 	// We can't test a successful close with a real Jaeger provider without
 	// a running Jaeger instance, but we can verify that the Provider type
 	// implements the tracing.Provider interface
@@ -137,6 +143,7 @@ func TestProviderCloseSuccess(t *testing.T) {
 // TestProviderCloseWithBothErrors tests the error path where
 // both ForceFlush and Shutdown fail.
 func TestProviderCloseWithBothErrors(t *testing.T) {
+	t.Parallel()
 	testProvider := &testProviderWithError{
 		forceFlushError: fmt.Errorf("force flush error"),
 		shutdownError:   fmt.Errorf("shutdown error"),
@@ -152,6 +159,7 @@ func TestProviderCloseWithBothErrors(t *testing.T) {
 // TestProviderCloseWithForceFlushErrorOnly tests the error path where
 // only ForceFlush fails but Shutdown succeeds.
 func TestProviderCloseWithForceFlushErrorOnly(t *testing.T) {
+	t.Parallel()
 	testProvider := &testProviderWithError{
 		forceFlushError: fmt.Errorf("force flush error"),
 		shutdownError:   nil,
@@ -185,6 +193,7 @@ func (t *testProviderWithError) Close() error {
 
 // TestProviderImplementsTracingProvider verifies that Provider implements tracing.Provider.
 func TestProviderImplementsTracingProvider(t *testing.T) {
+	t.Parallel()
 	// Compile-time interface check
 	var _ tracing.Provider = &Provider{}
 }
@@ -192,6 +201,7 @@ func TestProviderImplementsTracingProvider(t *testing.T) {
 // TestNewProviderBuilderWithEmptyAppVersion tests that empty AppVersion
 // doesn't prevent provider creation (only endpoint and service name are required).
 func TestNewProviderBuilderWithEmptyAppVersion(t *testing.T) {
+	t.Parallel()
 	config := Config{
 		EndPoint:    "http://localhost:14268/api/traces",
 		ServiceName: "test-service",

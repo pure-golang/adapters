@@ -7,6 +7,7 @@ import (
 )
 
 func TestStoreMethods(t *testing.T) {
+	t.Parallel()
 	ctx := context.Background()
 	s := NewStore()
 

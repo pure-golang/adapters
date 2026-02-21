@@ -12,6 +12,7 @@ import (
 
 // TestNewClient_InvalidConfig tests NewClient with invalid configurations.
 func TestNewClient_InvalidConfig(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name        string
 		cfg         Config
@@ -42,6 +43,7 @@ func TestNewClient_InvalidConfig(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			client, err := NewClient(tt.cfg, tt.options)
 			assert.Error(t, err)
 			assert.Nil(t, client)
@@ -52,6 +54,7 @@ func TestNewClient_InvalidConfig(t *testing.T) {
 
 // TestNewClient_Options tests NewClient with various options.
 func TestNewClient_Options(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name    string
 		cfg     Config
@@ -101,6 +104,7 @@ func TestNewClient_Options(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			// These will fail to connect, but we're testing option handling
 			client, err := NewClient(tt.cfg, tt.options)
 			assert.Error(t, err) // Expected to fail connection
@@ -111,6 +115,7 @@ func TestNewClient_Options(t *testing.T) {
 
 // TestNewClient_SecureFlag tests that Secure and InsecureSkipVerify are handled correctly.
 func TestNewClient_SecureFlag(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name                 string
 		cfg                  Config
@@ -162,6 +167,7 @@ func TestNewClient_SecureFlag(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			// These will fail to connect, but we're testing config handling
 			_, err := NewClient(tt.cfg, nil)
 			assert.Error(t, err)
@@ -171,6 +177,7 @@ func TestNewClient_SecureFlag(t *testing.T) {
 
 // TestNewClient_Timeout tests custom timeout configuration.
 func TestNewClient_Timeout(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name     string
 		cfg      Config
@@ -210,6 +217,7 @@ func TestNewClient_Timeout(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			// These will fail to connect, but we're testing timeout handling
 			_, err := NewClient(tt.cfg, nil)
 			assert.Error(t, err)
@@ -219,7 +227,9 @@ func TestNewClient_Timeout(t *testing.T) {
 
 // TestNewDefaultClient_Extended tests the NewDefaultClient function.
 func TestNewDefaultClient_Extended(t *testing.T) {
+	t.Parallel()
 	t.Run("uses default options", func(t *testing.T) {
+		t.Parallel()
 		cfg := Config{
 			Endpoint:  "localhost:9999",
 			AccessKey: "test",
@@ -232,6 +242,7 @@ func TestNewDefaultClient_Extended(t *testing.T) {
 	})
 
 	t.Run("with custom endpoint that fails", func(t *testing.T) {
+		t.Parallel()
 		cfg := Config{
 			Endpoint:  "nonexistent.example.com:9000",
 			AccessKey: "minioadmin",
@@ -247,7 +258,9 @@ func TestNewDefaultClient_Extended(t *testing.T) {
 
 // TestClient_Close_Extended tests the Client Close method.
 func TestClient_Close_Extended(t *testing.T) {
+	t.Parallel()
 	t.Run("close once successfully", func(t *testing.T) {
+		t.Parallel()
 		client := &Client{
 			logger: slog.Default(),
 			closed: false,
@@ -259,6 +272,7 @@ func TestClient_Close_Extended(t *testing.T) {
 	})
 
 	t.Run("close twice returns nil both times", func(t *testing.T) {
+		t.Parallel()
 		client := &Client{
 			logger: slog.Default(),
 			closed: false,
@@ -273,6 +287,7 @@ func TestClient_Close_Extended(t *testing.T) {
 	})
 
 	t.Run("IsClosed before and after close", func(t *testing.T) {
+		t.Parallel()
 		client := &Client{
 			logger: slog.Default(),
 			closed: false,
@@ -287,6 +302,7 @@ func TestClient_Close_Extended(t *testing.T) {
 	})
 
 	t.Run("close with nil logger panics", func(t *testing.T) {
+		t.Parallel()
 		client := &Client{
 			logger: nil,
 			closed: false,
@@ -299,6 +315,7 @@ func TestClient_Close_Extended(t *testing.T) {
 	})
 
 	t.Run("close already closed client", func(t *testing.T) {
+		t.Parallel()
 		client := &Client{
 			logger: slog.Default(),
 			closed: true, // Already closed
@@ -312,7 +329,9 @@ func TestClient_Close_Extended(t *testing.T) {
 
 // TestClient_IsClosed tests the IsClosed method with concurrent access.
 func TestClient_IsClosed(t *testing.T) {
+	t.Parallel()
 	t.Run("concurrent close and check", func(t *testing.T) {
+		t.Parallel()
 		client := &Client{
 			logger: slog.Default(),
 			closed: false,
@@ -342,7 +361,9 @@ func TestClient_IsClosed(t *testing.T) {
 
 // TestClient_GetMinioClient tests the GetMinioClient method.
 func TestClient_GetMinioClient(t *testing.T) {
+	t.Parallel()
 	t.Run("returns underlying minio client", func(t *testing.T) {
+		t.Parallel()
 		minioClient := &minio.Client{}
 		client := &Client{
 			client: minioClient,
@@ -353,6 +374,7 @@ func TestClient_GetMinioClient(t *testing.T) {
 	})
 
 	t.Run("returns nil when client is nil", func(t *testing.T) {
+		t.Parallel()
 		client := &Client{
 			client: nil,
 		}
@@ -364,7 +386,9 @@ func TestClient_GetMinioClient(t *testing.T) {
 
 // TestClient_Initialization tests client initialization scenarios.
 func TestClient_Initialization(t *testing.T) {
+	t.Parallel()
 	t.Run("client with full config", func(t *testing.T) {
+		t.Parallel()
 		cfg := Config{
 			Endpoint:           "localhost:9000",
 			AccessKey:          "access",
@@ -408,6 +432,7 @@ func TestClient_ConnectionTimeout(t *testing.T) {
 
 // TestCloserInterface_Extended verifies Client implements Closer interface.
 func TestCloserInterface_Extended(t *testing.T) {
+	t.Parallel()
 	// Compile-time interface check
 	var _ Closer = (*Client)(nil)
 
@@ -417,7 +442,9 @@ func TestCloserInterface_Extended(t *testing.T) {
 
 // TestClient_Logging tests that client logs appropriately.
 func TestClient_Logging(t *testing.T) {
+	t.Parallel()
 	t.Run("client with logger", func(t *testing.T) {
+		t.Parallel()
 		logger := slog.Default()
 		client := &Client{
 			logger: logger,
@@ -432,7 +459,9 @@ func TestClient_Logging(t *testing.T) {
 
 // TestNewClient_Context tests client creation with context timeout.
 func TestNewClient_Context(t *testing.T) {
+	t.Parallel()
 	t.Run("connection timeout during ListBuckets", func(t *testing.T) {
+		t.Parallel()
 		// This test verifies that the timeout is applied during the ListBuckets check
 		cfg := Config{
 			Endpoint:  "localhost:9999",

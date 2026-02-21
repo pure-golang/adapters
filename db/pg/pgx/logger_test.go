@@ -6,20 +6,22 @@ import (
 	"testing"
 	"time"
 
-	"github.com/pure-golang/adapters/logger"
 	"github.com/jackc/pgx/v5/tracelog"
+	"github.com/pure-golang/adapters/logger"
 	"github.com/stretchr/testify/assert"
 )
 
-// TestNewLogger tests the NewLogger function.
+// TestNewLogger tests NewLogger function.
 func TestNewLogger(t *testing.T) {
+	t.Parallel()
 	t.Run("creates non-nil logger", func(t *testing.T) {
+		t.Parallel()
 		log := NewLogger()
 		assert.NotNil(t, log)
 	})
 }
 
-// TestLogger_Log tests the Log method with various log levels.
+// TestLogger_Log tests Log method with various log levels.
 func TestLogger_Log(t *testing.T) {
 	// Create a test handler to capture log records
 	var records []slog.Record
@@ -113,7 +115,7 @@ func TestLogger_LogWithDuration(t *testing.T) {
 		pgxLogger.Log(ctx, tracelog.LogLevelInfo, "query message", data)
 
 		// Check that time was removed and duration_ms was added
-		// (The actual attribute conversion happens inside the Log method)
+		// (The actual attribute conversion happens inside of Log method)
 	})
 }
 
@@ -148,8 +150,9 @@ func TestLogger_LogWithNilData(t *testing.T) {
 	})
 }
 
-// TestLogger_slogLevel tests the slogLevel method.
+// TestLogger_slogLevel tests slogLevel method.
 func TestLogger_slogLevel(t *testing.T) {
+	t.Parallel()
 	pgxLogger := &Logger{}
 
 	tests := []struct {
@@ -196,6 +199,7 @@ func TestLogger_slogLevel(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			result := pgxLogger.slogLevel(tt.pgxLogLevel)
 			assert.Equal(t, tt.expectedLevel, result)
 		})

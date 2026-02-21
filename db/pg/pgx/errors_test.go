@@ -11,6 +11,7 @@ import (
 )
 
 func TestErrorIs_MatchingCode(t *testing.T) {
+	t.Parallel()
 	// Create a pgconn.PgError with UniqueViolation code
 	pgErr := &pgconn.PgError{
 		Code:    string(UniqueViolation),
@@ -27,6 +28,7 @@ func TestErrorIs_MatchingCode(t *testing.T) {
 }
 
 func TestErrorIs_NonMatchingCode(t *testing.T) {
+	t.Parallel()
 	// Create a pgconn.PgError with UniqueViolation code
 	pgErr := &pgconn.PgError{
 		Code:    string(UniqueViolation),
@@ -41,6 +43,7 @@ func TestErrorIs_NonMatchingCode(t *testing.T) {
 }
 
 func TestErrorIs_NonPgError(t *testing.T) {
+	t.Parallel()
 	// Test with a standard Go error
 	stdErr := errors.New("standard error")
 
@@ -51,6 +54,7 @@ func TestErrorIs_NonPgError(t *testing.T) {
 }
 
 func TestErrorIs_NilError(t *testing.T) {
+	t.Parallel()
 	result, isMatch := ErrorIs(nil, UniqueViolation)
 
 	require.False(t, isMatch)
@@ -58,6 +62,7 @@ func TestErrorIs_NilError(t *testing.T) {
 }
 
 func TestErrorIs_WrappedPgError(t *testing.T) {
+	t.Parallel()
 	// Create a pgconn.PgError wrapped in another error
 	pgErr := &pgconn.PgError{
 		Code:    string(ForeignKeyViolation),
@@ -107,6 +112,7 @@ func TestErrorIs_AllErrorCodeCombinations(t *testing.T) {
 }
 
 func TestFromError_WithPgError(t *testing.T) {
+	t.Parallel()
 	pgErr := &pgconn.PgError{
 		Code:           string(CheckViolation),
 		Message:        "new row violates check constraint",
@@ -127,6 +133,7 @@ func TestFromError_WithPgError(t *testing.T) {
 }
 
 func TestFromError_WithNilError(t *testing.T) {
+	t.Parallel()
 	result, ok := FromError(nil)
 
 	require.False(t, ok)
@@ -134,6 +141,7 @@ func TestFromError_WithNilError(t *testing.T) {
 }
 
 func TestFromError_WithNonPgError(t *testing.T) {
+	t.Parallel()
 	stdErr := errors.New("standard error")
 
 	result, ok := FromError(stdErr)
@@ -143,6 +151,7 @@ func TestFromError_WithNonPgError(t *testing.T) {
 }
 
 func TestFromError_WithWrappedPgError(t *testing.T) {
+	t.Parallel()
 	pgErr := &pgconn.PgError{
 		Code:    string(UniqueViolation),
 		Message: "duplicate key",
@@ -157,6 +166,7 @@ func TestFromError_WithWrappedPgError(t *testing.T) {
 }
 
 func TestErrorCode_StringMethod(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name string
 		code ErrorCode
@@ -191,12 +201,14 @@ func TestErrorCode_StringMethod(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			assert.Equal(t, tt.want, tt.code.String())
 		})
 	}
 }
 
 func TestErrorIs_CheckConstraint(t *testing.T) {
+	t.Parallel()
 	pgErr := &pgconn.PgError{
 		Code:           string(CheckViolation),
 		Message:        "violates check constraint",
@@ -212,6 +224,7 @@ func TestErrorIs_CheckConstraint(t *testing.T) {
 }
 
 func TestErrorIs_DoubleWrappedPgError(t *testing.T) {
+	t.Parallel()
 	// Create a double-wrapped pgconn.PgError
 	pgErr := &pgconn.PgError{
 		Code:    string(UniqueViolation),
@@ -229,6 +242,7 @@ func TestErrorIs_DoubleWrappedPgError(t *testing.T) {
 }
 
 func TestFromError_MultipleWrappingLevels(t *testing.T) {
+	t.Parallel()
 	pgErr := &pgconn.PgError{
 		Code:    string(ForeignKeyViolation),
 		Message: "foreign key violation",
@@ -245,6 +259,7 @@ func TestFromError_MultipleWrappingLevels(t *testing.T) {
 }
 
 func TestErrorCode_Constants(t *testing.T) {
+	t.Parallel()
 	// Verify all error code constants are set correctly
 	assert.Equal(t, ErrorCode("23505"), UniqueViolation)
 	assert.Equal(t, ErrorCode("23503"), ForeignKeyViolation)
@@ -252,6 +267,7 @@ func TestErrorCode_Constants(t *testing.T) {
 }
 
 func TestErrorIs_WithMultipleWrappers(t *testing.T) {
+	t.Parallel()
 	pgErr := &pgconn.PgError{
 		Code:    "23505",
 		Message: "duplicate key",
@@ -269,6 +285,7 @@ func TestErrorIs_WithMultipleWrappers(t *testing.T) {
 }
 
 func TestFromError_WithRegularErrorChain(t *testing.T) {
+	t.Parallel()
 	// Create a chain of regular errors
 	baseErr := errors.New("base error")
 	wrappedErr := fmt.Errorf("wrapped: %w", baseErr)

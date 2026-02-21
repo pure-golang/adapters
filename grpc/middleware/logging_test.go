@@ -37,6 +37,7 @@ func (m *mockHandler) handle(ctx context.Context, req interface{}) (interface{},
 
 // TestLoggingInterceptor_Success tests successful request logging
 func TestLoggingInterceptor_Success(t *testing.T) {
+	t.Parallel()
 	// Create a logger that captures log output
 	var logAttrs []slog.Attr
 	logger := slog.New(&attrHandler{attrs: &logAttrs})
@@ -65,6 +66,7 @@ func TestLoggingInterceptor_Success(t *testing.T) {
 
 // TestLoggingInterceptor_WithError tests error request logging
 func TestLoggingInterceptor_WithError(t *testing.T) {
+	t.Parallel()
 	var logAttrs []slog.Attr
 	logger := slog.New(&attrHandler{attrs: &logAttrs})
 
@@ -186,6 +188,7 @@ func TestLoggingInterceptor_DifferentErrorCodes(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
 			var logAttrs []slog.Attr
 			logger := slog.New(&attrHandler{attrs: &logAttrs})
 
@@ -286,6 +289,7 @@ func (m *mockServerStream) Context() context.Context {
 
 // TestLoggingStreamInterceptor_Success tests successful stream logging
 func TestLoggingStreamInterceptor_Success(t *testing.T) {
+	t.Parallel()
 	var logAttrs []slog.Attr
 	logger := slog.New(&attrHandler{attrs: &logAttrs})
 
@@ -314,6 +318,7 @@ func TestLoggingStreamInterceptor_Success(t *testing.T) {
 
 // TestLoggingStreamInterceptor_WithError tests error stream logging
 func TestLoggingStreamInterceptor_WithError(t *testing.T) {
+	t.Parallel()
 	var logAttrs []slog.Attr
 	logger := slog.New(&attrHandler{attrs: &logAttrs})
 
@@ -446,6 +451,7 @@ func TestRecoveryStreamInterceptor_CatchesPanic(t *testing.T) {
 
 // TestLoggingInterceptor_Context tests that context is properly passed through
 func TestLoggingInterceptor_Context(t *testing.T) {
+	t.Parallel()
 	logger := noop.NewNoop().With("test", "value")
 	interceptor := LoggingInterceptor(logger)
 
@@ -469,6 +475,7 @@ func TestLoggingInterceptor_Context(t *testing.T) {
 
 // TestLoggingStreamInterceptor_Context tests that context is properly passed through streams
 func TestLoggingStreamInterceptor_Context(t *testing.T) {
+	t.Parallel()
 	logger := noop.NewNoop()
 	interceptor := LoggingStreamInterceptor(logger)
 
@@ -494,6 +501,7 @@ func TestLoggingStreamInterceptor_Context(t *testing.T) {
 
 // TestLoggingInterceptor_WithTextLogger tests that interceptor works with text logger
 func TestLoggingInterceptor_WithTextLogger(t *testing.T) {
+	t.Parallel()
 	// Use text logger for simpler testing
 	var buf []byte
 	logger := slog.New(slog.NewTextHandler(&bufWriter{&buf}, nil))
@@ -552,6 +560,7 @@ func (h *attrHandler) WithGroup(name string) slog.Handler {
 
 // TestLoggingInterceptor_WithBufConn tests using buffer connection for gRPC testing
 func TestLoggingInterceptor_WithBufConn(t *testing.T) {
+	t.Parallel()
 	logger := noop.NewNoop()
 	interceptor := LoggingInterceptor(logger)
 

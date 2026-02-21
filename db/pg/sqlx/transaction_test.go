@@ -13,7 +13,9 @@ import (
 
 // TestTx_Query_Unit tests the Query method - unit tests.
 func TestTx_Query_Unit(t *testing.T) {
+	t.Parallel()
 	t.Run("Query method exists and has correct signature", func(t *testing.T) {
+		t.Parallel()
 		// Verify Query method exists on Tx
 		var _ interface {
 			Query(ctx context.Context, query string, args ...interface{}) (*sqlx.Rows, error)
@@ -21,6 +23,7 @@ func TestTx_Query_Unit(t *testing.T) {
 	})
 
 	t.Run("Query with nil transaction structure", func(t *testing.T) {
+		t.Parallel()
 		tx := &Tx{
 			tx:  nil,
 			cfg: Config{QueryTimeout: 30 * time.Second},
@@ -29,6 +32,7 @@ func TestTx_Query_Unit(t *testing.T) {
 	})
 
 	t.Run("Query with cancelled context", func(t *testing.T) {
+		t.Parallel()
 		// Create a mock transaction that will fail on cancelled context
 		mockDB, err := sqlx.Open("sqlite3", ":memory:")
 		if err != nil {
@@ -55,6 +59,7 @@ func TestTx_Query_Unit(t *testing.T) {
 	})
 
 	t.Run("Query with various query types", func(t *testing.T) {
+		t.Parallel()
 		// Test that Query handles different SQL statements
 		queries := []string{
 			"SELECT 1",
@@ -75,7 +80,9 @@ func TestTx_Query_Unit(t *testing.T) {
 
 // TestTx_QueryRow_Unit tests the QueryRow method - unit tests.
 func TestTx_QueryRow_Unit(t *testing.T) {
+	t.Parallel()
 	t.Run("QueryRow method exists and has correct signature", func(t *testing.T) {
+		t.Parallel()
 		// Verify QueryRow method exists on Tx
 		var _ interface {
 			QueryRow(ctx context.Context, query string, args ...interface{}) *sqlx.Row
@@ -83,6 +90,7 @@ func TestTx_QueryRow_Unit(t *testing.T) {
 	})
 
 	t.Run("QueryRow with nil transaction structure", func(t *testing.T) {
+		t.Parallel()
 		tx := &Tx{
 			tx:  nil,
 			cfg: Config{QueryTimeout: 30 * time.Second},
@@ -91,6 +99,7 @@ func TestTx_QueryRow_Unit(t *testing.T) {
 	})
 
 	t.Run("QueryRow with cancelled context", func(t *testing.T) {
+		t.Parallel()
 		mockDB, err := sqlx.Open("sqlite3", ":memory:")
 		if err != nil {
 			t.Skip("requires sqlite3 driver")
@@ -115,6 +124,7 @@ func TestTx_QueryRow_Unit(t *testing.T) {
 	})
 
 	t.Run("QueryRow with various queries", func(t *testing.T) {
+		t.Parallel()
 		queries := []string{
 			"SELECT 1",
 			"SELECT * FROM users WHERE id = ?",
@@ -133,7 +143,9 @@ func TestTx_QueryRow_Unit(t *testing.T) {
 
 // TestTx_QueryWithArgs_Unit tests Query method with arguments - unit tests.
 func TestTx_QueryWithArgs_Unit(t *testing.T) {
+	t.Parallel()
 	t.Run("Query with no args - structure test", func(t *testing.T) {
+		t.Parallel()
 		tx := &Tx{
 			tx:  nil,
 			cfg: Config{QueryTimeout: 30 * time.Second},
@@ -146,7 +158,9 @@ func TestTx_QueryWithArgs_Unit(t *testing.T) {
 
 // TestTx_QueryRowWithArgs_Unit tests QueryRow method with arguments - unit tests.
 func TestTx_QueryRowWithArgs_Unit(t *testing.T) {
+	t.Parallel()
 	t.Run("QueryRow structure test", func(t *testing.T) {
+		t.Parallel()
 		tx := &Tx{
 			tx:  nil,
 			cfg: Config{QueryTimeout: 30 * time.Second},
@@ -157,6 +171,7 @@ func TestTx_QueryRowWithArgs_Unit(t *testing.T) {
 
 // TestTx_QueryTimeoutVariations_Unit tests Query with various timeout settings - unit tests.
 func TestTx_QueryTimeoutVariations_Unit(t *testing.T) {
+	t.Parallel()
 	timeouts := []time.Duration{
 		0,
 		1 * time.Nanosecond,
@@ -182,6 +197,7 @@ func TestTx_QueryTimeoutVariations_Unit(t *testing.T) {
 
 // TestTx_QueryRowTimeoutVariations_Unit tests QueryRow with various timeout settings - unit tests.
 func TestTx_QueryRowTimeoutVariations_Unit(t *testing.T) {
+	t.Parallel()
 	timeouts := []time.Duration{
 		0,
 		1 * time.Nanosecond,
@@ -206,7 +222,9 @@ func TestTx_QueryRowTimeoutVariations_Unit(t *testing.T) {
 
 // TestTx_QueryErrorPaths_Unit tests Query method error paths - unit tests.
 func TestTx_QueryErrorPaths_Unit(t *testing.T) {
+	t.Parallel()
 	t.Run("Query with invalid SQL syntax", func(t *testing.T) {
+		t.Parallel()
 		mockDB, err := sqlx.Open("sqlite3", ":memory:")
 		if err != nil {
 			t.Skip("requires sqlite3 driver")
@@ -230,6 +248,7 @@ func TestTx_QueryErrorPaths_Unit(t *testing.T) {
 	})
 
 	t.Run("Query with context already done", func(t *testing.T) {
+		t.Parallel()
 		mockDB, err := sqlx.Open("sqlite3", ":memory:")
 		if err != nil {
 			t.Skip("requires sqlite3 driver")
@@ -257,7 +276,9 @@ func TestTx_QueryErrorPaths_Unit(t *testing.T) {
 
 // TestTx_QueryRowErrorPaths_Unit tests QueryRow method error paths - unit tests.
 func TestTx_QueryRowErrorPaths_Unit(t *testing.T) {
+	t.Parallel()
 	t.Run("QueryRow returns row even if query will fail", func(t *testing.T) {
+		t.Parallel()
 		mockDB, err := sqlx.Open("sqlite3", ":memory:")
 		if err != nil {
 			t.Skip("requires sqlite3 driver")
@@ -287,7 +308,9 @@ func TestTx_QueryRowErrorPaths_Unit(t *testing.T) {
 
 // TestTx_OptionsStructure tests the TxOptions structure.
 func TestTx_OptionsStructure(t *testing.T) {
+	t.Parallel()
 	t.Run("DefaultTxOptions returns valid options", func(t *testing.T) {
+		t.Parallel()
 		opts := DefaultTxOptions()
 		assert.NotNil(t, opts)
 		assert.Equal(t, sql.LevelDefault, opts.Isolation)
@@ -296,6 +319,7 @@ func TestTx_OptionsStructure(t *testing.T) {
 	})
 
 	t.Run("TxOptions with custom values", func(t *testing.T) {
+		t.Parallel()
 		opts := &TxOptions{
 			Isolation:  sql.LevelSerializable,
 			ReadOnly:   true,
@@ -307,6 +331,7 @@ func TestTx_OptionsStructure(t *testing.T) {
 	})
 
 	t.Run("TxOptions with various isolation levels", func(t *testing.T) {
+		t.Parallel()
 		levels := []sql.IsolationLevel{
 			sql.LevelDefault,
 			sql.LevelReadUncommitted,
@@ -331,7 +356,9 @@ func TestTx_OptionsStructure(t *testing.T) {
 
 // TestTx_TxFuncSignature tests the TxFunc signature.
 func TestTx_TxFuncSignature(t *testing.T) {
+	t.Parallel()
 	t.Run("TxFunc is a function type", func(t *testing.T) {
+		t.Parallel()
 		// Verify TxFunc is defined
 		var _ TxFunc = func(ctx context.Context, tx *Tx) error {
 			return nil
@@ -347,6 +374,7 @@ func TestTx_TxFuncSignature(t *testing.T) {
 	})
 
 	t.Run("TxFunc can return error", func(t *testing.T) {
+		t.Parallel()
 		fn := func(ctx context.Context, tx *Tx) error {
 			return assert.AnError
 		}
@@ -358,6 +386,7 @@ func TestTx_TxFuncSignature(t *testing.T) {
 	})
 
 	t.Run("TxFunc can return nil", func(t *testing.T) {
+		t.Parallel()
 		fn := func(ctx context.Context, tx *Tx) error {
 			return nil
 		}
@@ -371,7 +400,9 @@ func TestTx_TxFuncSignature(t *testing.T) {
 
 // TestTx_Structure tests the Tx structure.
 func TestTx_Structure(t *testing.T) {
+	t.Parallel()
 	t.Run("Tx can be created", func(t *testing.T) {
+		t.Parallel()
 		tx := &Tx{
 			tx:  nil,
 			cfg: Config{},
@@ -380,6 +411,7 @@ func TestTx_Structure(t *testing.T) {
 	})
 
 	t.Run("Tx has WithTracing method", func(t *testing.T) {
+		t.Parallel()
 		tx := &Tx{
 			tx:  nil,
 			cfg: Config{},

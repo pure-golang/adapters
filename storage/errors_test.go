@@ -10,7 +10,9 @@ import (
 
 // TestStorageError_Error tests the Error method of StorageError.
 func TestStorageError_Error(t *testing.T) {
+	t.Parallel()
 	t.Run("with wrapped error", func(t *testing.T) {
+		t.Parallel()
 		baseErr := errors.New("underlying error")
 		err := &StorageError{
 			Code:    CodeNotFound,
@@ -25,6 +27,7 @@ func TestStorageError_Error(t *testing.T) {
 	})
 
 	t.Run("without wrapped error", func(t *testing.T) {
+		t.Parallel()
 		err := &StorageError{
 			Code:    CodeAccessDenied,
 			Message: "access is denied",
@@ -37,6 +40,7 @@ func TestStorageError_Error(t *testing.T) {
 	})
 
 	t.Run("with empty bucket and key", func(t *testing.T) {
+		t.Parallel()
 		err := &StorageError{
 			Code:    CodeInternalError,
 			Message: "internal error occurred",
@@ -49,7 +53,9 @@ func TestStorageError_Error(t *testing.T) {
 
 // TestStorageError_Unwrap tests the Unwrap method of StorageError.
 func TestStorageError_Unwrap(t *testing.T) {
+	t.Parallel()
 	t.Run("with wrapped error", func(t *testing.T) {
+		t.Parallel()
 		baseErr := errors.New("base error")
 		err := &StorageError{
 			Code: CodeNotFound,
@@ -61,6 +67,7 @@ func TestStorageError_Unwrap(t *testing.T) {
 	})
 
 	t.Run("without wrapped error", func(t *testing.T) {
+		t.Parallel()
 		err := &StorageError{
 			Code: CodeNotFound,
 		}
@@ -72,7 +79,9 @@ func TestStorageError_Unwrap(t *testing.T) {
 
 // TestIsNotFound tests the IsNotFound helper function.
 func TestIsNotFound(t *testing.T) {
+	t.Parallel()
 	t.Run("returns true for NotFound StorageError", func(t *testing.T) {
+		t.Parallel()
 		err := &StorageError{
 			Code: CodeNotFound,
 		}
@@ -81,6 +90,7 @@ func TestIsNotFound(t *testing.T) {
 	})
 
 	t.Run("returns false for other StorageError codes", func(t *testing.T) {
+		t.Parallel()
 		err := &StorageError{
 			Code: CodeAccessDenied,
 		}
@@ -89,27 +99,33 @@ func TestIsNotFound(t *testing.T) {
 	})
 
 	t.Run("returns true for ErrNotFound", func(t *testing.T) {
+		t.Parallel()
 		assert.True(t, IsNotFound(ErrNotFound))
 	})
 
 	t.Run("returns true for wrapped ErrNotFound", func(t *testing.T) {
+		t.Parallel()
 		err := fmt.Errorf("wrapped: %w", ErrNotFound)
 		assert.True(t, IsNotFound(err))
 	})
 
 	t.Run("returns false for generic error", func(t *testing.T) {
+		t.Parallel()
 		err := errors.New("some other error")
 		assert.False(t, IsNotFound(err))
 	})
 
 	t.Run("returns false for nil error", func(t *testing.T) {
+		t.Parallel()
 		assert.False(t, IsNotFound(nil))
 	})
 }
 
 // TestIsAccessDenied tests the IsAccessDenied helper function.
 func TestIsAccessDenied(t *testing.T) {
+	t.Parallel()
 	t.Run("returns true for AccessDenied StorageError", func(t *testing.T) {
+		t.Parallel()
 		err := &StorageError{
 			Code: CodeAccessDenied,
 		}
@@ -118,6 +134,7 @@ func TestIsAccessDenied(t *testing.T) {
 	})
 
 	t.Run("returns false for other StorageError codes", func(t *testing.T) {
+		t.Parallel()
 		err := &StorageError{
 			Code: CodeNotFound,
 		}
@@ -126,27 +143,33 @@ func TestIsAccessDenied(t *testing.T) {
 	})
 
 	t.Run("returns true for ErrAccessDenied", func(t *testing.T) {
+		t.Parallel()
 		assert.True(t, IsAccessDenied(ErrAccessDenied))
 	})
 
 	t.Run("returns true for wrapped ErrAccessDenied", func(t *testing.T) {
+		t.Parallel()
 		err := fmt.Errorf("wrapped: %w", ErrAccessDenied)
 		assert.True(t, IsAccessDenied(err))
 	})
 
 	t.Run("returns false for generic error", func(t *testing.T) {
+		t.Parallel()
 		err := errors.New("some other error")
 		assert.False(t, IsAccessDenied(err))
 	})
 
 	t.Run("returns false for nil error", func(t *testing.T) {
+		t.Parallel()
 		assert.False(t, IsAccessDenied(nil))
 	})
 }
 
 // TestIsBucketNotFound tests the IsBucketNotFound helper function.
 func TestIsBucketNotFound(t *testing.T) {
+	t.Parallel()
 	t.Run("returns true for BucketNotFound StorageError", func(t *testing.T) {
+		t.Parallel()
 		err := &StorageError{
 			Code: CodeBucketNotFound,
 		}
@@ -155,6 +178,7 @@ func TestIsBucketNotFound(t *testing.T) {
 	})
 
 	t.Run("returns false for other StorageError codes", func(t *testing.T) {
+		t.Parallel()
 		err := &StorageError{
 			Code: CodeNotFound,
 		}
@@ -163,26 +187,31 @@ func TestIsBucketNotFound(t *testing.T) {
 	})
 
 	t.Run("returns true for ErrBucketNotFound", func(t *testing.T) {
+		t.Parallel()
 		assert.True(t, IsBucketNotFound(ErrBucketNotFound))
 	})
 
 	t.Run("returns true for wrapped ErrBucketNotFound", func(t *testing.T) {
+		t.Parallel()
 		err := fmt.Errorf("wrapped: %w", ErrBucketNotFound)
 		assert.True(t, IsBucketNotFound(err))
 	})
 
 	t.Run("returns false for generic error", func(t *testing.T) {
+		t.Parallel()
 		err := errors.New("some other error")
 		assert.False(t, IsBucketNotFound(err))
 	})
 
 	t.Run("returns false for nil error", func(t *testing.T) {
+		t.Parallel()
 		assert.False(t, IsBucketNotFound(nil))
 	})
 }
 
 // TestErrorCode_values tests that ErrorCode constants have expected values.
 func TestErrorCode_values(t *testing.T) {
+	t.Parallel()
 	assert.Equal(t, ErrorCode("NotFound"), CodeNotFound)
 	assert.Equal(t, ErrorCode("AccessDenied"), CodeAccessDenied)
 	assert.Equal(t, ErrorCode("BucketNotFound"), CodeBucketNotFound)
@@ -191,6 +220,7 @@ func TestErrorCode_values(t *testing.T) {
 
 // TestNewStorageError tests creating StorageError instances.
 func TestNewStorageError(t *testing.T) {
+	t.Parallel()
 	err := &StorageError{
 		Code:    CodeNotFound,
 		Message: "test message",
@@ -208,7 +238,9 @@ func TestNewStorageError(t *testing.T) {
 
 // TestStorageError_As tests errors.As with StorageError.
 func TestStorageError_As(t *testing.T) {
+	t.Parallel()
 	t.Run("can extract StorageError from wrapped error", func(t *testing.T) {
+		t.Parallel()
 		storageErr := &StorageError{
 			Code:    CodeNotFound,
 			Message: "not found",
@@ -222,6 +254,7 @@ func TestStorageError_As(t *testing.T) {
 	})
 
 	t.Run("returns false for non-StorageError", func(t *testing.T) {
+		t.Parallel()
 		err := errors.New("plain error")
 		var storageErr *StorageError
 		assert.False(t, errors.As(err, &storageErr))

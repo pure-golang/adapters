@@ -36,6 +36,7 @@ func init() {
 }
 
 func TestNew_ValidConfig(t *testing.T) {
+	t.Parallel()
 	c := Config{
 		Host:          "localhost",
 		Port:          9090,
@@ -63,6 +64,7 @@ func TestNew_ValidConfig(t *testing.T) {
 }
 
 func TestNew_WithReflection(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name          string
 		enableReflect bool
@@ -79,6 +81,7 @@ func TestNew_WithReflection(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			c := Config{
 				Port:          9091,
 				EnableReflect: tt.enableReflect,
@@ -97,6 +100,7 @@ func TestNew_WithReflection(t *testing.T) {
 }
 
 func TestNew_WithTLSConfig(t *testing.T) {
+	t.Parallel()
 	// Create temporary test certificate files
 	tmpDir, err := os.MkdirTemp("", "grpc-test")
 	require.NoError(t, err)
@@ -123,6 +127,7 @@ func TestNew_WithTLSConfig(t *testing.T) {
 }
 
 func TestNew_WithUnaryInterceptor(t *testing.T) {
+	t.Parallel()
 	c := Config{
 		Port: 9093,
 	}
@@ -138,6 +143,7 @@ func TestNew_WithUnaryInterceptor(t *testing.T) {
 }
 
 func TestNew_WithStreamInterceptor(t *testing.T) {
+	t.Parallel()
 	c := Config{
 		Port: 9094,
 	}
@@ -153,6 +159,7 @@ func TestNew_WithStreamInterceptor(t *testing.T) {
 }
 
 func TestNew_WithServerOption(t *testing.T) {
+	t.Parallel()
 	c := Config{
 		Port: 9095,
 	}
@@ -169,6 +176,7 @@ func TestNew_WithServerOption(t *testing.T) {
 }
 
 func TestNew_WithMonitoringOptions(t *testing.T) {
+	t.Parallel()
 	c := Config{
 		Port: 9096,
 	}
@@ -189,6 +197,7 @@ func TestNew_WithMonitoringOptions(t *testing.T) {
 }
 
 func TestNew_WithNilMonitoringOptions(t *testing.T) {
+	t.Parallel()
 	c := Config{
 		Port: 9097,
 	}
@@ -202,6 +211,7 @@ func TestNew_WithNilMonitoringOptions(t *testing.T) {
 }
 
 func TestNew_ServerRegistersService(t *testing.T) {
+	t.Parallel()
 	c := Config{
 		Port: 9098,
 	}
@@ -221,6 +231,7 @@ func TestNew_ServerRegistersService(t *testing.T) {
 }
 
 func TestNew_ServerOptionChaining(t *testing.T) {
+	t.Parallel()
 	c := Config{
 		Port: 9099,
 	}
@@ -258,6 +269,7 @@ func TestNew_ServerOptionChaining(t *testing.T) {
 }
 
 func TestNew_MultipleInterceptors(t *testing.T) {
+	t.Parallel()
 	c := Config{
 		Port: 9100,
 	}
@@ -284,6 +296,7 @@ func TestNew_MultipleInterceptors(t *testing.T) {
 }
 
 func TestNewDefault_WithReflection(t *testing.T) {
+	t.Parallel()
 	c := Config{
 		Port:          9101,
 		EnableReflect: true,
@@ -298,6 +311,7 @@ func TestNewDefault_WithReflection(t *testing.T) {
 }
 
 func TestNewDefault_WithoutReflection(t *testing.T) {
+	t.Parallel()
 	c := Config{
 		Port:          9102,
 		EnableReflect: false,
@@ -311,6 +325,7 @@ func TestNewDefault_WithoutReflection(t *testing.T) {
 }
 
 func TestServer_Start_Errors(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name        string
 		config      Config
@@ -328,6 +343,7 @@ func TestServer_Start_Errors(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			s := New(tt.config, func(srv *grpc.Server) {})
 			require.NotNil(t, s)
 
@@ -339,6 +355,7 @@ func TestServer_Start_Errors(t *testing.T) {
 }
 
 func TestServer_Close_WithoutStart(t *testing.T) {
+	t.Parallel()
 	c := Config{
 		Port: 9105,
 	}
@@ -352,6 +369,7 @@ func TestServer_Close_WithoutStart(t *testing.T) {
 }
 
 func TestServer_Close_AfterGracefulStop(t *testing.T) {
+	t.Parallel()
 	c := Config{
 		Port: 9106,
 	}
@@ -368,6 +386,7 @@ func TestServer_Close_AfterGracefulStop(t *testing.T) {
 }
 
 func TestServer_Run_StartsInGoroutine(t *testing.T) {
+	t.Parallel()
 	c := Config{
 		Port: 9107,
 	}
@@ -386,11 +405,13 @@ func TestServer_Run_StartsInGoroutine(t *testing.T) {
 }
 
 func TestServer_ImplementsRunableProvider(t *testing.T) {
+	t.Parallel()
 	// Verify Server implements the RunableProvider interface
 	var _ interface{} = (*Server)(nil)
 }
 
 func TestShutdownTimeout_Constant(t *testing.T) {
+	t.Parallel()
 	// Test that ShutdownTimeout is set correctly
 	assert.Equal(t, 15*time.Second, ShutdownTimeout)
 }
@@ -480,6 +501,7 @@ func TestServer_Close_WithListener(t *testing.T) {
 }
 
 func TestServer_MultipleCloseCalls(t *testing.T) {
+	t.Parallel()
 	c := Config{
 		Port: 9110,
 	}
@@ -496,6 +518,7 @@ func TestServer_MultipleCloseCalls(t *testing.T) {
 }
 
 func TestConfig_DefaultValues(t *testing.T) {
+	t.Parallel()
 	c := Config{}
 
 	assert.Equal(t, "", c.Host)
@@ -506,6 +529,7 @@ func TestConfig_DefaultValues(t *testing.T) {
 }
 
 func TestNew_WithEmptyHost(t *testing.T) {
+	t.Parallel()
 	c := Config{
 		Host: "",
 		Port: 9111,
@@ -519,6 +543,7 @@ func TestNew_WithEmptyHost(t *testing.T) {
 }
 
 func TestNew_WithContextLogger(t *testing.T) {
+	t.Parallel()
 	// Save original default logger
 	original := slog.Default()
 	defer slog.SetDefault(original)
@@ -541,6 +566,7 @@ func TestNew_WithContextLogger(t *testing.T) {
 }
 
 func TestServer_Start_BadAddress(t *testing.T) {
+	t.Parallel()
 	c := Config{
 		Host: "invalid.host.address.that.does.not.exist",
 		Port: 99999, // Invalid port
@@ -554,6 +580,7 @@ func TestServer_Start_BadAddress(t *testing.T) {
 }
 
 func TestServer_Start_AlreadyListening(t *testing.T) {
+	t.Parallel()
 	t.Skip("flaky test - gRPC server may not immediately fail on port conflict")
 
 	// This test is skipped because gRPC server behavior with port conflicts
@@ -603,6 +630,7 @@ func TestServer_Close_Timeout(t *testing.T) {
 }
 
 func TestReflection_Default(t *testing.T) {
+	t.Parallel()
 	// Test with default reflection enabled
 	c := Config{
 		Port:          9113,
@@ -616,6 +644,7 @@ func TestReflection_Default(t *testing.T) {
 }
 
 func TestReflection_Disabled(t *testing.T) {
+	t.Parallel()
 	// Test with reflection explicitly disabled
 	c := Config{
 		Port:          9114,
@@ -629,6 +658,7 @@ func TestReflection_Disabled(t *testing.T) {
 }
 
 func TestWithUnaryInterceptor_ReturnsOption(t *testing.T) {
+	t.Parallel()
 	// Test that WithUnaryInterceptor returns a valid ServerOption
 	mockInterceptor := func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
 		return handler(ctx, req)
@@ -646,6 +676,7 @@ func TestWithUnaryInterceptor_ReturnsOption(t *testing.T) {
 }
 
 func TestWithStreamInterceptor_ReturnsOption(t *testing.T) {
+	t.Parallel()
 	// Test that WithStreamInterceptor returns a valid ServerOption
 	mockInterceptor := func(srv interface{}, ss grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) error {
 		return handler(srv, ss)
@@ -663,6 +694,7 @@ func TestWithStreamInterceptor_ReturnsOption(t *testing.T) {
 }
 
 func TestWithServerOption_ReturnsOption(t *testing.T) {
+	t.Parallel()
 	// Test that WithServerOption returns a valid ServerOption
 	serverOpt := grpc.MaxRecvMsgSize(2048)
 
@@ -678,6 +710,7 @@ func TestWithServerOption_ReturnsOption(t *testing.T) {
 }
 
 func TestWithMonitoringOptions_ReturnsOption(t *testing.T) {
+	t.Parallel()
 	// Test that WithMonitoringOptions returns a valid ServerOption
 	testLogger := slog.New(noop.NewNoop().Handler())
 	opts := &middleware.MonitoringOptions{
@@ -696,6 +729,7 @@ func TestWithMonitoringOptions_ReturnsOption(t *testing.T) {
 }
 
 func TestServer_Run_Panics(t *testing.T) {
+	t.Parallel()
 	// Test that Run handles panics in the goroutine
 	c := Config{
 		Port: 9119,
@@ -757,6 +791,7 @@ func TestServer_Start_NetworkErrClosed(t *testing.T) {
 }
 
 func TestNew_WithValidTLSFiles(t *testing.T) {
+	t.Parallel()
 	// Create temporary test certificate files
 	tmpDir, err := os.MkdirTemp("", "grpc-test-tls")
 	require.NoError(t, err)
@@ -786,6 +821,7 @@ func TestNew_WithValidTLSFiles(t *testing.T) {
 }
 
 func TestNew_OnlyCertPath(t *testing.T) {
+	t.Parallel()
 	c := Config{
 		Port:        9121,
 		TLSCertPath: "/path/to/cert.pem",
@@ -799,6 +835,7 @@ func TestNew_OnlyCertPath(t *testing.T) {
 }
 
 func TestNew_OnlyKeyPath(t *testing.T) {
+	t.Parallel()
 	c := Config{
 		Port:       9122,
 		TLSKeyPath: "/path/to/key.pem",
@@ -812,6 +849,7 @@ func TestNew_OnlyKeyPath(t *testing.T) {
 }
 
 func TestServer_Start_InvalidPort(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name        string
 		port        int
@@ -831,6 +869,7 @@ func TestServer_Start_InvalidPort(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			c := Config{
 				Port: tt.port,
 			}
@@ -847,6 +886,7 @@ func TestServer_Start_InvalidPort(t *testing.T) {
 }
 
 func TestNew_WithEmptyRegistrationFunc(t *testing.T) {
+	t.Parallel()
 	c := Config{
 		Port: 9123,
 	}
@@ -859,6 +899,7 @@ func TestNew_WithEmptyRegistrationFunc(t *testing.T) {
 }
 
 func TestServer_ListenAddressFormat(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name     string
 		host     string
@@ -887,6 +928,7 @@ func TestServer_ListenAddressFormat(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			c := Config{
 				Host: tt.host,
 				Port: tt.port,
@@ -903,6 +945,7 @@ func TestServer_ListenAddressFormat(t *testing.T) {
 }
 
 func TestReflectionService(t *testing.T) {
+	t.Parallel()
 	// Verify reflection service is registered in the grpc package
 	// This is a compile-time check to ensure the reflection package is used
 	_ = reflection.Register

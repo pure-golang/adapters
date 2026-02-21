@@ -8,7 +8,9 @@ import (
 
 // TestConfig_GetEndpoint tests the GetEndpoint method.
 func TestConfig_GetEndpoint(t *testing.T) {
+	t.Parallel()
 	t.Run("with custom endpoint", func(t *testing.T) {
+		t.Parallel()
 		cfg := Config{
 			Endpoint: "localhost:9000",
 		}
@@ -16,6 +18,7 @@ func TestConfig_GetEndpoint(t *testing.T) {
 	})
 
 	t.Run("with default endpoint when empty", func(t *testing.T) {
+		t.Parallel()
 		cfg := Config{
 			Endpoint: "",
 		}
@@ -23,6 +26,7 @@ func TestConfig_GetEndpoint(t *testing.T) {
 	})
 
 	t.Run("with Yandex endpoint explicitly set", func(t *testing.T) {
+		t.Parallel()
 		cfg := Config{
 			Endpoint: "storage.yandexcloud.net",
 		}
@@ -30,6 +34,7 @@ func TestConfig_GetEndpoint(t *testing.T) {
 	})
 
 	t.Run("with AWS S3 endpoint", func(t *testing.T) {
+		t.Parallel()
 		cfg := Config{
 			Endpoint: "s3.amazonaws.com",
 		}
@@ -37,6 +42,7 @@ func TestConfig_GetEndpoint(t *testing.T) {
 	})
 
 	t.Run("zero config returns default", func(t *testing.T) {
+		t.Parallel()
 		var cfg Config
 		assert.Equal(t, DefaultYandexEndpoint, cfg.GetEndpoint())
 	})
@@ -44,11 +50,13 @@ func TestConfig_GetEndpoint(t *testing.T) {
 
 // TestConfig_DefaultYandexEndpoint tests the default endpoint constant.
 func TestConfig_DefaultYandexEndpoint(t *testing.T) {
+	t.Parallel()
 	assert.Equal(t, "storage.yandexcloud.net", DefaultYandexEndpoint)
 }
 
 // TestConfig_Fields tests all Config fields are properly settable.
 func TestConfig_Fields(t *testing.T) {
+	t.Parallel()
 	cfg := Config{
 		Endpoint:           "localhost:9000",
 		AccessKey:          "test-access-key",
@@ -72,6 +80,7 @@ func TestConfig_Fields(t *testing.T) {
 
 // TestConfig_DefaultValues tests default values for optional Config fields.
 func TestConfig_DefaultValues(t *testing.T) {
+	t.Parallel()
 	cfg := Config{
 		AccessKey: "key",
 		SecretKey: "secret",

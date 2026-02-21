@@ -13,12 +13,14 @@ import (
 )
 
 func TestFromError_Nil(t *testing.T) {
+	t.Parallel()
 	// Test FromError with nil error
 	err := FromError(nil)
 	assert.Nil(t, err, "FromError(nil) should return nil")
 }
 
 func TestFromError_ContextCanceled(t *testing.T) {
+	t.Parallel()
 	// Test FromError with context.Canceled
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel()
@@ -33,6 +35,7 @@ func TestFromError_ContextCanceled(t *testing.T) {
 }
 
 func TestFromError_ContextDeadlineExceeded(t *testing.T) {
+	t.Parallel()
 	// Test FromError with context.DeadlineExceeded
 	ctx, cancel := context.WithTimeout(context.Background(), 1)
 	<-ctx.Done()
@@ -48,6 +51,7 @@ func TestFromError_ContextDeadlineExceeded(t *testing.T) {
 }
 
 func TestFromError_ExistingGRPCStatus(t *testing.T) {
+	t.Parallel()
 	// Test FromError with existing gRPC status (preserves it)
 	originalErr := status.Error(codes.NotFound, "resource not found")
 	err := FromError(originalErr)
@@ -60,6 +64,7 @@ func TestFromError_ExistingGRPCStatus(t *testing.T) {
 }
 
 func TestFromError_GenericError(t *testing.T) {
+	t.Parallel()
 	// Test FromError with generic error (converts to Internal)
 	genericErr := errors.New("something went wrong")
 	err := FromError(genericErr)
@@ -73,6 +78,7 @@ func TestFromError_GenericError(t *testing.T) {
 }
 
 func TestFromError_WrappedContextErrors(t *testing.T) {
+	t.Parallel()
 	// Test FromError with wrapped context errors
 	wrappedCanceled := fmt.Errorf("wrapped: %w", context.Canceled)
 	err := FromError(wrappedCanceled)
@@ -90,12 +96,14 @@ func TestFromError_WrappedContextErrors(t *testing.T) {
 }
 
 func TestWrapError_Nil(t *testing.T) {
+	t.Parallel()
 	// Test WrapError with nil error
 	err := WrapError(nil, codes.Internal, "wrapped message")
 	assert.Nil(t, err, "WrapError with nil error should return nil")
 }
 
 func TestWrapError_ValidError(t *testing.T) {
+	t.Parallel()
 	// Test WrapError with valid error
 	originalErr := errors.New("base error")
 	err := WrapError(originalErr, codes.NotFound, "resource lookup failed")
@@ -110,6 +118,7 @@ func TestWrapError_ValidError(t *testing.T) {
 }
 
 func TestWrapError_MessageFormatting(t *testing.T) {
+	t.Parallel()
 	// Test WrapError message formatting
 	tests := []struct {
 		name        string
@@ -143,6 +152,7 @@ func TestWrapError_MessageFormatting(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			err := WrapError(tt.baseErr, tt.code, tt.msg)
 			require.Error(t, err)
 
@@ -155,6 +165,7 @@ func TestWrapError_MessageFormatting(t *testing.T) {
 }
 
 func TestWrapError_DifferentCodes(t *testing.T) {
+	t.Parallel()
 	// Test WrapError with different status codes
 	codesList := []codes.Code{
 		codes.Canceled,
@@ -189,6 +200,7 @@ func TestWrapError_DifferentCodes(t *testing.T) {
 }
 
 func TestWrapError_OKCode(t *testing.T) {
+	t.Parallel()
 	// Test WrapError with codes.OK - gRPC returns nil for OK
 	baseErr := errors.New("test error")
 	err := WrapError(baseErr, codes.OK, "wrapped")
@@ -197,6 +209,7 @@ func TestWrapError_OKCode(t *testing.T) {
 }
 
 func TestNewError_DifferentCodes(t *testing.T) {
+	t.Parallel()
 	// Test NewError with different codes
 	tests := []struct {
 		name        string
@@ -244,6 +257,7 @@ func TestNewError_DifferentCodes(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			err := NewError(tt.code, tt.msg)
 			require.Error(t, err)
 
@@ -256,6 +270,7 @@ func TestNewError_DifferentCodes(t *testing.T) {
 }
 
 func TestNewError_AllCodes(t *testing.T) {
+	t.Parallel()
 	// Test NewError with all possible gRPC codes
 	codesList := []codes.Code{
 		codes.Canceled,
@@ -290,6 +305,7 @@ func TestNewError_AllCodes(t *testing.T) {
 }
 
 func TestNewError_OKCode(t *testing.T) {
+	t.Parallel()
 	// Test NewError with codes.OK - gRPC returns nil for OK
 	err := NewError(codes.OK, "test message")
 	// codes.OK results in nil error from status.Error
@@ -297,6 +313,7 @@ func TestNewError_OKCode(t *testing.T) {
 }
 
 func TestIntegration_FromErrorRoundtrip(t *testing.T) {
+	t.Parallel()
 	// Test that errors created by NewError are handled correctly by FromError
 	originalErr := NewError(codes.NotFound, "item not found")
 	resultErr := FromError(originalErr)
@@ -310,6 +327,7 @@ func TestIntegration_FromErrorRoundtrip(t *testing.T) {
 }
 
 func TestIntegration_WrapAndFrom(t *testing.T) {
+	t.Parallel()
 	// Test wrapping an error then passing through FromError
 	baseErr := errors.New("connection failed")
 	wrappedErr := WrapError(baseErr, codes.Unavailable, "database error")

@@ -10,6 +10,7 @@ import (
 )
 
 func TestNewDefaultDialer(t *testing.T) {
+	t.Parallel()
 	uri := "amqp://guest:guest@localhost:5672/"
 
 	dialer := NewDefaultDialer(uri)
@@ -22,7 +23,9 @@ func TestNewDefaultDialer(t *testing.T) {
 }
 
 func TestNewDialer(t *testing.T) {
+	t.Parallel()
 	t.Run("with nil options", func(t *testing.T) {
+		t.Parallel()
 		uri := "amqp://guest:guest@localhost:5672/"
 		dialer := NewDialer(uri, nil)
 
@@ -34,6 +37,7 @@ func TestNewDialer(t *testing.T) {
 	})
 
 	t.Run("with default logger", func(t *testing.T) {
+		t.Parallel()
 		uri := "amqp://guest:guest@localhost:5672/"
 		dialer := NewDialer(uri, &DialerOptions{})
 
@@ -42,6 +46,7 @@ func TestNewDialer(t *testing.T) {
 	})
 
 	t.Run("with custom logger", func(t *testing.T) {
+		t.Parallel()
 		uri := "amqp://guest:guest@localhost:5672/"
 		customLogger := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
 			Level: slog.LevelDebug,
@@ -57,6 +62,7 @@ func TestNewDialer(t *testing.T) {
 	})
 
 	t.Run("with default retry policy", func(t *testing.T) {
+		t.Parallel()
 		uri := "amqp://guest:guest@localhost:5672/"
 		dialer := NewDialer(uri, &DialerOptions{})
 
@@ -68,6 +74,7 @@ func TestNewDialer(t *testing.T) {
 	})
 
 	t.Run("with custom retry policy", func(t *testing.T) {
+		t.Parallel()
 		uri := "amqp://guest:guest@localhost:5672/"
 		customPolicy := NewConstantInterval(5)
 
@@ -80,6 +87,7 @@ func TestNewDialer(t *testing.T) {
 	})
 
 	t.Run("logger has rabbitmq group", func(t *testing.T) {
+		t.Parallel()
 		uri := "amqp://guest:guest@localhost:5672/"
 		dialer := NewDialer(uri, nil)
 

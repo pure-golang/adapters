@@ -23,6 +23,7 @@ func init() {
 
 // TestNew_WithValidConfig tests that New creates a server with valid config
 func TestNew_WithValidConfig(t *testing.T) {
+	t.Parallel()
 	config := Config{
 		Host: "127.0.0.1",
 		Port: 8080,
@@ -44,6 +45,7 @@ func TestNew_WithValidConfig(t *testing.T) {
 
 // TestNew_WithTLSConfig tests that New handles TLS configuration
 func TestNew_WithTLSConfig(t *testing.T) {
+	t.Parallel()
 	config := Config{
 		Host:        "0.0.0.0",
 		Port:        8443,
@@ -64,6 +66,7 @@ func TestNew_WithTLSConfig(t *testing.T) {
 
 // TestNew_SetsReadHeaderTimeout tests that New sets ReadHeaderTimeout to prevent Slowloris attacks
 func TestNew_SetsReadHeaderTimeout(t *testing.T) {
+	t.Parallel()
 	config := Config{
 		Host: "localhost",
 		Port: 9090,
@@ -81,6 +84,7 @@ func TestNew_SetsReadHeaderTimeout(t *testing.T) {
 
 // TestNew_WithEmptyHost tests that New handles empty host (defaults to all interfaces)
 func TestNew_WithEmptyHost(t *testing.T) {
+	t.Parallel()
 	config := Config{
 		Host: "",
 		Port: 8080,
@@ -98,6 +102,7 @@ func TestNew_WithEmptyHost(t *testing.T) {
 
 // TestNewDefault_SetsErrorLog tests that NewDefault sets the error log
 func TestNewDefault_SetsErrorLog(t *testing.T) {
+	t.Parallel()
 	config := Config{
 		Host: "localhost",
 		Port: 8080,
@@ -115,6 +120,7 @@ func TestNewDefault_SetsErrorLog(t *testing.T) {
 
 // TestServer_Close_GracefulShutdown tests that Server Close performs graceful shutdown
 func TestServer_Close_GracefulShutdown(t *testing.T) {
+	t.Parallel()
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 	})
@@ -135,6 +141,7 @@ func TestServer_Close_GracefulShutdown(t *testing.T) {
 
 // TestServer_Close_TimeoutExceeded tests Close behavior when shutdown timeout is exceeded
 func TestServer_Close_TimeoutExceeded(t *testing.T) {
+	t.Parallel()
 	// Create a server with a handler that blocks connections
 	handlerCalled := make(chan struct{}, 1)
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -196,6 +203,7 @@ func TestServer_Close_TimeoutExceeded(t *testing.T) {
 
 // TestServer_Close_WithContextCancellation tests Close when context is cancelled
 func TestServer_Close_WithContextCancellation(t *testing.T) {
+	t.Parallel()
 	// Note: Shutdown on an idle server may succeed even with cancelled context
 	// because there are no active connections to wait for
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -220,6 +228,7 @@ func TestServer_Close_WithContextCancellation(t *testing.T) {
 
 // TestServer_Close_NilServer tests Close on a server that hasn't been properly initialized
 func TestServer_Close_NilServer(t *testing.T) {
+	t.Parallel()
 	// Create a server but don't start it
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
@@ -243,6 +252,7 @@ func TestServer_Close_NilServer(t *testing.T) {
 
 // TestServer_Run_StartsInBackground tests that Run starts the server in a background goroutine
 func TestServer_Run_StartsInBackground(t *testing.T) {
+	t.Parallel()
 	handlerCalled := make(chan struct{}, 1)
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		select {
@@ -310,6 +320,7 @@ func TestServer_Run_StartsInBackground(t *testing.T) {
 
 // TestServer_Start_ListenAndServe tests Start method without TLS
 func TestServer_Start_ListenAndServe(t *testing.T) {
+	t.Parallel()
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte("OK"))
@@ -361,6 +372,7 @@ func TestServer_Start_ListenAndServe(t *testing.T) {
 
 // TestServer_Start_ErrServerClosed tests that Start returns nil when ErrServerClosed occurs
 func TestServer_Start_ErrServerClosed(t *testing.T) {
+	t.Parallel()
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 	})
@@ -405,6 +417,7 @@ func TestServer_Start_ErrServerClosed(t *testing.T) {
 
 // TestServer_Start_InvalidPort tests Start with invalid port configuration
 func TestServer_Start_InvalidPort(t *testing.T) {
+	t.Parallel()
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 	})
@@ -422,6 +435,7 @@ func TestServer_Start_InvalidPort(t *testing.T) {
 
 // TestServer_Start_AddressInUse tests Start when address is already in use
 func TestServer_Start_AddressInUse(t *testing.T) {
+	t.Parallel()
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 	})
@@ -457,6 +471,7 @@ func TestServer_Start_AddressInUse(t *testing.T) {
 
 // TestServer_Run_LogsErrorOnFailure tests that Run logs error when server fails to start
 func TestServer_Run_LogsErrorOnFailure(t *testing.T) {
+	t.Parallel()
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 	})
@@ -486,11 +501,13 @@ func TestServer_Run_LogsErrorOnFailure(t *testing.T) {
 
 // TestShutdownTimeout_Constant tests the ShutdownTimeout constant value
 func TestShutdownTimeout_Constant(t *testing.T) {
+	t.Parallel()
 	assert.Equal(t, 15*time.Second, ShutdownTimeout, "ShutdownTimeout should be 15 seconds")
 }
 
 // TestServer_ImplementsRunableProvider tests that Server implements httpserver.RunableProvider
 func TestServer_ImplementsRunableProvider(t *testing.T) {
+	t.Parallel()
 	// This is verified at compile time by the var declaration:
 	// var _ httpserver.RunableProvider = (*Server)(nil)
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

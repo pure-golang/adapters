@@ -14,6 +14,7 @@ import (
 )
 
 func TestNewDefault_DebugLevel(t *testing.T) {
+	t.Parallel()
 	l := NewDefault(slog.LevelDebug)
 
 	assert.NotNil(t, l)
@@ -24,6 +25,7 @@ func TestNewDefault_DebugLevel(t *testing.T) {
 }
 
 func TestNewDefault_InfoLevel(t *testing.T) {
+	t.Parallel()
 	l := NewDefault(slog.LevelInfo)
 
 	assert.NotNil(t, l)
@@ -33,6 +35,7 @@ func TestNewDefault_InfoLevel(t *testing.T) {
 }
 
 func TestNewDefault_WarnLevel(t *testing.T) {
+	t.Parallel()
 	l := NewDefault(slog.LevelWarn)
 
 	assert.NotNil(t, l)
@@ -42,6 +45,7 @@ func TestNewDefault_WarnLevel(t *testing.T) {
 }
 
 func TestNewDefault_ErrorLevel(t *testing.T) {
+	t.Parallel()
 	l := NewDefault(slog.LevelError)
 
 	assert.NotNil(t, l)
@@ -51,6 +55,7 @@ func TestNewDefault_ErrorLevel(t *testing.T) {
 }
 
 func TestNewDefault_WithCustomOutput(t *testing.T) {
+	t.Parallel()
 	// Capture stdout to verify JSON output
 	var buf bytes.Buffer
 
@@ -70,6 +75,7 @@ func TestNewDefault_WithCustomOutput(t *testing.T) {
 }
 
 func TestNewDefault_HandlerConfiguration(t *testing.T) {
+	t.Parallel()
 	l := NewDefault(slog.LevelDebug)
 
 	require.NotNil(t, l)
@@ -85,6 +91,7 @@ func TestNewDefault_HandlerConfiguration(t *testing.T) {
 }
 
 func TestNewDefault_LevelFiltering(t *testing.T) {
+	t.Parallel()
 	l := NewDefault(slog.LevelWarn)
 	h := l.Handler()
 
@@ -124,6 +131,7 @@ func TestNewDefault_JSONOutput(t *testing.T) {
 }
 
 func TestNewDefault_WithAttributes(t *testing.T) {
+	t.Parallel()
 	var buf bytes.Buffer
 
 	l := slog.New(slog.NewJSONHandler(&buf, &slog.HandlerOptions{Level: slog.LevelInfo}))
@@ -141,6 +149,7 @@ func TestNewDefault_WithAttributes(t *testing.T) {
 }
 
 func TestNewDefault_WithGroup(t *testing.T) {
+	t.Parallel()
 	var buf bytes.Buffer
 
 	l := slog.New(slog.NewJSONHandler(&buf, &slog.HandlerOptions{Level: slog.LevelInfo}))
@@ -157,6 +166,7 @@ func TestNewDefault_WithGroup(t *testing.T) {
 }
 
 func TestNewDefault_LogAttrs(t *testing.T) {
+	t.Parallel()
 	var buf bytes.Buffer
 
 	l := slog.New(slog.NewJSONHandler(&buf, &slog.HandlerOptions{Level: slog.LevelInfo}))
@@ -178,6 +188,7 @@ func TestNewDefault_LogAttrs(t *testing.T) {
 }
 
 func TestNewDefault_AllLevels(t *testing.T) {
+	t.Parallel()
 	levels := []slog.Level{
 		slog.LevelDebug,
 		slog.LevelInfo,
@@ -194,6 +205,7 @@ func TestNewDefault_AllLevels(t *testing.T) {
 }
 
 func TestNewDefault_ContextSupport(t *testing.T) {
+	t.Parallel()
 	l := NewDefault(slog.LevelInfo)
 
 	ctx := context.Background()
@@ -204,6 +216,7 @@ func TestNewDefault_ContextSupport(t *testing.T) {
 }
 
 func TestNewDefault_NilContext(t *testing.T) {
+	t.Parallel()
 	l := NewDefault(slog.LevelInfo)
 
 	l.LogAttrs(nil, slog.LevelInfo, "nil context test")
@@ -211,6 +224,7 @@ func TestNewDefault_NilContext(t *testing.T) {
 }
 
 func TestNewDefault_ErrorHandling(t *testing.T) {
+	t.Parallel()
 	l := NewDefault(slog.LevelError)
 
 	l.Error("error message", "error_code", 500, "details", "internal error")
@@ -218,6 +232,7 @@ func TestNewDefault_ErrorHandling(t *testing.T) {
 }
 
 func TestNewDefault_StructuredLogging(t *testing.T) {
+	t.Parallel()
 	var buf bytes.Buffer
 
 	l := slog.New(slog.NewJSONHandler(&buf, &slog.HandlerOptions{Level: slog.LevelInfo}))
@@ -240,6 +255,7 @@ func TestNewDefault_StructuredLogging(t *testing.T) {
 }
 
 func TestNewDefault_EmptyMessage(t *testing.T) {
+	t.Parallel()
 	var buf bytes.Buffer
 
 	l := slog.New(slog.NewJSONHandler(&buf, &slog.HandlerOptions{Level: slog.LevelInfo}))
@@ -251,6 +267,7 @@ func TestNewDefault_EmptyMessage(t *testing.T) {
 }
 
 func TestNewDefault_SpecialCharacters(t *testing.T) {
+	t.Parallel()
 	var buf bytes.Buffer
 
 	l := slog.New(slog.NewJSONHandler(&buf, &slog.HandlerOptions{Level: slog.LevelInfo}))
@@ -266,6 +283,7 @@ func TestNewDefault_SpecialCharacters(t *testing.T) {
 }
 
 func TestNewDefault_HigherLevel(t *testing.T) {
+	t.Parallel()
 	l := NewDefault(slog.Level(100)) // Very high level
 
 	// Should create logger without error
@@ -277,6 +295,7 @@ func TestNewDefault_HigherLevel(t *testing.T) {
 }
 
 func TestNewDefault_LowerLevel(t *testing.T) {
+	t.Parallel()
 	l := NewDefault(slog.Level(-100)) // Very low level
 
 	assert.NotNil(t, l)
@@ -286,6 +305,7 @@ func TestNewDefault_LowerLevel(t *testing.T) {
 }
 
 func TestNewDefault_MultipleAttributes(t *testing.T) {
+	t.Parallel()
 	var buf bytes.Buffer
 
 	l := slog.New(slog.NewJSONHandler(&buf, &slog.HandlerOptions{Level: slog.LevelInfo}))
@@ -309,6 +329,7 @@ func TestNewDefault_MultipleAttributes(t *testing.T) {
 }
 
 func TestNewDefault_ConcurrentLogging(t *testing.T) {
+	t.Parallel()
 	var buf bytes.Buffer
 
 	l := slog.New(slog.NewJSONHandler(&buf, &slog.HandlerOptions{Level: slog.LevelInfo}))
@@ -334,6 +355,7 @@ func TestNewDefault_ConcurrentLogging(t *testing.T) {
 }
 
 func TestNewDefault_NestedGroups(t *testing.T) {
+	t.Parallel()
 	var buf bytes.Buffer
 
 	l := slog.New(slog.NewJSONHandler(&buf, &slog.HandlerOptions{Level: slog.LevelInfo}))
@@ -350,6 +372,7 @@ func TestNewDefault_NestedGroups(t *testing.T) {
 }
 
 func TestNewDefault_TimeField(t *testing.T) {
+	t.Parallel()
 	var buf bytes.Buffer
 
 	l := slog.New(slog.NewJSONHandler(&buf, &slog.HandlerOptions{Level: slog.LevelInfo}))
@@ -365,6 +388,7 @@ func TestNewDefault_TimeField(t *testing.T) {
 }
 
 func TestNewDefault_LevelField(t *testing.T) {
+	t.Parallel()
 	var buf bytes.Buffer
 
 	l := slog.New(slog.NewJSONHandler(&buf, &slog.HandlerOptions{Level: slog.LevelInfo}))
@@ -380,6 +404,7 @@ func TestNewDefault_LevelField(t *testing.T) {
 }
 
 func TestNewDefault_CustomLevels(t *testing.T) {
+	t.Parallel()
 	// Slog levels: Debug=-4, Info=0, Warn=4, Error=8
 	customLevel := slog.Level(2) // Between Info (0) and Warn (4)
 
@@ -398,6 +423,7 @@ func TestNewDefault_CustomLevels(t *testing.T) {
 }
 
 func TestNewDefault_Reusable(t *testing.T) {
+	t.Parallel()
 	l := NewDefault(slog.LevelInfo)
 
 	// Create multiple loggers

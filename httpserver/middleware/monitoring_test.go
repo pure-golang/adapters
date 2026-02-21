@@ -26,6 +26,7 @@ func init() {
 }
 
 func TestMonitoring_MiddlewareCreatesSpan(t *testing.T) {
+	t.Parallel()
 	handlerCalled := false
 	nextHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		handlerCalled = true
@@ -52,6 +53,7 @@ func TestMonitoring_MiddlewareCreatesSpan(t *testing.T) {
 }
 
 func TestMonitoring_MiddlewareAddsTraceIDHeader(t *testing.T) {
+	t.Parallel()
 	nextHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 	})
@@ -75,6 +77,7 @@ func TestMonitoring_MiddlewareAddsTraceIDHeader(t *testing.T) {
 }
 
 func TestMonitoring_MiddlewareWithRequestBody(t *testing.T) {
+	t.Parallel()
 	requestBody := `{"test": "data"}`
 	nextHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Verify body is readable
@@ -97,6 +100,7 @@ func TestMonitoring_MiddlewareWithRequestBody(t *testing.T) {
 }
 
 func TestMonitoring_MiddlewareWithResponseBody(t *testing.T) {
+	t.Parallel()
 	responseBody := `{"result": "success"}`
 	nextHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
@@ -115,6 +119,7 @@ func TestMonitoring_MiddlewareWithResponseBody(t *testing.T) {
 }
 
 func TestMonitoring_MiddlewareCutsLongBody(t *testing.T) {
+	t.Parallel()
 	// Test the cut function directly
 	longBody := make([]byte, BodyMaxLen+1000)
 	for i := range longBody {
@@ -146,6 +151,7 @@ func TestMonitoring_MiddlewareCutsLongBody(t *testing.T) {
 }
 
 func TestMonitoring_CutShortBody(t *testing.T) {
+	t.Parallel()
 	// Test cut with short body (no truncation)
 	shortBody := []byte("short content")
 
@@ -155,6 +161,7 @@ func TestMonitoring_CutShortBody(t *testing.T) {
 }
 
 func TestMonitoring_CutEmptyBody(t *testing.T) {
+	t.Parallel()
 	emptyBody := []byte{}
 
 	result := cut(emptyBody)
@@ -162,6 +169,7 @@ func TestMonitoring_CutEmptyBody(t *testing.T) {
 }
 
 func TestMonitoring_CutExactMaxLength(t *testing.T) {
+	t.Parallel()
 	exactBody := make([]byte, BodyMaxLen)
 	for i := range exactBody {
 		exactBody[i] = 'a'
@@ -173,6 +181,7 @@ func TestMonitoring_CutExactMaxLength(t *testing.T) {
 }
 
 func TestMonitoring_StatefulRespWriterWriteHeader(t *testing.T) {
+	t.Parallel()
 	underlying := httptest.NewRecorder()
 	srw := newStatefulRespWriter(underlying)
 
@@ -186,6 +195,7 @@ func TestMonitoring_StatefulRespWriterWriteHeader(t *testing.T) {
 }
 
 func TestMonitoring_StatefulRespWriterWriteDefaultsTo200(t *testing.T) {
+	t.Parallel()
 	underlying := httptest.NewRecorder()
 	srw := newStatefulRespWriter(underlying)
 
@@ -201,6 +211,7 @@ func TestMonitoring_StatefulRespWriterWriteDefaultsTo200(t *testing.T) {
 }
 
 func TestMonitoring_StatefulRespWriterFlush(t *testing.T) {
+	t.Parallel()
 	underlying := httptest.NewRecorder()
 	srw := newStatefulRespWriter(underlying)
 
@@ -209,6 +220,7 @@ func TestMonitoring_StatefulRespWriterFlush(t *testing.T) {
 }
 
 func TestMonitoring_StatefulRespWriterWithFlusher(t *testing.T) {
+	t.Parallel()
 	// Create a response writer that supports flushing
 	underlying := &flushableResponseWriter{
 		ResponseWriter: httptest.NewRecorder(),
@@ -222,6 +234,7 @@ func TestMonitoring_StatefulRespWriterWithFlusher(t *testing.T) {
 }
 
 func TestMonitoring_StatefulRespWriterBodyCapture(t *testing.T) {
+	t.Parallel()
 	underlying := httptest.NewRecorder()
 	srw := newStatefulRespWriter(underlying)
 
@@ -232,6 +245,7 @@ func TestMonitoring_StatefulRespWriterBodyCapture(t *testing.T) {
 }
 
 func TestMonitoring_StatefulRespWriterMultipleWrites(t *testing.T) {
+	t.Parallel()
 	underlying := httptest.NewRecorder()
 	srw := newStatefulRespWriter(underlying)
 
@@ -244,6 +258,7 @@ func TestMonitoring_StatefulRespWriterMultipleWrites(t *testing.T) {
 }
 
 func TestMonitoring_MiddlewareRecordsMetrics(t *testing.T) {
+	t.Parallel()
 	nextHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 	})
@@ -262,6 +277,7 @@ func TestMonitoring_MiddlewareRecordsMetrics(t *testing.T) {
 }
 
 func TestMonitoring_MiddlewareWithErrorStatus(t *testing.T) {
+	t.Parallel()
 	nextHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 	})
@@ -277,6 +293,7 @@ func TestMonitoring_MiddlewareWithErrorStatus(t *testing.T) {
 }
 
 func TestMonitoring_MiddlewareWithHeaders(t *testing.T) {
+	t.Parallel()
 	nextHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 	})
@@ -296,6 +313,7 @@ func TestMonitoring_MiddlewareWithHeaders(t *testing.T) {
 }
 
 func TestMonitoring_RequestURIWithoutParameters(t *testing.T) {
+	t.Parallel()
 	nextHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 	})
@@ -311,6 +329,7 @@ func TestMonitoring_RequestURIWithoutParameters(t *testing.T) {
 }
 
 func TestMonitoring_ContextWithLogger(t *testing.T) {
+	t.Parallel()
 	var capturedLog *slog.Logger
 	nextHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		capturedLog = logger.FromContext(r.Context())
@@ -328,6 +347,7 @@ func TestMonitoring_ContextWithLogger(t *testing.T) {
 }
 
 func TestMonitoring_MiddlewareChain(t *testing.T) {
+	t.Parallel()
 	// Test monitoring in a middleware chain
 	middleware1 := func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -356,10 +376,12 @@ func TestMonitoring_MiddlewareChain(t *testing.T) {
 }
 
 func TestMonitoring_VariousHTTPMethods(t *testing.T) {
+	t.Parallel()
 	methods := []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS", "HEAD"}
 
 	for _, method := range methods {
 		t.Run(method, func(t *testing.T) {
+			t.Parallel()
 			nextHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				w.WriteHeader(http.StatusOK)
 			})
@@ -377,6 +399,7 @@ func TestMonitoring_VariousHTTPMethods(t *testing.T) {
 }
 
 func TestMonitoring_VariousStatusCodes(t *testing.T) {
+	t.Parallel()
 	statusCodes := []int{
 		http.StatusOK,
 		http.StatusCreated,
@@ -409,6 +432,7 @@ func TestMonitoring_VariousStatusCodes(t *testing.T) {
 }
 
 func TestMonitoring_RequestBodyReadError(t *testing.T) {
+	t.Parallel()
 	// Create a reader that returns an error
 	errorReader := &errReader{err: io.EOF}
 	nextHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -429,6 +453,7 @@ func TestMonitoring_RequestBodyReadError(t *testing.T) {
 }
 
 func TestMonitoring_EmptyRequestBody(t *testing.T) {
+	t.Parallel()
 	nextHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Read the empty body
 		body, err := io.ReadAll(r.Body)
@@ -449,6 +474,7 @@ func TestMonitoring_EmptyRequestBody(t *testing.T) {
 }
 
 func TestMonitoring_LargeRequestBody(t *testing.T) {
+	t.Parallel()
 	largeBody := make([]byte, 10*1024) // 10KB
 	for i := range largeBody {
 		largeBody[i] = 'x'
@@ -472,6 +498,7 @@ func TestMonitoring_LargeRequestBody(t *testing.T) {
 }
 
 func TestMonitoring_LargeResponseBody(t *testing.T) {
+	t.Parallel()
 	largeBody := make([]byte, 10*1024) // 10KB
 	for i := range largeBody {
 		largeBody[i] = 'y'
@@ -494,6 +521,7 @@ func TestMonitoring_LargeResponseBody(t *testing.T) {
 }
 
 func TestMonitoring_WithExistingContextLogger(t *testing.T) {
+	t.Parallel()
 	existingLog := noop.NewNoop().With("existing", "value")
 	ctx := logger.NewContext(context.Background(), existingLog)
 
@@ -515,6 +543,7 @@ func TestMonitoring_WithExistingContextLogger(t *testing.T) {
 }
 
 func TestMonitoring_TracePropagation(t *testing.T) {
+	t.Parallel()
 	nextHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Verify span context exists
 		span := trace.SpanFromContext(r.Context())

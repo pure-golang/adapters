@@ -11,6 +11,7 @@ import (
 
 // TestToStorageError_NotFound tests toStorageError with various NotFound scenarios.
 func TestToStorageError_NotFound(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name         string
 		err          error
@@ -106,6 +107,7 @@ func TestToStorageError_NotFound(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			err := toStorageError(tt.err, tt.bucket, tt.key)
 			if tt.expectedCode == "" {
 				assert.Nil(t, err)
@@ -125,6 +127,7 @@ func TestToStorageError_NotFound(t *testing.T) {
 
 // TestToStorageError_ErrorMessages tests the error messages are set correctly.
 func TestToStorageError_ErrorMessages(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name            string
 		err             error
@@ -154,6 +157,7 @@ func TestToStorageError_ErrorMessages(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			err := toStorageError(tt.err, "bucket", "key")
 			require.NotNil(t, err)
 			storageErr, ok := err.(*storage.StorageError)
@@ -165,6 +169,7 @@ func TestToStorageError_ErrorMessages(t *testing.T) {
 
 // TestIsNotFoundError_Extended tests the isNotFoundError function with additional scenarios.
 func TestIsNotFoundError_Extended(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name     string
 		err      error
@@ -219,6 +224,7 @@ func TestIsNotFoundError_Extended(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			result := isNotFoundError(tt.err)
 			assert.Equal(t, tt.expected, result)
 		})
@@ -227,6 +233,7 @@ func TestIsNotFoundError_Extended(t *testing.T) {
 
 // TestStorageErrorCodes tests all storage error codes are properly used.
 func TestStorageErrorCodes(t *testing.T) {
+	t.Parallel()
 	// Test that we use the correct error codes
 	assert.Equal(t, storage.ErrorCode("NotFound"), storage.CodeNotFound)
 	assert.Equal(t, storage.ErrorCode("BucketNotFound"), storage.CodeBucketNotFound)

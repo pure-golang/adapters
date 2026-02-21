@@ -7,6 +7,7 @@ import (
 )
 
 func TestNewDefaultDialer(t *testing.T) {
+	t.Parallel()
 	brokers := []string{"localhost:9092"}
 	dialer := NewDefaultDialer(brokers)
 
@@ -16,6 +17,7 @@ func TestNewDefaultDialer(t *testing.T) {
 }
 
 func TestNewDialer(t *testing.T) {
+	t.Parallel()
 	cfg := Config{
 		Brokers: []string{"broker1:9092", "broker2:9092"},
 	}
@@ -28,6 +30,7 @@ func TestNewDialer(t *testing.T) {
 }
 
 func TestConfig_DefaultValues(t *testing.T) {
+	t.Parallel()
 	cfg := Config{
 		Brokers: []string{"localhost:9092"},
 	}

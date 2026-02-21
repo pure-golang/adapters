@@ -12,6 +12,7 @@ import (
 
 // TestDefaultTracingConfig verifies default tracing configuration
 func TestDefaultTracingConfig(t *testing.T) {
+	t.Parallel()
 	cfg := DefaultTracingConfig()
 
 	require.NotNil(t, cfg)
@@ -22,6 +23,7 @@ func TestDefaultTracingConfig(t *testing.T) {
 
 // TestWithTracing verifies WithTracing function returns the config
 func TestWithTracing(t *testing.T) {
+	t.Parallel()
 	baseCfg := &Config{
 		Host:     "localhost",
 		Port:     5432,
@@ -39,6 +41,7 @@ func TestWithTracing(t *testing.T) {
 
 // TestConnection_WithTracing verifies Connection.WithTracing creates a span
 func TestConnection_WithTracing(t *testing.T) {
+	t.Parallel()
 	// Create a mock connection with minimal config
 	conn := &Connection{
 		cfg: Config{
@@ -63,6 +66,7 @@ func TestConnection_WithTracing(t *testing.T) {
 
 // TestConnection_WithTracing_DifferentOperations verifies different operation types
 func TestConnection_WithTracing_DifferentOperations(t *testing.T) {
+	t.Parallel()
 	conn := &Connection{
 		cfg: Config{
 			Host:     "localhost",
@@ -90,6 +94,7 @@ func TestConnection_WithTracing_DifferentOperations(t *testing.T) {
 	ctx := context.Background()
 	for _, op := range operations {
 		t.Run(op.name, func(t *testing.T) {
+			t.Parallel()
 			_, span := conn.WithTracing(ctx, op.operation, op.query)
 
 			require.NotNil(t, span)
@@ -103,6 +108,7 @@ func TestConnection_WithTracing_DifferentOperations(t *testing.T) {
 
 // TestTx_WithTracing verifies Tx.WithTracing creates a span
 func TestTx_WithTracing(t *testing.T) {
+	t.Parallel()
 	// Create a mock transaction with minimal config
 	tx := &Tx{
 		cfg: Config{
@@ -127,6 +133,7 @@ func TestTx_WithTracing(t *testing.T) {
 
 // TestTx_WithTracing_DifferentOperations verifies transaction operations
 func TestTx_WithTracing_DifferentOperations(t *testing.T) {
+	t.Parallel()
 	tx := &Tx{
 		cfg: Config{
 			Host:     "localhost",
@@ -154,6 +161,7 @@ func TestTx_WithTracing_DifferentOperations(t *testing.T) {
 	ctx := context.Background()
 	for _, op := range operations {
 		t.Run(op.name, func(t *testing.T) {
+			t.Parallel()
 			_, span := tx.WithTracing(ctx, op.operation, op.query)
 
 			require.NotNil(t, span)
@@ -167,6 +175,7 @@ func TestTx_WithTracing_DifferentOperations(t *testing.T) {
 
 // TestTracer_VerifyTracerExists verifies the global tracer is initialized
 func TestTracer_VerifyTracerExists(t *testing.T) {
+	t.Parallel()
 	// This test verifies the tracer variable exists and can create spans
 	// The actual tracer is initialized at package level
 
@@ -182,6 +191,7 @@ func TestTracer_VerifyTracerExists(t *testing.T) {
 
 // TestTracer_SpanIsTracer verifies span implements Tracer interface
 func TestTracer_SpanIsTracer(t *testing.T) {
+	t.Parallel()
 	// Create a mock connection
 	conn := &Connection{
 		cfg: Config{
@@ -205,6 +215,7 @@ func TestTracer_SpanIsTracer(t *testing.T) {
 
 // TestTracingConfig_CommentsAsAttributes verifies CommentsAsAttributes setting
 func TestTracingConfig_CommentsAsAttributes(t *testing.T) {
+	t.Parallel()
 	cfg := &TracingConfig{
 		CommentsAsAttributes: false,
 		ExcludeErrors:        []error{},
@@ -218,6 +229,7 @@ func TestTracingConfig_CommentsAsAttributes(t *testing.T) {
 
 // TestTracingConfig_ExcludeErrors verifies custom error exclusion
 func TestTracingConfig_ExcludeErrors(t *testing.T) {
+	t.Parallel()
 	customErr := &customError{msg: "custom error"}
 
 	cfg := &TracingConfig{

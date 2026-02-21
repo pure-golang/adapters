@@ -13,7 +13,9 @@ import (
 )
 
 func TestNew(t *testing.T) {
+	t.Parallel()
 	t.Run("creates Metrics with valid config", func(t *testing.T) {
+		t.Parallel()
 		config := Config{
 			Host:                  "localhost",
 			Port:                  9090,
@@ -28,6 +30,7 @@ func TestNew(t *testing.T) {
 	})
 
 	t.Run("creates HTTP server with correct address", func(t *testing.T) {
+		t.Parallel()
 		config := Config{
 			Host:                  "127.0.0.1",
 			Port:                  8080,
@@ -68,6 +71,7 @@ func TestNewHttpServer(t *testing.T) {
 	})
 
 	t.Run("sets correct read timeout", func(t *testing.T) {
+		t.Parallel()
 		config := Config{
 			Host:                  "localhost",
 			Port:                  9090,
@@ -80,6 +84,7 @@ func TestNewHttpServer(t *testing.T) {
 	})
 
 	t.Run("uses default read timeout when not specified", func(t *testing.T) {
+		t.Parallel()
 		config := Config{
 			Host: "localhost",
 			Port: 9090,

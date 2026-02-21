@@ -11,6 +11,7 @@ import (
 )
 
 func TestNewDefault_ProviderDev(t *testing.T) {
+	t.Parallel()
 	c := Config{
 		Provider: ProviderDevSlog,
 		Level:    DEBUG,
@@ -23,6 +24,7 @@ func TestNewDefault_ProviderDev(t *testing.T) {
 }
 
 func TestNewDefault_ProviderStdJson(t *testing.T) {
+	t.Parallel()
 	c := Config{
 		Provider: ProviderStdJson,
 		Level:    INFO,
@@ -35,6 +37,7 @@ func TestNewDefault_ProviderStdJson(t *testing.T) {
 }
 
 func TestNewDefault_ProviderNoop(t *testing.T) {
+	t.Parallel()
 	c := Config{
 		Provider: ProviderNoop,
 		Level:    ERROR,
@@ -47,6 +50,7 @@ func TestNewDefault_ProviderNoop(t *testing.T) {
 }
 
 func TestNewDefault_ProviderInvalid(t *testing.T) {
+	t.Parallel()
 	// Invalid provider should fall back to stdjson (default case)
 	c := Config{
 		Provider: Provider("invalid_provider"),
@@ -60,6 +64,7 @@ func TestNewDefault_ProviderInvalid(t *testing.T) {
 }
 
 func TestNewDefault_ProviderEmpty(t *testing.T) {
+	t.Parallel()
 	// Empty provider should use default from config which is std_json
 	c := Config{
 		Provider: Provider(""),
@@ -111,6 +116,7 @@ func TestInitDefault_SetsOtelErrorHandler(t *testing.T) {
 }
 
 func TestFromContext_WithLoggerInContext(t *testing.T) {
+	t.Parallel()
 	ctx := context.Background()
 	testLogger := slog.New(noop.NewNoop().Handler())
 
@@ -132,6 +138,7 @@ func TestFromContext_WithoutLoggerInContext(t *testing.T) {
 }
 
 func TestNewContext_StoresLogger(t *testing.T) {
+	t.Parallel()
 	ctx := context.Background()
 	testLogger := slog.New(noop.NewNoop().Handler())
 
@@ -144,6 +151,7 @@ func TestNewContext_StoresLogger(t *testing.T) {
 }
 
 func TestNewContext_ReplacesExistingLogger(t *testing.T) {
+	t.Parallel()
 	ctx := context.Background()
 	logger1 := slog.New(noop.NewNoop().Handler())
 	logger2 := slog.New(noop.NewNoop().Handler())
@@ -223,6 +231,7 @@ func TestWithErrIf_ReturnsLoggerWithError(t *testing.T) {
 }
 
 func TestFromContextWithErr_WithLoggerInContext(t *testing.T) {
+	t.Parallel()
 	ctx := context.Background()
 	testLogger := slog.New(noop.NewNoop().Handler())
 	ctx = NewContext(ctx, testLogger)
@@ -235,6 +244,7 @@ func TestFromContextWithErr_WithLoggerInContext(t *testing.T) {
 }
 
 func TestFromContextWithErr_WithoutLoggerInContext(t *testing.T) {
+	t.Parallel()
 	ctx := context.Background()
 
 	err := errors.New("default error")
@@ -246,6 +256,7 @@ func TestFromContextWithErr_WithoutLoggerInContext(t *testing.T) {
 }
 
 func TestFromContextWithErrIf_NilError(t *testing.T) {
+	t.Parallel()
 	ctx := context.Background()
 	testLogger := slog.New(noop.NewNoop().Handler())
 	ctx = NewContext(ctx, testLogger)
@@ -259,6 +270,7 @@ func TestFromContextWithErrIf_NilError(t *testing.T) {
 }
 
 func TestFromContextWithErrIf_WithError(t *testing.T) {
+	t.Parallel()
 	ctx := context.Background()
 	testLogger := slog.New(noop.NewNoop().Handler())
 	ctx = NewContext(ctx, testLogger)
@@ -272,37 +284,44 @@ func TestFromContextWithErrIf_WithError(t *testing.T) {
 }
 
 func TestConvertLevel_Info(t *testing.T) {
+	t.Parallel()
 	result := convertLevel(INFO)
 	assert.Equal(t, slog.LevelInfo, result)
 }
 
 func TestConvertLevel_Error(t *testing.T) {
+	t.Parallel()
 	result := convertLevel(ERROR)
 	assert.Equal(t, slog.LevelError, result)
 }
 
 func TestConvertLevel_Warn(t *testing.T) {
+	t.Parallel()
 	result := convertLevel(WARN)
 	assert.Equal(t, slog.LevelWarn, result)
 }
 
 func TestConvertLevel_Debug(t *testing.T) {
+	t.Parallel()
 	result := convertLevel(DEBUG)
 	assert.Equal(t, slog.LevelDebug, result)
 }
 
 func TestConvertLevel_UnknownLevel(t *testing.T) {
+	t.Parallel()
 	// Unknown levels should default to Info
 	result := convertLevel(Level("unknown"))
 	assert.Equal(t, slog.LevelInfo, result)
 }
 
 func TestConvertLevel_EmptyLevel(t *testing.T) {
+	t.Parallel()
 	result := convertLevel(Level(""))
 	assert.Equal(t, slog.LevelInfo, result)
 }
 
 func TestConvertLevel_CaseSensitive(t *testing.T) {
+	t.Parallel()
 	// Levels are case sensitive - uppercase should work
 	result := convertLevel(INFO)
 	assert.Equal(t, slog.LevelInfo, result)
@@ -313,6 +332,7 @@ func TestConvertLevel_CaseSensitive(t *testing.T) {
 }
 
 func TestAppendErr_WithErrorWithStackTrace(t *testing.T) {
+	t.Parallel()
 	testLogger := slog.New(noop.NewNoop().Handler())
 
 	// Create error with stack trace
@@ -326,6 +346,7 @@ func TestAppendErr_WithErrorWithStackTrace(t *testing.T) {
 }
 
 func TestAppendErr_WithSimpleError(t *testing.T) {
+	t.Parallel()
 	testLogger := slog.New(noop.NewNoop().Handler())
 
 	// Simple error without stack trace
@@ -338,6 +359,7 @@ func TestAppendErr_WithSimpleError(t *testing.T) {
 }
 
 func TestConfig_DefaultValues(t *testing.T) {
+	t.Parallel()
 	c := Config{}
 
 	// Test default values from struct tags
@@ -347,6 +369,7 @@ func TestConfig_DefaultValues(t *testing.T) {
 }
 
 func TestConstants_Values(t *testing.T) {
+	t.Parallel()
 	assert.Equal(t, Level("info"), INFO)
 	assert.Equal(t, Level("error"), ERROR)
 	assert.Equal(t, Level("warn"), WARN)
@@ -358,6 +381,7 @@ func TestConstants_Values(t *testing.T) {
 }
 
 func TestNewDefault_AllLevels(t *testing.T) {
+	t.Parallel()
 	levels := []Level{INFO, ERROR, WARN, DEBUG}
 
 	for _, level := range levels {
@@ -372,6 +396,7 @@ func TestNewDefault_AllLevels(t *testing.T) {
 }
 
 func TestNewDefault_AllProviders(t *testing.T) {
+	t.Parallel()
 	providers := []Provider{ProviderDevSlog, ProviderStdJson, ProviderNoop}
 
 	for _, provider := range providers {
@@ -386,6 +411,7 @@ func TestNewDefault_AllProviders(t *testing.T) {
 }
 
 func TestFromContext_ContextChain(t *testing.T) {
+	t.Parallel()
 	// Test logger retrieval through context chain
 	ctx := context.Background()
 	testLogger := slog.New(noop.NewNoop().Handler())
@@ -400,6 +426,7 @@ func TestFromContext_ContextChain(t *testing.T) {
 }
 
 func TestNewContext_NilLogger(t *testing.T) {
+	t.Parallel()
 	ctx := context.Background()
 
 	// Should handle nil logger gracefully
@@ -431,6 +458,7 @@ func TestWithErr_ErrorWithNewline(t *testing.T) {
 }
 
 func TestIntegration_LogMethods(t *testing.T) {
+	t.Parallel()
 	// Integration test to ensure all logger methods work
 	ctx := context.Background()
 	testLogger := slog.New(noop.NewNoop().Handler())

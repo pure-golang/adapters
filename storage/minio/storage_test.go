@@ -19,7 +19,9 @@ import (
 
 // TestStorage getClient tests the getClient method.
 func TestStorage_GetClient(t *testing.T) {
+	t.Parallel()
 	t.Run("returns nil when client is nil", func(t *testing.T) {
+		t.Parallel()
 		stor := &Storage{
 			client: nil,
 			cfg:    Config{},
@@ -37,6 +39,7 @@ func TestStorage_GetClient(t *testing.T) {
 	})
 
 	t.Run("returns nil when minio client is nil", func(t *testing.T) {
+		t.Parallel()
 		stor := &Storage{
 			client: &Client{
 				client: nil,
@@ -55,6 +58,7 @@ func TestStorage_GetClient(t *testing.T) {
 	})
 
 	t.Run("returns client when initialized", func(t *testing.T) {
+		t.Parallel()
 		minioClient := &minio.Client{}
 		stor := &Storage{
 			client: &Client{
@@ -72,7 +76,9 @@ func TestStorage_GetClient(t *testing.T) {
 
 // TestStorage_NewDefault tests the NewDefault function.
 func TestStorage_NewDefault(t *testing.T) {
+	t.Parallel()
 	t.Run("with invalid config returns error", func(t *testing.T) {
+		t.Parallel()
 		cfg := Config{
 			Endpoint:  "invalid-endpoint:9999",
 			AccessKey: "test",
@@ -87,7 +93,9 @@ func TestStorage_NewDefault(t *testing.T) {
 
 // TestStorage_Put_DefaultBucket tests Put with default bucket.
 func TestStorage_Put_DefaultBucket(t *testing.T) {
+	t.Parallel()
 	t.Run("uses default bucket when empty", func(t *testing.T) {
+		t.Parallel()
 		client := &Client{
 			cfg:    Config{DefaultBucket: "default-bucket"},
 			logger: slog.Default(),
@@ -101,6 +109,7 @@ func TestStorage_Put_DefaultBucket(t *testing.T) {
 	})
 
 	t.Run("uses explicit bucket when provided", func(t *testing.T) {
+		t.Parallel()
 		client := &Client{
 			cfg:    Config{DefaultBucket: "default-bucket"},
 			logger: slog.Default(),
@@ -116,6 +125,7 @@ func TestStorage_Put_DefaultBucket(t *testing.T) {
 
 // TestStorage_Put_Options tests Put with various options.
 func TestStorage_Put_Options(t *testing.T) {
+	t.Parallel()
 	client := &Client{
 		cfg:    Config{DefaultBucket: "bucket"},
 		logger: slog.Default(),
@@ -123,6 +133,7 @@ func TestStorage_Put_Options(t *testing.T) {
 	stor := NewStorage(client, nil)
 
 	t.Run("with nil options", func(t *testing.T) {
+		t.Parallel()
 		reader := strings.NewReader("test data")
 		err := stor.Put(context.Background(), "bucket", "key.txt", reader, nil)
 		assert.Error(t, err)
@@ -130,6 +141,7 @@ func TestStorage_Put_Options(t *testing.T) {
 	})
 
 	t.Run("with empty options", func(t *testing.T) {
+		t.Parallel()
 		reader := strings.NewReader("test data")
 		opts := &storage.PutOptions{}
 		err := stor.Put(context.Background(), "bucket", "key.txt", reader, opts)
@@ -138,6 +150,7 @@ func TestStorage_Put_Options(t *testing.T) {
 	})
 
 	t.Run("with content type", func(t *testing.T) {
+		t.Parallel()
 		reader := strings.NewReader("test data")
 		opts := &storage.PutOptions{
 			ContentType: "text/plain",
@@ -148,6 +161,7 @@ func TestStorage_Put_Options(t *testing.T) {
 	})
 
 	t.Run("with metadata", func(t *testing.T) {
+		t.Parallel()
 		reader := strings.NewReader("test data")
 		opts := &storage.PutOptions{
 			ContentType: "application/json",
@@ -161,7 +175,9 @@ func TestStorage_Put_Options(t *testing.T) {
 
 // TestStorage_Get_DefaultBucket tests Get with default bucket.
 func TestStorage_Get_DefaultBucket(t *testing.T) {
+	t.Parallel()
 	t.Run("uses default bucket when empty", func(t *testing.T) {
+		t.Parallel()
 		client := &Client{
 			cfg:    Config{DefaultBucket: "default-bucket"},
 			logger: slog.Default(),
@@ -178,6 +194,7 @@ func TestStorage_Get_DefaultBucket(t *testing.T) {
 
 // TestStorage_Get_KeyVariations tests Get with various key formats.
 func TestStorage_Get_KeyVariations(t *testing.T) {
+	t.Parallel()
 	client := &Client{
 		cfg:    Config{DefaultBucket: "bucket"},
 		logger: slog.Default(),
@@ -193,6 +210,7 @@ func TestStorage_Get_KeyVariations(t *testing.T) {
 
 	for _, key := range keys {
 		t.Run("key_"+strings.ReplaceAll(key, "/", "_"), func(t *testing.T) {
+			t.Parallel()
 			rc, info, err := stor.Get(context.Background(), "bucket", key)
 			assert.Error(t, err)
 			assert.Nil(t, rc)
@@ -203,7 +221,9 @@ func TestStorage_Get_KeyVariations(t *testing.T) {
 
 // TestStorage_Delete_DefaultBucket tests Delete with default bucket.
 func TestStorage_Delete_DefaultBucket(t *testing.T) {
+	t.Parallel()
 	t.Run("uses default bucket when empty", func(t *testing.T) {
+		t.Parallel()
 		client := &Client{
 			cfg:    Config{DefaultBucket: "default-bucket"},
 			logger: slog.Default(),
@@ -216,6 +236,7 @@ func TestStorage_Delete_DefaultBucket(t *testing.T) {
 	})
 
 	t.Run("with explicit bucket", func(t *testing.T) {
+		t.Parallel()
 		client := &Client{
 			cfg:    Config{DefaultBucket: "default-bucket"},
 			logger: slog.Default(),
@@ -230,7 +251,9 @@ func TestStorage_Delete_DefaultBucket(t *testing.T) {
 
 // TestStorage_Exists_DefaultBucket tests Exists with default bucket.
 func TestStorage_Exists_DefaultBucket(t *testing.T) {
+	t.Parallel()
 	t.Run("uses default bucket when empty", func(t *testing.T) {
+		t.Parallel()
 		client := &Client{
 			cfg:    Config{DefaultBucket: "default-bucket"},
 			logger: slog.Default(),
@@ -246,6 +269,7 @@ func TestStorage_Exists_DefaultBucket(t *testing.T) {
 
 // TestStorage_Exists_KeyVariations tests Exists with various key formats.
 func TestStorage_Exists_KeyVariations(t *testing.T) {
+	t.Parallel()
 	client := &Client{
 		cfg:    Config{DefaultBucket: "bucket"},
 		logger: slog.Default(),
@@ -260,6 +284,7 @@ func TestStorage_Exists_KeyVariations(t *testing.T) {
 
 	for _, key := range keys {
 		t.Run("key_"+strings.ReplaceAll(key, "/", "_"), func(t *testing.T) {
+			t.Parallel()
 			exists, err := stor.Exists(context.Background(), "bucket", key)
 			assert.Error(t, err)
 			assert.False(t, exists)
@@ -269,7 +294,9 @@ func TestStorage_Exists_KeyVariations(t *testing.T) {
 
 // TestStorage_List_DefaultBucket tests List with default bucket.
 func TestStorage_List_DefaultBucket(t *testing.T) {
+	t.Parallel()
 	t.Run("uses default bucket when empty", func(t *testing.T) {
+		t.Parallel()
 		client := &Client{
 			cfg:    Config{DefaultBucket: "default-bucket"},
 			logger: slog.Default(),
@@ -285,6 +312,7 @@ func TestStorage_List_DefaultBucket(t *testing.T) {
 
 // TestStorage_List_Options tests List with various options.
 func TestStorage_List_Options(t *testing.T) {
+	t.Parallel()
 	client := &Client{
 		cfg:    Config{DefaultBucket: "bucket"},
 		logger: slog.Default(),
@@ -292,6 +320,7 @@ func TestStorage_List_Options(t *testing.T) {
 	stor := NewStorage(client, nil)
 
 	t.Run("with nil options", func(t *testing.T) {
+		t.Parallel()
 		result, err := stor.List(context.Background(), "bucket", nil)
 		assert.Error(t, err)
 		assert.Nil(t, result)
@@ -299,6 +328,7 @@ func TestStorage_List_Options(t *testing.T) {
 	})
 
 	t.Run("with empty options", func(t *testing.T) {
+		t.Parallel()
 		opts := &storage.ListOptions{}
 		result, err := stor.List(context.Background(), "bucket", opts)
 		assert.Error(t, err)
@@ -307,6 +337,7 @@ func TestStorage_List_Options(t *testing.T) {
 	})
 
 	t.Run("with prefix", func(t *testing.T) {
+		t.Parallel()
 		opts := &storage.ListOptions{
 			Prefix: "test/",
 		}
@@ -317,6 +348,7 @@ func TestStorage_List_Options(t *testing.T) {
 	})
 
 	t.Run("with recursive", func(t *testing.T) {
+		t.Parallel()
 		opts := &storage.ListOptions{
 			Recursive: true,
 		}
@@ -327,6 +359,7 @@ func TestStorage_List_Options(t *testing.T) {
 	})
 
 	t.Run("with max keys", func(t *testing.T) {
+		t.Parallel()
 		opts := &storage.ListOptions{
 			MaxKeys: 100,
 		}
@@ -337,6 +370,7 @@ func TestStorage_List_Options(t *testing.T) {
 	})
 
 	t.Run("with all options", func(t *testing.T) {
+		t.Parallel()
 		opts := &storage.ListOptions{
 			Prefix:    "docs/",
 			Recursive: true,
@@ -351,6 +385,7 @@ func TestStorage_List_Options(t *testing.T) {
 
 // TestStorage_ContextTests tests storage methods with various contexts.
 func TestStorage_ContextTests(t *testing.T) {
+	t.Parallel()
 	client := &Client{
 		cfg:    Config{DefaultBucket: "bucket"},
 		logger: slog.Default(),
@@ -358,6 +393,7 @@ func TestStorage_ContextTests(t *testing.T) {
 	stor := NewStorage(client, nil)
 
 	t.Run("Put with cancelled context", func(t *testing.T) {
+		t.Parallel()
 		ctx, cancel := context.WithCancel(context.Background())
 		cancel()
 
@@ -367,6 +403,7 @@ func TestStorage_ContextTests(t *testing.T) {
 	})
 
 	t.Run("Get with cancelled context", func(t *testing.T) {
+		t.Parallel()
 		ctx, cancel := context.WithCancel(context.Background())
 		cancel()
 
@@ -377,6 +414,7 @@ func TestStorage_ContextTests(t *testing.T) {
 	})
 
 	t.Run("Delete with cancelled context", func(t *testing.T) {
+		t.Parallel()
 		ctx, cancel := context.WithCancel(context.Background())
 		cancel()
 
@@ -385,6 +423,7 @@ func TestStorage_ContextTests(t *testing.T) {
 	})
 
 	t.Run("Exists with cancelled context", func(t *testing.T) {
+		t.Parallel()
 		ctx, cancel := context.WithCancel(context.Background())
 		cancel()
 
@@ -394,6 +433,7 @@ func TestStorage_ContextTests(t *testing.T) {
 	})
 
 	t.Run("List with cancelled context", func(t *testing.T) {
+		t.Parallel()
 		ctx, cancel := context.WithCancel(context.Background())
 		cancel()
 
@@ -405,6 +445,7 @@ func TestStorage_ContextTests(t *testing.T) {
 
 // TestStorage_WithNilReader tests Put with nil reader.
 func TestStorage_WithNilReader(t *testing.T) {
+	t.Parallel()
 	client := &Client{
 		cfg:    Config{DefaultBucket: "bucket"},
 		logger: slog.Default(),
@@ -418,7 +459,9 @@ func TestStorage_WithNilReader(t *testing.T) {
 
 // TestStorage_Close_Extended tests the Close method.
 func TestStorage_Close_Extended(t *testing.T) {
+	t.Parallel()
 	t.Run("close calls client close", func(t *testing.T) {
+		t.Parallel()
 		client := &Client{
 			cfg:    Config{},
 			logger: slog.Default(),
@@ -433,6 +476,7 @@ func TestStorage_Close_Extended(t *testing.T) {
 	})
 
 	t.Run("close twice returns nil", func(t *testing.T) {
+		t.Parallel()
 		client := &Client{
 			cfg:    Config{},
 			logger: slog.Default(),
@@ -451,24 +495,28 @@ func TestStorage_Close_Extended(t *testing.T) {
 
 // TestStorage_Options tests various storage options.
 func TestStorage_Options(t *testing.T) {
+	t.Parallel()
 	client := &Client{
 		cfg:    Config{DefaultBucket: "bucket"},
 		logger: slog.Default(),
 	}
 
 	t.Run("nil options", func(t *testing.T) {
+		t.Parallel()
 		stor := NewStorage(client, nil)
 		assert.NotNil(t, stor)
 		assert.NotNil(t, stor.logger)
 	})
 
 	t.Run("empty options", func(t *testing.T) {
+		t.Parallel()
 		stor := NewStorage(client, &StorageOptions{})
 		assert.NotNil(t, stor)
 		assert.NotNil(t, stor.logger)
 	})
 
 	t.Run("with custom logger", func(t *testing.T) {
+		t.Parallel()
 		logger := slog.Default()
 		stor := NewStorage(client, &StorageOptions{Logger: logger})
 		assert.NotNil(t, stor)
@@ -478,6 +526,7 @@ func TestStorage_Options(t *testing.T) {
 
 // TestStorage_Config tests that storage uses client config.
 func TestStorage_Config(t *testing.T) {
+	t.Parallel()
 	cfg := Config{
 		DefaultBucket: "test-bucket",
 		Endpoint:      "localhost:9000",
@@ -499,6 +548,7 @@ func TestStorage_Config(t *testing.T) {
 
 // TestStorageInterface verifies Storage implements required interfaces.
 func TestStorageInterface_Extended(t *testing.T) {
+	t.Parallel()
 	// Compile-time check that Storage implements storage.Storage
 	var _ storage.Storage = (*Storage)(nil)
 	var _ io.Closer = (*Storage)(nil)
@@ -516,6 +566,7 @@ func TestStorageInterface_Extended(t *testing.T) {
 
 // TestStorage_WithTimeoutContext tests with timeout contexts.
 func TestStorage_WithTimeoutContext(t *testing.T) {
+	t.Parallel()
 	client := &Client{
 		cfg:    Config{DefaultBucket: "bucket"},
 		logger: slog.Default(),
@@ -523,6 +574,7 @@ func TestStorage_WithTimeoutContext(t *testing.T) {
 	stor := NewStorage(client, nil)
 
 	t.Run("Put with timeout", func(t *testing.T) {
+		t.Parallel()
 		ctx, cancel := context.WithTimeout(context.Background(), 1*time.Nanosecond)
 		defer cancel()
 		time.Sleep(10 * time.Millisecond)
@@ -533,6 +585,7 @@ func TestStorage_WithTimeoutContext(t *testing.T) {
 	})
 
 	t.Run("Get with timeout", func(t *testing.T) {
+		t.Parallel()
 		ctx, cancel := context.WithTimeout(context.Background(), 1*time.Nanosecond)
 		defer cancel()
 		time.Sleep(10 * time.Millisecond)
@@ -546,12 +599,15 @@ func TestStorage_WithTimeoutContext(t *testing.T) {
 
 // TestStorageError_Wrapping tests that errors are properly wrapped.
 func TestStorageError_Wrapping(t *testing.T) {
+	t.Parallel()
 	t.Run("toStorageError with nil error", func(t *testing.T) {
+		t.Parallel()
 		err := toStorageError(nil, "bucket", "key")
 		assert.Nil(t, err)
 	})
 
 	t.Run("toStorageError wraps original error", func(t *testing.T) {
+		t.Parallel()
 		originalErr := errors.New("original error")
 		err := toStorageError(originalErr, "bucket", "key")
 
@@ -566,6 +622,7 @@ func TestStorageError_Wrapping(t *testing.T) {
 
 // TestObjectInfo tests the ObjectInfo structure.
 func TestObjectInfo(t *testing.T) {
+	t.Parallel()
 	info := &storage.ObjectInfo{
 		Key:          "test-key.txt",
 		Size:         1024,
@@ -585,6 +642,7 @@ func TestObjectInfo(t *testing.T) {
 
 // TestListResult tests the ListResult structure.
 func TestListResult(t *testing.T) {
+	t.Parallel()
 	objects := []storage.ObjectInfo{
 		{Key: "file1.txt", Size: 100},
 		{Key: "file2.txt", Size: 200},
@@ -603,6 +661,7 @@ func TestListResult(t *testing.T) {
 
 // TestPutOptions tests the PutOptions structure.
 func TestPutOptions(t *testing.T) {
+	t.Parallel()
 	opts := &storage.PutOptions{
 		ContentType: "application/json",
 		Metadata: map[string]string{
@@ -618,6 +677,7 @@ func TestPutOptions(t *testing.T) {
 
 // TestListOptions tests the ListOptions structure.
 func TestListOptions(t *testing.T) {
+	t.Parallel()
 	opts := &storage.ListOptions{
 		Prefix:    "test/",
 		Recursive: true,
@@ -631,6 +691,7 @@ func TestListOptions(t *testing.T) {
 
 // TestPresignedURLOptions_Struct tests the PresignedURLOptions structure.
 func TestPresignedURLOptions_Struct(t *testing.T) {
+	t.Parallel()
 	opts := &storage.PresignedURLOptions{
 		Method: "GET",
 		Expiry: 15 * time.Minute,
@@ -642,7 +703,9 @@ func TestPresignedURLOptions_Struct(t *testing.T) {
 
 // TestStorage_ErrorPaths tests additional error paths in storage operations.
 func TestStorage_ErrorPaths(t *testing.T) {
+	t.Parallel()
 	t.Run("Put with error in getClient", func(t *testing.T) {
+		t.Parallel()
 		// Create storage with nil client
 		nilClientStor := &Storage{
 			client: nil,
@@ -657,6 +720,7 @@ func TestStorage_ErrorPaths(t *testing.T) {
 	})
 
 	t.Run("Get with error in getClient", func(t *testing.T) {
+		t.Parallel()
 		nilClientStor := &Storage{
 			client: nil,
 			cfg:    Config{DefaultBucket: "bucket"},
@@ -671,6 +735,7 @@ func TestStorage_ErrorPaths(t *testing.T) {
 	})
 
 	t.Run("Delete with error in getClient", func(t *testing.T) {
+		t.Parallel()
 		nilClientStor := &Storage{
 			client: nil,
 			cfg:    Config{DefaultBucket: "bucket"},
@@ -683,6 +748,7 @@ func TestStorage_ErrorPaths(t *testing.T) {
 	})
 
 	t.Run("Exists with error in getClient", func(t *testing.T) {
+		t.Parallel()
 		nilClientStor := &Storage{
 			client: nil,
 			cfg:    Config{DefaultBucket: "bucket"},
@@ -696,6 +762,7 @@ func TestStorage_ErrorPaths(t *testing.T) {
 	})
 
 	t.Run("List with error in getClient", func(t *testing.T) {
+		t.Parallel()
 		nilClientStor := &Storage{
 			client: nil,
 			cfg:    Config{DefaultBucket: "bucket"},
@@ -711,6 +778,7 @@ func TestStorage_ErrorPaths(t *testing.T) {
 
 // TestStorage_WithZeroValueOptions tests with zero value options.
 func TestStorage_WithZeroValueOptions(t *testing.T) {
+	t.Parallel()
 	client := &Client{
 		cfg:    Config{DefaultBucket: "bucket"},
 		logger: slog.Default(),
@@ -718,6 +786,7 @@ func TestStorage_WithZeroValueOptions(t *testing.T) {
 	stor := NewStorage(client, nil)
 
 	t.Run("Put with zero value PutOptions", func(t *testing.T) {
+		t.Parallel()
 		opts := &storage.PutOptions{}
 		reader := strings.NewReader("test")
 		err := stor.Put(context.Background(), "bucket", "key", reader, opts)
@@ -725,6 +794,7 @@ func TestStorage_WithZeroValueOptions(t *testing.T) {
 	})
 
 	t.Run("List with zero value ListOptions", func(t *testing.T) {
+		t.Parallel()
 		opts := &storage.ListOptions{}
 		result, err := stor.List(context.Background(), "bucket", opts)
 		assert.Error(t, err)
@@ -734,6 +804,7 @@ func TestStorage_WithZeroValueOptions(t *testing.T) {
 
 // TestStorage_WithNilOptions tests with nil options.
 func TestStorage_WithNilOptions(t *testing.T) {
+	t.Parallel()
 	client := &Client{
 		cfg:    Config{DefaultBucket: "bucket"},
 		logger: slog.Default(),
@@ -741,12 +812,14 @@ func TestStorage_WithNilOptions(t *testing.T) {
 	stor := NewStorage(client, nil)
 
 	t.Run("Put with nil options", func(t *testing.T) {
+		t.Parallel()
 		reader := strings.NewReader("test")
 		err := stor.Put(context.Background(), "bucket", "key", reader, nil)
 		assert.Error(t, err)
 	})
 
 	t.Run("List with nil options", func(t *testing.T) {
+		t.Parallel()
 		result, err := stor.List(context.Background(), "bucket", nil)
 		assert.Error(t, err)
 		assert.Nil(t, result)
@@ -755,6 +828,7 @@ func TestStorage_WithNilOptions(t *testing.T) {
 
 // TestStorage_MetadataOptions tests PutOptions with metadata.
 func TestStorage_MetadataOptions(t *testing.T) {
+	t.Parallel()
 	client := &Client{
 		cfg:    Config{DefaultBucket: "bucket"},
 		logger: slog.Default(),
@@ -800,6 +874,7 @@ func TestStorage_MetadataOptions(t *testing.T) {
 
 	for _, tc := range metadataTests {
 		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
 			opts := &storage.PutOptions{
 				ContentType: "text/plain",
 				Metadata:    tc.metadata,
@@ -813,6 +888,7 @@ func TestStorage_MetadataOptions(t *testing.T) {
 
 // TestStorage_ContentTypeVariations tests various content types.
 func TestStorage_ContentTypeVariations(t *testing.T) {
+	t.Parallel()
 	client := &Client{
 		cfg:    Config{DefaultBucket: "bucket"},
 		logger: slog.Default(),
@@ -837,6 +913,7 @@ func TestStorage_ContentTypeVariations(t *testing.T) {
 
 	for _, ct := range contentTypes {
 		t.Run("content_type_"+ct, func(t *testing.T) {
+			t.Parallel()
 			opts := &storage.PutOptions{
 				ContentType: ct,
 			}
@@ -849,6 +926,7 @@ func TestStorage_ContentTypeVariations(t *testing.T) {
 
 // TestStorage_ListOptions tests various list options.
 func TestStorage_ListOptions(t *testing.T) {
+	t.Parallel()
 	client := &Client{
 		cfg:    Config{DefaultBucket: "bucket"},
 		logger: slog.Default(),
@@ -856,6 +934,7 @@ func TestStorage_ListOptions(t *testing.T) {
 	stor := NewStorage(client, nil)
 
 	t.Run("List with prefix only", func(t *testing.T) {
+		t.Parallel()
 		opts := &storage.ListOptions{
 			Prefix: "test/",
 		}
@@ -865,6 +944,7 @@ func TestStorage_ListOptions(t *testing.T) {
 	})
 
 	t.Run("List with recursive only", func(t *testing.T) {
+		t.Parallel()
 		opts := &storage.ListOptions{
 			Recursive: true,
 		}
@@ -874,6 +954,7 @@ func TestStorage_ListOptions(t *testing.T) {
 	})
 
 	t.Run("List with max keys only", func(t *testing.T) {
+		t.Parallel()
 		opts := &storage.ListOptions{
 			MaxKeys: 100,
 		}
@@ -883,6 +964,7 @@ func TestStorage_ListOptions(t *testing.T) {
 	})
 
 	t.Run("List with max keys zero", func(t *testing.T) {
+		t.Parallel()
 		opts := &storage.ListOptions{
 			MaxKeys: 0,
 		}
@@ -892,6 +974,7 @@ func TestStorage_ListOptions(t *testing.T) {
 	})
 
 	t.Run("List with all options", func(t *testing.T) {
+		t.Parallel()
 		opts := &storage.ListOptions{
 			Prefix:    "docs/",
 			Recursive: true,
@@ -905,6 +988,7 @@ func TestStorage_ListOptions(t *testing.T) {
 
 // TestStorage_BucketAndKeyVariations tests various bucket and key combinations.
 func TestStorage_BucketAndKeyVariations(t *testing.T) {
+	t.Parallel()
 	client := &Client{
 		cfg:    Config{DefaultBucket: "default-bucket"},
 		logger: slog.Default(),
@@ -931,12 +1015,14 @@ func TestStorage_BucketAndKeyVariations(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name+"_Put", func(t *testing.T) {
+			t.Parallel()
 			reader := strings.NewReader("test")
 			err := stor.Put(context.Background(), tc.bucket, tc.key, reader, nil)
 			assert.Error(t, err)
 		})
 
 		t.Run(tc.name+"_Get", func(t *testing.T) {
+			t.Parallel()
 			rc, info, err := stor.Get(context.Background(), tc.bucket, tc.key)
 			assert.Error(t, err)
 			assert.Nil(t, rc)
@@ -944,6 +1030,7 @@ func TestStorage_BucketAndKeyVariations(t *testing.T) {
 		})
 
 		t.Run(tc.name+"_Exists", func(t *testing.T) {
+			t.Parallel()
 			exists, err := stor.Exists(context.Background(), tc.bucket, tc.key)
 			assert.Error(t, err)
 			assert.False(t, exists)
@@ -953,7 +1040,9 @@ func TestStorage_BucketAndKeyVariations(t *testing.T) {
 
 // TestStorage_CloseTests variations for Close method.
 func TestStorage_CloseVariations(t *testing.T) {
+	t.Parallel()
 	t.Run("close with non-nil client", func(t *testing.T) {
+		t.Parallel()
 		client := &Client{
 			cfg:    Config{},
 			logger: slog.Default(),
@@ -967,6 +1056,7 @@ func TestStorage_CloseVariations(t *testing.T) {
 	})
 
 	t.Run("close twice is safe", func(t *testing.T) {
+		t.Parallel()
 		client := &Client{
 			cfg:    Config{},
 			logger: slog.Default(),
@@ -983,6 +1073,7 @@ func TestStorage_CloseVariations(t *testing.T) {
 
 // TestStorage_ContextDeadlineExceeded tests context deadline exceeded scenarios.
 func TestStorage_ContextDeadlineExceeded(t *testing.T) {
+	t.Parallel()
 	client := &Client{
 		cfg:    Config{DefaultBucket: "bucket"},
 		logger: slog.Default(),
@@ -990,6 +1081,7 @@ func TestStorage_ContextDeadlineExceeded(t *testing.T) {
 	stor := NewStorage(client, nil)
 
 	t.Run("Put with deadline exceeded", func(t *testing.T) {
+		t.Parallel()
 		ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(-1*time.Hour))
 		defer cancel()
 
@@ -999,6 +1091,7 @@ func TestStorage_ContextDeadlineExceeded(t *testing.T) {
 	})
 
 	t.Run("Get with deadline exceeded", func(t *testing.T) {
+		t.Parallel()
 		ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(-1*time.Hour))
 		defer cancel()
 
@@ -1009,6 +1102,7 @@ func TestStorage_ContextDeadlineExceeded(t *testing.T) {
 	})
 
 	t.Run("Delete with deadline exceeded", func(t *testing.T) {
+		t.Parallel()
 		ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(-1*time.Hour))
 		defer cancel()
 
@@ -1017,6 +1111,7 @@ func TestStorage_ContextDeadlineExceeded(t *testing.T) {
 	})
 
 	t.Run("Exists with deadline exceeded", func(t *testing.T) {
+		t.Parallel()
 		ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(-1*time.Hour))
 		defer cancel()
 
@@ -1028,6 +1123,7 @@ func TestStorage_ContextDeadlineExceeded(t *testing.T) {
 
 // TestStorage_ReaderVariations tests various reader types for Put.
 func TestStorage_ReaderVariations(t *testing.T) {
+	t.Parallel()
 	client := &Client{
 		cfg:    Config{DefaultBucket: "bucket"},
 		logger: slog.Default(),
@@ -1035,6 +1131,7 @@ func TestStorage_ReaderVariations(t *testing.T) {
 	stor := NewStorage(client, nil)
 
 	t.Run("with bytes.Reader", func(t *testing.T) {
+		t.Parallel()
 		data := []byte("test data")
 		reader := bytes.NewReader(data)
 		err := stor.Put(context.Background(), "bucket", "key", reader, nil)
@@ -1042,12 +1139,14 @@ func TestStorage_ReaderVariations(t *testing.T) {
 	})
 
 	t.Run("with empty reader", func(t *testing.T) {
+		t.Parallel()
 		reader := strings.NewReader("")
 		err := stor.Put(context.Background(), "bucket", "key", reader, nil)
 		assert.Error(t, err)
 	})
 
 	t.Run("with large data", func(t *testing.T) {
+		t.Parallel()
 		data := bytes.Repeat([]byte("x"), 10*1024*1024) // 10MB
 		reader := bytes.NewReader(data)
 		err := stor.Put(context.Background(), "bucket", "key", reader, nil)
@@ -1057,7 +1156,9 @@ func TestStorage_ReaderVariations(t *testing.T) {
 
 // TestStorage_Get_ErrorPaths tests Get method error paths.
 func TestStorage_Get_ErrorPaths(t *testing.T) {
+	t.Parallel()
 	t.Run("Get with nil client returns error", func(t *testing.T) {
+		t.Parallel()
 		client := &Client{
 			cfg:    Config{DefaultBucket: "bucket"},
 			logger: slog.Default(),
@@ -1072,6 +1173,7 @@ func TestStorage_Get_ErrorPaths(t *testing.T) {
 	})
 
 	t.Run("Get with empty bucket uses default", func(t *testing.T) {
+		t.Parallel()
 		client := &Client{
 			cfg:    Config{DefaultBucket: "default-bucket"},
 			logger: slog.Default(),
@@ -1092,7 +1194,9 @@ func TestStorage_Get_ErrorPaths(t *testing.T) {
 
 // TestStorage_Exists_ErrorPaths tests Exists method error paths.
 func TestStorage_Exists_ErrorPaths(t *testing.T) {
+	t.Parallel()
 	t.Run("Exists with nil client returns error", func(t *testing.T) {
+		t.Parallel()
 		client := &Client{
 			cfg:    Config{DefaultBucket: "bucket"},
 			logger: slog.Default(),
@@ -1105,6 +1209,7 @@ func TestStorage_Exists_ErrorPaths(t *testing.T) {
 	})
 
 	t.Run("Exists with empty bucket uses default", func(t *testing.T) {
+		t.Parallel()
 		client := &Client{
 			cfg:    Config{DefaultBucket: "my-bucket"},
 			logger: slog.Default(),
@@ -1120,7 +1225,9 @@ func TestStorage_Exists_ErrorPaths(t *testing.T) {
 
 // TestStorage_Delete_ErrorPaths tests Delete method error paths.
 func TestStorage_Delete_ErrorPaths(t *testing.T) {
+	t.Parallel()
 	t.Run("Delete with nil client returns error", func(t *testing.T) {
+		t.Parallel()
 		client := &Client{
 			cfg:    Config{DefaultBucket: "bucket"},
 			logger: slog.Default(),
@@ -1133,6 +1240,7 @@ func TestStorage_Delete_ErrorPaths(t *testing.T) {
 	})
 
 	t.Run("Delete with empty bucket uses default", func(t *testing.T) {
+		t.Parallel()
 		client := &Client{
 			cfg:    Config{DefaultBucket: "default"},
 			logger: slog.Default(),
@@ -1147,7 +1255,9 @@ func TestStorage_Delete_ErrorPaths(t *testing.T) {
 
 // TestStorage_List_ErrorPaths tests List method error paths.
 func TestStorage_List_ErrorPaths(t *testing.T) {
+	t.Parallel()
 	t.Run("List with nil client returns error", func(t *testing.T) {
+		t.Parallel()
 		client := &Client{
 			cfg:    Config{DefaultBucket: "bucket"},
 			logger: slog.Default(),
@@ -1161,6 +1271,7 @@ func TestStorage_List_ErrorPaths(t *testing.T) {
 	})
 
 	t.Run("List with nil options", func(t *testing.T) {
+		t.Parallel()
 		client := &Client{
 			cfg:    Config{DefaultBucket: "bucket"},
 			logger: slog.Default(),
@@ -1173,6 +1284,7 @@ func TestStorage_List_ErrorPaths(t *testing.T) {
 	})
 
 	t.Run("List with empty bucket uses default", func(t *testing.T) {
+		t.Parallel()
 		client := &Client{
 			cfg:    Config{DefaultBucket: "default-bucket"},
 			logger: slog.Default(),
@@ -1187,6 +1299,7 @@ func TestStorage_List_ErrorPaths(t *testing.T) {
 
 // TestStorage_ListOptionsVariations tests List with various options.
 func TestStorage_ListOptionsVariations(t *testing.T) {
+	t.Parallel()
 	client := &Client{
 		cfg:    Config{DefaultBucket: "bucket"},
 		logger: slog.Default(),
@@ -1203,6 +1316,7 @@ func TestStorage_ListOptionsVariations(t *testing.T) {
 
 	for i, opts := range options {
 		t.Run(fmt.Sprintf("options_%d", i), func(t *testing.T) {
+			t.Parallel()
 			// Just verify options are structured correctly
 			assert.NotNil(t, opts)
 		})
@@ -1211,6 +1325,7 @@ func TestStorage_ListOptionsVariations(t *testing.T) {
 
 // TestStorage_PresignedURLVariations tests GetPresignedURL with various options.
 func TestStorage_PresignedURLVariations(t *testing.T) {
+	t.Parallel()
 	client := &Client{
 		cfg:    Config{DefaultBucket: "bucket"},
 		logger: slog.Default(),
@@ -1227,6 +1342,7 @@ func TestStorage_PresignedURLVariations(t *testing.T) {
 
 	for _, exp := range expirations {
 		t.Run("expiry_"+exp.String(), func(t *testing.T) {
+			t.Parallel()
 			opts := &storage.PresignedURLOptions{
 				Method: "GET",
 				Expiry: exp,
@@ -1241,6 +1357,7 @@ func TestStorage_PresignedURLVariations(t *testing.T) {
 
 // TestStorage_ContextVariations tests various context scenarios.
 func TestStorage_ContextVariations(t *testing.T) {
+	t.Parallel()
 	client := &Client{
 		cfg:    Config{DefaultBucket: "bucket"},
 		logger: slog.Default(),
@@ -1248,6 +1365,7 @@ func TestStorage_ContextVariations(t *testing.T) {
 	stor := NewStorage(client, nil)
 
 	t.Run("With cancelled context", func(t *testing.T) {
+		t.Parallel()
 		ctx, cancel := context.WithCancel(context.Background())
 		cancel()
 
@@ -1256,6 +1374,7 @@ func TestStorage_ContextVariations(t *testing.T) {
 	})
 
 	t.Run("With timeout context", func(t *testing.T) {
+		t.Parallel()
 		ctx, cancel := context.WithTimeout(context.Background(), 1*time.Nanosecond)
 		defer cancel()
 

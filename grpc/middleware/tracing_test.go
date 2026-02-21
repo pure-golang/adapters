@@ -17,6 +17,7 @@ import (
 
 // TestSplitMethodName_ValidPath tests splitMethodName with valid method paths
 func TestSplitMethodName_ValidPath(t *testing.T) {
+	t.Parallel()
 	testCases := []struct {
 		name            string
 		fullMethodName  string
@@ -63,6 +64,7 @@ func TestSplitMethodName_ValidPath(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
 			service, method := splitMethodName(tc.fullMethodName)
 			assert.Equal(t, tc.expectedService, service)
 			assert.Equal(t, tc.expectedMethod, method)
@@ -72,6 +74,7 @@ func TestSplitMethodName_ValidPath(t *testing.T) {
 
 // TestSplitMethodName_InvalidPath tests splitMethodName with invalid paths
 func TestSplitMethodName_InvalidPath(t *testing.T) {
+	t.Parallel()
 	testCases := []struct {
 		name            string
 		fullMethodName  string
@@ -112,6 +115,7 @@ func TestSplitMethodName_InvalidPath(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
 			service, method := splitMethodName(tc.fullMethodName)
 			assert.Equal(t, tc.expectedService, service)
 			assert.Equal(t, tc.expectedMethod, method)
@@ -121,6 +125,7 @@ func TestSplitMethodName_InvalidPath(t *testing.T) {
 
 // TestMetadataTextMapPropagator tests the MetadataTextMapPropagator function
 func TestMetadataTextMapPropagator(t *testing.T) {
+	t.Parallel()
 	propagator := MetadataTextMapPropagator()
 
 	assert.NotNil(t, propagator)
@@ -132,6 +137,7 @@ func TestMetadataTextMapPropagator(t *testing.T) {
 
 // TestMetadataSupplier_Get tests metadataSupplier.Get method
 func TestMetadataSupplier_Get(t *testing.T) {
+	t.Parallel()
 	md := metadata.Pairs("key1", "value1", "key2", "value2")
 	supplier := metadataSupplier{metadata: &md}
 
@@ -150,6 +156,7 @@ func TestMetadataSupplier_Get(t *testing.T) {
 
 // TestMetadataSupplier_Set tests metadataSupplier.Set method
 func TestMetadataSupplier_Set(t *testing.T) {
+	t.Parallel()
 	md := metadata.MD{}
 	supplier := metadataSupplier{metadata: &md}
 
@@ -168,6 +175,7 @@ func TestMetadataSupplier_Set(t *testing.T) {
 
 // TestMetadataSupplier_Keys tests metadataSupplier.Keys method
 func TestMetadataSupplier_Keys(t *testing.T) {
+	t.Parallel()
 	md := metadata.Pairs("key1", "value1", "key2", "value2", "key3", "value3")
 	supplier := metadataSupplier{metadata: &md}
 
@@ -181,6 +189,7 @@ func TestMetadataSupplier_Keys(t *testing.T) {
 
 // TestMetadataSupplier_Empty tests metadataSupplier with empty metadata
 func TestMetadataSupplier_Empty(t *testing.T) {
+	t.Parallel()
 	md := metadata.MD{}
 	supplier := metadataSupplier{metadata: &md}
 
@@ -200,6 +209,7 @@ func TestMetadataSupplier_Empty(t *testing.T) {
 
 // TestWrappedServerStream_Context tests wrappedServerStream.Context method
 func TestWrappedServerStream_Context(t *testing.T) {
+	t.Parallel()
 	ctx := context.Background()
 	wss := &wrappedServerStream{
 		ctx: ctx,
@@ -210,6 +220,7 @@ func TestWrappedServerStream_Context(t *testing.T) {
 
 // TestWrappedServerStream_ContextWithValue tests wrappedServerStream with custom context
 func TestWrappedServerStream_ContextWithValue(t *testing.T) {
+	t.Parallel()
 	ctxWithValue := context.WithValue(context.Background(), "test-key", "test-value")
 	wss := &wrappedServerStream{
 		ctx: ctxWithValue,
@@ -623,6 +634,7 @@ func TestTracingStreamInterceptor_SpanAttributes(t *testing.T) {
 
 // TestSplitMethodName_URLSafe tests splitMethodName with URL-safe paths
 func TestSplitMethodName_URLSafe(t *testing.T) {
+	t.Parallel()
 	// Test that URL encoded paths are handled
 	service, method := splitMethodName("/api.v1.User/GetUser")
 

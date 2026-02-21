@@ -9,6 +9,7 @@ import (
 )
 
 func TestNewConstantInterval(t *testing.T) {
+	t.Parallel()
 	interval := time.Second * 5
 	policy := NewConstantInterval(interval)
 
@@ -17,7 +18,9 @@ func TestNewConstantInterval(t *testing.T) {
 }
 
 func TestConstantInterval_TryNum(t *testing.T) {
+	t.Parallel()
 	t.Run("returns constant duration", func(t *testing.T) {
+		t.Parallel()
 		interval := time.Second * 10
 		policy := NewConstantInterval(interval)
 
@@ -30,6 +33,7 @@ func TestConstantInterval_TryNum(t *testing.T) {
 	})
 
 	t.Run("never stops", func(t *testing.T) {
+		t.Parallel()
 		policy := NewConstantInterval(time.Millisecond)
 
 		// Even with very high try numbers, it should never stop
@@ -40,6 +44,7 @@ func TestConstantInterval_TryNum(t *testing.T) {
 	})
 
 	t.Run("handles zero try number", func(t *testing.T) {
+		t.Parallel()
 		interval := time.Second
 		policy := NewConstantInterval(interval)
 

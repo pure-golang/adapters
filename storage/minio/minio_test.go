@@ -18,6 +18,7 @@ import (
 
 // TestConfig tests Config struct.
 func TestConfig(t *testing.T) {
+	t.Parallel()
 	cfg := Config{
 		Endpoint:  "localhost:9000",
 		AccessKey: "minioadmin",
@@ -35,6 +36,7 @@ func TestConfig(t *testing.T) {
 
 // TestToStorageError tests the toStorageError function.
 func TestToStorageError(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name         string
 		err          error
@@ -102,6 +104,7 @@ func TestToStorageError(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			err := toStorageError(tt.err, tt.bucket, tt.key)
 			if tt.expectedCode == "" {
 				assert.Nil(t, err)
@@ -119,6 +122,7 @@ func TestToStorageError(t *testing.T) {
 
 // TestIsNotFoundError tests the isNotFoundError function.
 func TestIsNotFoundError(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name     string
 		err      error
@@ -153,6 +157,7 @@ func TestIsNotFoundError(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			assert.Equal(t, tt.expected, isNotFoundError(tt.err))
 		})
 	}
@@ -160,7 +165,9 @@ func TestIsNotFoundError(t *testing.T) {
 
 // TestNewClient tests the NewClient function.
 func TestNewClient(t *testing.T) {
+	t.Parallel()
 	t.Run("with nil options fails to connect", func(t *testing.T) {
+		t.Parallel()
 		cfg := Config{
 			Endpoint:  "invalid-endpoint:9999",
 			AccessKey: "test",
@@ -175,6 +182,7 @@ func TestNewClient(t *testing.T) {
 
 // TestNewDefaultClient tests the NewDefaultClient function.
 func TestNewDefaultClient(t *testing.T) {
+	t.Parallel()
 	cfg := Config{
 		Endpoint:  "invalid-endpoint:9999",
 		AccessKey: "test",
@@ -188,7 +196,9 @@ func TestNewDefaultClient(t *testing.T) {
 
 // TestClient_Close tests the Client Close method.
 func TestClient_Close(t *testing.T) {
+	t.Parallel()
 	t.Run("close once", func(t *testing.T) {
+		t.Parallel()
 		client := &Client{
 			logger: slog.Default(),
 			closed: false,
@@ -200,6 +210,7 @@ func TestClient_Close(t *testing.T) {
 	})
 
 	t.Run("close twice returns nil", func(t *testing.T) {
+		t.Parallel()
 		client := &Client{
 			logger: slog.Default(),
 			closed: false,
@@ -214,6 +225,7 @@ func TestClient_Close(t *testing.T) {
 	})
 
 	t.Run("IsClosed before close", func(t *testing.T) {
+		t.Parallel()
 		client := &Client{
 			logger: slog.Default(),
 			closed: false,
@@ -229,6 +241,7 @@ func TestClient_Close(t *testing.T) {
 
 // TestGetMinioClient tests the GetMinioClient method.
 func TestGetMinioClient(t *testing.T) {
+	t.Parallel()
 	minioClient := &minio.Client{}
 	client := &Client{
 		client: minioClient,
@@ -239,7 +252,9 @@ func TestGetMinioClient(t *testing.T) {
 
 // TestNewStorage tests the NewStorage function.
 func TestNewStorage(t *testing.T) {
+	t.Parallel()
 	t.Run("with nil options", func(t *testing.T) {
+		t.Parallel()
 		client := &Client{
 			cfg: Config{DefaultBucket: "test-bucket"},
 		}
@@ -253,6 +268,7 @@ func TestNewStorage(t *testing.T) {
 	})
 
 	t.Run("with nil logger in options", func(t *testing.T) {
+		t.Parallel()
 		client := &Client{
 			cfg: Config{DefaultBucket: "test-bucket"},
 		}
@@ -263,6 +279,7 @@ func TestNewStorage(t *testing.T) {
 	})
 
 	t.Run("with custom logger", func(t *testing.T) {
+		t.Parallel()
 		client := &Client{
 			cfg: Config{DefaultBucket: "test-bucket"},
 		}
@@ -276,7 +293,9 @@ func TestNewStorage(t *testing.T) {
 
 // TestNewDefault tests the NewDefault function.
 func TestNewDefault(t *testing.T) {
+	t.Parallel()
 	t.Run("with invalid config", func(t *testing.T) {
+		t.Parallel()
 		cfg := Config{
 			Endpoint:  "invalid-endpoint:9999",
 			AccessKey: "test",
@@ -291,7 +310,9 @@ func TestNewDefault(t *testing.T) {
 
 // TestStorage_Close tests the Storage Close method.
 func TestStorage_Close(t *testing.T) {
+	t.Parallel()
 	t.Run("close calls client close", func(t *testing.T) {
+		t.Parallel()
 		client := &Client{
 			cfg:    Config{},
 			logger: slog.Default(),
@@ -308,6 +329,7 @@ func TestStorage_Close(t *testing.T) {
 
 // TestStorageInterface verifies Storage implements storage.Storage.
 func TestStorageInterface(t *testing.T) {
+	t.Parallel()
 	// Compile-time check that Storage implements storage.Storage
 	var _ storage.Storage = (*Storage)(nil)
 	var _ io.Closer = (*Storage)(nil)
@@ -315,13 +337,16 @@ func TestStorageInterface(t *testing.T) {
 
 // TestCloserInterface verifies Client implements Closer.
 func TestCloserInterface(t *testing.T) {
+	t.Parallel()
 	// Compile-time check that Client implements Closer
 	var _ Closer = (*Client)(nil)
 }
 
 // TestStorage_Put tests the Put method with nil client.
 func TestStorage_Put(t *testing.T) {
+	t.Parallel()
 	t.Run("put with nil client returns error", func(t *testing.T) {
+		t.Parallel()
 		client := &Client{
 			cfg:    Config{DefaultBucket: "bucket"},
 			logger: slog.Default(),
@@ -336,7 +361,9 @@ func TestStorage_Put(t *testing.T) {
 
 // TestStorage_Get tests the Get method with nil client.
 func TestStorage_Get(t *testing.T) {
+	t.Parallel()
 	t.Run("get with nil client returns error", func(t *testing.T) {
+		t.Parallel()
 		client := &Client{
 			cfg:    Config{DefaultBucket: "bucket"},
 			logger: slog.Default(),
@@ -353,7 +380,9 @@ func TestStorage_Get(t *testing.T) {
 
 // TestStorage_Delete tests the Delete method with nil client.
 func TestStorage_Delete(t *testing.T) {
+	t.Parallel()
 	t.Run("delete with nil client returns error", func(t *testing.T) {
+		t.Parallel()
 		client := &Client{
 			cfg:    Config{DefaultBucket: "bucket"},
 			logger: slog.Default(),
@@ -368,7 +397,9 @@ func TestStorage_Delete(t *testing.T) {
 
 // TestStorage_Exists tests the Exists method with nil client.
 func TestStorage_Exists(t *testing.T) {
+	t.Parallel()
 	t.Run("exists with nil client returns error", func(t *testing.T) {
+		t.Parallel()
 		client := &Client{
 			cfg:    Config{DefaultBucket: "bucket"},
 			logger: slog.Default(),
@@ -384,7 +415,9 @@ func TestStorage_Exists(t *testing.T) {
 
 // TestStorage_List tests the List method.
 func TestStorage_List(t *testing.T) {
+	t.Parallel()
 	t.Run("list with nil client returns error", func(t *testing.T) {
+		t.Parallel()
 		client := &Client{
 			cfg:    Config{DefaultBucket: "bucket"},
 			logger: slog.Default(),
@@ -400,7 +433,9 @@ func TestStorage_List(t *testing.T) {
 
 // TestGetPresignedURL tests the GetPresignedURL method.
 func TestGetPresignedURL(t *testing.T) {
+	t.Parallel()
 	t.Run("unsupported method returns error", func(t *testing.T) {
+		t.Parallel()
 		client := &Client{
 			cfg:    Config{DefaultBucket: "bucket"},
 			logger: slog.Default(),
@@ -418,6 +453,7 @@ func TestGetPresignedURL(t *testing.T) {
 	})
 
 	t.Run("GET method with nil client returns error", func(t *testing.T) {
+		t.Parallel()
 		client := &Client{
 			cfg:    Config{DefaultBucket: "bucket"},
 			logger: slog.Default(),
@@ -435,6 +471,7 @@ func TestGetPresignedURL(t *testing.T) {
 	})
 
 	t.Run("PUT method with nil client returns error", func(t *testing.T) {
+		t.Parallel()
 		client := &Client{
 			cfg:    Config{DefaultBucket: "bucket"},
 			logger: slog.Default(),
@@ -454,6 +491,7 @@ func TestGetPresignedURL(t *testing.T) {
 
 // TestCore tests the core method.
 func TestCore(t *testing.T) {
+	t.Parallel()
 	client := &Client{
 		cfg:    Config{},
 		logger: slog.Default(),
@@ -466,7 +504,9 @@ func TestCore(t *testing.T) {
 
 // TestCreateMultipartUpload tests the CreateMultipartUpload method.
 func TestCreateMultipartUpload(t *testing.T) {
+	t.Parallel()
 	t.Run("with nil client returns error", func(t *testing.T) {
+		t.Parallel()
 		client := &Client{
 			cfg:    Config{DefaultBucket: "bucket"},
 			logger: slog.Default(),
@@ -482,7 +522,9 @@ func TestCreateMultipartUpload(t *testing.T) {
 
 // TestUploadPart tests the UploadPart method.
 func TestUploadPart(t *testing.T) {
+	t.Parallel()
 	t.Run("with nil client returns error", func(t *testing.T) {
+		t.Parallel()
 		client := &Client{
 			cfg:    Config{DefaultBucket: "bucket"},
 			logger: slog.Default(),
@@ -500,7 +542,9 @@ func TestUploadPart(t *testing.T) {
 
 // TestCompleteMultipartUpload tests the CompleteMultipartUpload method.
 func TestCompleteMultipartUpload(t *testing.T) {
+	t.Parallel()
 	t.Run("with nil client returns error", func(t *testing.T) {
+		t.Parallel()
 		client := &Client{
 			cfg:    Config{DefaultBucket: "bucket"},
 			logger: slog.Default(),
@@ -517,7 +561,9 @@ func TestCompleteMultipartUpload(t *testing.T) {
 
 // TestAbortMultipartUpload tests the AbortMultipartUpload method.
 func TestAbortMultipartUpload(t *testing.T) {
+	t.Parallel()
 	t.Run("with nil client returns error", func(t *testing.T) {
+		t.Parallel()
 		client := &Client{
 			cfg:    Config{DefaultBucket: "bucket"},
 			logger: slog.Default(),
@@ -532,7 +578,9 @@ func TestAbortMultipartUpload(t *testing.T) {
 
 // TestListMultipartUploads tests the ListMultipartUploads method.
 func TestListMultipartUploads(t *testing.T) {
+	t.Parallel()
 	t.Run("with nil client panics", func(t *testing.T) {
+		t.Parallel()
 		t.Skip("ListIncompleteUploads spawns goroutines that panic cannot be caught")
 		client := &Client{
 			cfg:    Config{DefaultBucket: "bucket"},
@@ -570,7 +618,9 @@ func ExampleStorage() {
 
 // TestStorage_GetFileHeader tests the GetFileHeader method.
 func TestStorage_GetFileHeader(t *testing.T) {
+	t.Parallel()
 	t.Run("get file header with uninitialized client returns error", func(t *testing.T) {
+		t.Parallel()
 		// Arrange
 		client := &Client{
 			client: nil,

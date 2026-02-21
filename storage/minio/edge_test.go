@@ -13,6 +13,7 @@ import (
 
 // TestStorage_EdgeCases tests edge cases for storage operations.
 func TestStorage_EdgeCases(t *testing.T) {
+	t.Parallel()
 	client := &Client{
 		cfg:    Config{DefaultBucket: "default-bucket"},
 		logger: slog.Default(),
@@ -20,6 +21,7 @@ func TestStorage_EdgeCases(t *testing.T) {
 	stor := NewStorage(client, nil)
 
 	t.Run("Put with empty key uses default bucket", func(t *testing.T) {
+		t.Parallel()
 		reader := strings.NewReader("test")
 		err := stor.Put(context.Background(), "", "key.txt", reader, nil)
 		assert.Error(t, err)
@@ -27,6 +29,7 @@ func TestStorage_EdgeCases(t *testing.T) {
 	})
 
 	t.Run("Get with empty key uses default bucket", func(t *testing.T) {
+		t.Parallel()
 		rc, info, err := stor.Get(context.Background(), "", "key.txt")
 		assert.Error(t, err)
 		assert.Nil(t, rc)
@@ -35,12 +38,14 @@ func TestStorage_EdgeCases(t *testing.T) {
 	})
 
 	t.Run("Delete with empty key uses default bucket", func(t *testing.T) {
+		t.Parallel()
 		err := stor.Delete(context.Background(), "", "key.txt")
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), "not initialized")
 	})
 
 	t.Run("Exists with empty key uses default bucket", func(t *testing.T) {
+		t.Parallel()
 		exists, err := stor.Exists(context.Background(), "", "key.txt")
 		assert.Error(t, err)
 		assert.False(t, exists)
@@ -48,6 +53,7 @@ func TestStorage_EdgeCases(t *testing.T) {
 	})
 
 	t.Run("List with empty bucket uses default bucket", func(t *testing.T) {
+		t.Parallel()
 		result, err := stor.List(context.Background(), "", nil)
 		assert.Error(t, err)
 		assert.Nil(t, result)
@@ -55,6 +61,7 @@ func TestStorage_EdgeCases(t *testing.T) {
 	})
 
 	t.Run("GetPresignedURL with empty bucket uses default", func(t *testing.T) {
+		t.Parallel()
 		opts := &storage.PresignedURLOptions{
 			Method: "GET",
 		}
@@ -65,6 +72,7 @@ func TestStorage_EdgeCases(t *testing.T) {
 	})
 
 	t.Run("CreateMultipartUpload with empty bucket uses default", func(t *testing.T) {
+		t.Parallel()
 		upload, err := stor.CreateMultipartUpload(context.Background(), "", "key.txt", nil)
 		assert.Error(t, err)
 		assert.Nil(t, upload)
@@ -72,6 +80,7 @@ func TestStorage_EdgeCases(t *testing.T) {
 	})
 
 	t.Run("UploadPart with empty bucket uses default", func(t *testing.T) {
+		t.Parallel()
 		reader := strings.NewReader("test data")
 		part, err := stor.UploadPart(context.Background(), "", "key.txt", "upload-id", 1, reader)
 		assert.Error(t, err)
@@ -80,6 +89,7 @@ func TestStorage_EdgeCases(t *testing.T) {
 	})
 
 	t.Run("CompleteMultipartUpload with empty bucket uses default", func(t *testing.T) {
+		t.Parallel()
 		opts := &storage.CompleteMultipartUploadOptions{}
 		info, err := stor.CompleteMultipartUpload(context.Background(), "", "key.txt", "upload-id", opts)
 		assert.Error(t, err)
@@ -88,12 +98,14 @@ func TestStorage_EdgeCases(t *testing.T) {
 	})
 
 	t.Run("AbortMultipartUpload with empty bucket uses default", func(t *testing.T) {
+		t.Parallel()
 		err := stor.AbortMultipartUpload(context.Background(), "", "key.txt", "upload-id")
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), "not initialized")
 	})
 
 	t.Run("ListMultipartUploads with empty bucket uses default", func(t *testing.T) {
+		t.Parallel()
 		t.Skip("ListIncompleteUploads spawns goroutines that panic cannot be caught")
 		_, err := stor.ListMultipartUploads(context.Background(), "")
 		assert.Error(t, err)
@@ -102,6 +114,7 @@ func TestStorage_EdgeCases(t *testing.T) {
 
 // TestStorage_SpecialCharacters tests keys with special characters.
 func TestStorage_SpecialCharacters(t *testing.T) {
+	t.Parallel()
 	client := &Client{
 		cfg:    Config{DefaultBucket: "bucket"},
 		logger: slog.Default(),
@@ -144,6 +157,7 @@ func TestStorage_SpecialCharacters(t *testing.T) {
 
 	for _, key := range specialKeys {
 		t.Run("key_"+strings.ReplaceAll(key, "/", "_slash_"), func(t *testing.T) {
+			t.Parallel()
 			// Put
 			reader := strings.NewReader("test")
 			err := stor.Put(context.Background(), "bucket", key, reader, nil)
@@ -169,6 +183,7 @@ func TestStorage_SpecialCharacters(t *testing.T) {
 
 // TestStorage_UnicodeKeys tests keys with unicode characters.
 func TestStorage_UnicodeKeys(t *testing.T) {
+	t.Parallel()
 	client := &Client{
 		cfg:    Config{DefaultBucket: "bucket"},
 		logger: slog.Default(),
@@ -190,6 +205,7 @@ func TestStorage_UnicodeKeys(t *testing.T) {
 
 	for _, key := range unicodeKeys {
 		t.Run("unicode_key", func(t *testing.T) {
+			t.Parallel()
 			// Put
 			reader := strings.NewReader("test")
 			err := stor.Put(context.Background(), "bucket", key, reader, nil)
@@ -206,6 +222,7 @@ func TestStorage_UnicodeKeys(t *testing.T) {
 
 // TestStorage_LongKeys tests very long key names.
 func TestStorage_LongKeys(t *testing.T) {
+	t.Parallel()
 	client := &Client{
 		cfg:    Config{DefaultBucket: "bucket"},
 		logger: slog.Default(),
@@ -213,6 +230,7 @@ func TestStorage_LongKeys(t *testing.T) {
 	stor := NewStorage(client, nil)
 
 	t.Run("very long key", func(t *testing.T) {
+		t.Parallel()
 		longKey := strings.Repeat("a", 1024)
 		reader := strings.NewReader("test")
 		err := stor.Put(context.Background(), "bucket", longKey, reader, nil)
@@ -220,6 +238,7 @@ func TestStorage_LongKeys(t *testing.T) {
 	})
 
 	t.Run("nested long path", func(t *testing.T) {
+		t.Parallel()
 		longPath := strings.Repeat("a/", 100) + "file.txt"
 		reader := strings.NewReader("test")
 		err := stor.Put(context.Background(), "bucket", longPath, reader, nil)
@@ -229,6 +248,7 @@ func TestStorage_LongKeys(t *testing.T) {
 
 // TestStorage_EmptyAndNilValues tests empty and nil values.
 func TestStorage_EmptyAndNilValues(t *testing.T) {
+	t.Parallel()
 	client := &Client{
 		cfg:    Config{DefaultBucket: "bucket"},
 		logger: slog.Default(),
@@ -236,17 +256,20 @@ func TestStorage_EmptyAndNilValues(t *testing.T) {
 	stor := NewStorage(client, nil)
 
 	t.Run("Put with empty reader", func(t *testing.T) {
+		t.Parallel()
 		reader := strings.NewReader("")
 		err := stor.Put(context.Background(), "bucket", "key.txt", reader, nil)
 		assert.Error(t, err)
 	})
 
 	t.Run("Put with nil reader", func(t *testing.T) {
+		t.Parallel()
 		err := stor.Put(context.Background(), "bucket", "key.txt", nil, nil)
 		assert.Error(t, err)
 	})
 
 	t.Run("Get with empty key", func(t *testing.T) {
+		t.Parallel()
 		rc, info, err := stor.Get(context.Background(), "bucket", "")
 		assert.Error(t, err)
 		assert.Nil(t, rc)
@@ -254,11 +277,13 @@ func TestStorage_EmptyAndNilValues(t *testing.T) {
 	})
 
 	t.Run("Delete with empty key", func(t *testing.T) {
+		t.Parallel()
 		err := stor.Delete(context.Background(), "bucket", "")
 		assert.Error(t, err)
 	})
 
 	t.Run("Exists with empty key", func(t *testing.T) {
+		t.Parallel()
 		exists, err := stor.Exists(context.Background(), "bucket", "")
 		assert.Error(t, err)
 		assert.False(t, exists)
@@ -267,6 +292,7 @@ func TestStorage_EmptyAndNilValues(t *testing.T) {
 
 // TestMultipartUpload_EdgeCases tests edge cases for multipart upload.
 func TestMultipartUpload_EdgeCases(t *testing.T) {
+	t.Parallel()
 	client := &Client{
 		cfg:    Config{DefaultBucket: "bucket"},
 		logger: slog.Default(),
@@ -274,6 +300,7 @@ func TestMultipartUpload_EdgeCases(t *testing.T) {
 	stor := NewStorage(client, nil)
 
 	t.Run("UploadPart with empty reader", func(t *testing.T) {
+		t.Parallel()
 		reader := strings.NewReader("")
 		part, err := stor.UploadPart(context.Background(), "bucket", "key", "upload-id", 1, reader)
 		assert.Error(t, err)
@@ -281,6 +308,7 @@ func TestMultipartUpload_EdgeCases(t *testing.T) {
 	})
 
 	t.Run("UploadPart with part number 0", func(t *testing.T) {
+		t.Parallel()
 		reader := strings.NewReader("test")
 		part, err := stor.UploadPart(context.Background(), "bucket", "key", "upload-id", 0, reader)
 		assert.Error(t, err)
@@ -288,6 +316,7 @@ func TestMultipartUpload_EdgeCases(t *testing.T) {
 	})
 
 	t.Run("UploadPart with negative part number", func(t *testing.T) {
+		t.Parallel()
 		reader := strings.NewReader("test")
 		part, err := stor.UploadPart(context.Background(), "bucket", "key", "upload-id", -1, reader)
 		assert.Error(t, err)
@@ -295,6 +324,7 @@ func TestMultipartUpload_EdgeCases(t *testing.T) {
 	})
 
 	t.Run("UploadPart with very large part number", func(t *testing.T) {
+		t.Parallel()
 		reader := strings.NewReader("test")
 		part, err := stor.UploadPart(context.Background(), "bucket", "key", "upload-id", 10000, reader)
 		assert.Error(t, err)
@@ -302,6 +332,7 @@ func TestMultipartUpload_EdgeCases(t *testing.T) {
 	})
 
 	t.Run("CompleteMultipartUpload with empty parts", func(t *testing.T) {
+		t.Parallel()
 		opts := &storage.CompleteMultipartUploadOptions{
 			Parts: []storage.UploadedPart{},
 		}
@@ -311,6 +342,7 @@ func TestMultipartUpload_EdgeCases(t *testing.T) {
 	})
 
 	t.Run("CompleteMultipartUpload with nil parts", func(t *testing.T) {
+		t.Parallel()
 		opts := &storage.CompleteMultipartUploadOptions{}
 		info, err := stor.CompleteMultipartUpload(context.Background(), "bucket", "key", "upload-id", opts)
 		assert.Error(t, err)
@@ -320,6 +352,7 @@ func TestMultipartUpload_EdgeCases(t *testing.T) {
 
 // TestPresignedURL_EdgeCases tests edge cases for presigned URLs.
 func TestPresignedURL_EdgeCases(t *testing.T) {
+	t.Parallel()
 	client := &Client{
 		cfg:    Config{DefaultBucket: "bucket"},
 		logger: slog.Default(),
@@ -327,6 +360,7 @@ func TestPresignedURL_EdgeCases(t *testing.T) {
 	stor := NewStorage(client, nil)
 
 	t.Run("with very short expiry", func(t *testing.T) {
+		t.Parallel()
 		opts := &storage.PresignedURLOptions{
 			Method: "GET",
 			Expiry: 1,
@@ -337,6 +371,7 @@ func TestPresignedURL_EdgeCases(t *testing.T) {
 	})
 
 	t.Run("with very long expiry", func(t *testing.T) {
+		t.Parallel()
 		opts := &storage.PresignedURLOptions{
 			Method: "GET",
 			Expiry: 7 * 24 * time.Hour, // 7 days
@@ -347,6 +382,7 @@ func TestPresignedURL_EdgeCases(t *testing.T) {
 	})
 
 	t.Run("GET with special characters in key", func(t *testing.T) {
+		t.Parallel()
 		opts := &storage.PresignedURLOptions{
 			Method: "GET",
 		}
@@ -367,6 +403,7 @@ func TestPresignedURL_EdgeCases(t *testing.T) {
 
 // TestList_EdgeCases tests edge cases for List operation.
 func TestList_EdgeCases(t *testing.T) {
+	t.Parallel()
 	client := &Client{
 		cfg:    Config{DefaultBucket: "bucket"},
 		logger: slog.Default(),
@@ -374,6 +411,7 @@ func TestList_EdgeCases(t *testing.T) {
 	stor := NewStorage(client, nil)
 
 	t.Run("with empty prefix", func(t *testing.T) {
+		t.Parallel()
 		opts := &storage.ListOptions{
 			Prefix: "",
 		}
@@ -383,6 +421,7 @@ func TestList_EdgeCases(t *testing.T) {
 	})
 
 	t.Run("with very long prefix", func(t *testing.T) {
+		t.Parallel()
 		opts := &storage.ListOptions{
 			Prefix: strings.Repeat("a", 1024),
 		}
@@ -392,6 +431,7 @@ func TestList_EdgeCases(t *testing.T) {
 	})
 
 	t.Run("with special characters in prefix", func(t *testing.T) {
+		t.Parallel()
 		prefixes := []string{
 			"файл/",
 			"文件/",
@@ -410,6 +450,7 @@ func TestList_EdgeCases(t *testing.T) {
 	})
 
 	t.Run("with zero max keys", func(t *testing.T) {
+		t.Parallel()
 		opts := &storage.ListOptions{
 			MaxKeys: 0,
 		}
@@ -419,6 +460,7 @@ func TestList_EdgeCases(t *testing.T) {
 	})
 
 	t.Run("with large max keys", func(t *testing.T) {
+		t.Parallel()
 		opts := &storage.ListOptions{
 			MaxKeys: 1000000,
 		}

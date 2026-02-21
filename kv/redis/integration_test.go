@@ -18,14 +18,13 @@ type RedisSuite struct {
 }
 
 func TestRedisSuite(t *testing.T) {
+	if testing.Short() {
+		t.Skip("integration test")
+	}
 	suite.Run(t, new(RedisSuite))
 }
 
 func (s *RedisSuite) SetupSuite() {
-	if testing.Short() {
-		s.T().Skip("integration test")
-	}
-
 	ctx := context.Background()
 
 	req := testcontainers.ContainerRequest{

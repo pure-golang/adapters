@@ -79,6 +79,7 @@ func TestParseTraceLogLevel_ValidLevels(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			result := parseTraceLogLevel(tt.input)
 			assert.Equal(t, tt.expected, result)
 		})
@@ -126,6 +127,7 @@ func TestParseTraceLogLevel_InvalidLevel(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			result := parseTraceLogLevel(tt.input)
 			// Invalid levels should default to LogLevelNone
 			assert.Equal(t, tracelog.LogLevelNone, result)
@@ -151,6 +153,7 @@ func TestParseTraceLogLevel_ProductionDefaults(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			result := parseTraceLogLevel(tt.input)
 			if tt.input == "" {
 				// Empty should default to None
@@ -188,6 +191,7 @@ func TestParseTraceLogLevel_DevelopmentDefaults(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			result := parseTraceLogLevel(tt.input)
 			assert.Equal(t, tt.expected, result)
 		})
@@ -195,6 +199,7 @@ func TestParseTraceLogLevel_DevelopmentDefaults(t *testing.T) {
 }
 
 func TestParseTraceLogLevel_LogLevelValues(t *testing.T) {
+	t.Parallel()
 	// Verify the actual numeric values match pgx expectations
 	// In pgx v5, the values are: Trace=6, Debug=5, Info=4, Warn=3, Error=2, None=1
 	assert.Equal(t, tracelog.LogLevel(6), tracelog.LogLevelTrace)

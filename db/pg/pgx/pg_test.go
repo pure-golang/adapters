@@ -14,6 +14,7 @@ import (
 )
 
 func TestNew_ValidConfig(t *testing.T) {
+	t.Parallel()
 	// This test verifies the configuration parsing logic
 	// We can't test actual database connection without a running PostgreSQL instance
 	// but we can verify the config URL generation
@@ -69,6 +70,7 @@ func TestNew_InvalidConfig(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			// Try to create DB - will fail without actual database
 			db, err := New(tt.cfg, nil)
 
@@ -81,6 +83,7 @@ func TestNew_InvalidConfig(t *testing.T) {
 }
 
 func TestNew_ZeroMaxOpenConns(t *testing.T) {
+	t.Parallel()
 	cfg := Config{
 		User:            "testuser",
 		Password:        "testpass",
@@ -101,6 +104,7 @@ func TestNew_ZeroMaxOpenConns(t *testing.T) {
 }
 
 func TestNewDefault_Tracers(t *testing.T) {
+	t.Parallel()
 	cfg := Config{
 		User:            "testuser",
 		Password:        "testpass",
@@ -156,6 +160,7 @@ func TestNewDefault_TraceLogLevelParsing(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			result := parseTraceLogLevel(tt.logLevel)
 			// Just verify it doesn't panic and returns a valid log level (1-6 for pgx v5)
 			assert.GreaterOrEqual(t, int(result), 1)
@@ -166,6 +171,7 @@ func TestNewDefault_TraceLogLevelParsing(t *testing.T) {
 
 func TestDB_Close(t *testing.T) {
 	t.Run("close with nil pool panics - we test this doesn't panic", func(t *testing.T) {
+		t.Parallel()
 		// The Close method calls db.Pool.Close() which will panic if Pool is nil
 		// We can't actually call it without a real pool, but we can verify
 		// the DB structure exists
@@ -177,6 +183,7 @@ func TestDB_Close(t *testing.T) {
 	})
 
 	t.Run("close method exists on DB", func(t *testing.T) {
+		t.Parallel()
 		// Verify DB implements io.Closer interface
 		var _ interface{ Close() error } = &DB{}
 	})
@@ -184,6 +191,7 @@ func TestDB_Close(t *testing.T) {
 
 func TestDB_Close_NilPool(t *testing.T) {
 	t.Run("nil pool DB can be created", func(t *testing.T) {
+		t.Parallel()
 		db := &DB{
 			Pool: nil,
 		}
@@ -244,6 +252,7 @@ func TestDB_ConnectionPoolOptions(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			// The actual connection pool configuration is validated in the New function
 			// We can't test it fully without a database, but we can verify the logic
 			expected := tt.expectedMaxConns
@@ -256,6 +265,7 @@ func TestDB_ConnectionPoolOptions(t *testing.T) {
 }
 
 func TestDB_ConnectionDurations(t *testing.T) {
+	t.Parallel()
 	cfg := Config{
 		User:            "testuser",
 		Password:        "testpass",
@@ -276,6 +286,7 @@ func TestDB_ConnectionDurations(t *testing.T) {
 }
 
 func TestNew_WithOptions(t *testing.T) {
+	t.Parallel()
 	// Test with nil options (should use default empty options)
 	options := &Options{}
 	assert.NotNil(t, options)
@@ -292,6 +303,7 @@ func TestNew_WithOptions(t *testing.T) {
 }
 
 func TestNew_WithNilOptions(t *testing.T) {
+	t.Parallel()
 	// Test with nil options (should be handled in New function)
 	var options *Options = nil
 
@@ -304,6 +316,7 @@ func TestNew_WithNilOptions(t *testing.T) {
 }
 
 func TestOptions_Struct(t *testing.T) {
+	t.Parallel()
 	// Test Options structure
 	opts := &Options{
 		Tracers: []pgx.QueryTracer{},
@@ -315,11 +328,13 @@ func TestOptions_Struct(t *testing.T) {
 }
 
 func TestDB_ImplementsCloser(t *testing.T) {
+	t.Parallel()
 	// Verify DB implements io.Closer
 	var _ interface{ Close() error } = &DB{}
 }
 
 func TestNew_ParseConfigFailure(t *testing.T) {
+	t.Parallel()
 	// Test that invalid DSN returns an error
 	cfg := Config{
 		User:     "testuser",
@@ -336,6 +351,7 @@ func TestNew_ParseConfigFailure(t *testing.T) {
 }
 
 func TestDB_Ping_NilPool(t *testing.T) {
+	t.Parallel()
 	db := &DB{
 		Pool: nil,
 	}
@@ -380,6 +396,7 @@ func TestConfig_DurationValues(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			lifeTime := time.Duration(tt.cfg.MaxConnLifeTime) * time.Second
 			idleTime := time.Duration(tt.cfg.MaxConnIdleTime) * time.Second
 
@@ -390,6 +407,7 @@ func TestConfig_DurationValues(t *testing.T) {
 }
 
 func TestNew_InvalidDSN(t *testing.T) {
+	t.Parallel()
 	// We can't easily test this without mocking pgxpool.ParseConfig
 	// But we can verify the URL generation handles edge cases
 
@@ -414,6 +432,7 @@ func TestNew_InvalidDSN(t *testing.T) {
 }
 
 func TestNew_TracerConfiguration(t *testing.T) {
+	t.Parallel()
 	// Test that tracers are properly configured
 	opts := &Options{
 		Tracers: []pgx.QueryTracer{
@@ -463,6 +482,7 @@ func TestNew_ConnectionFailures(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			// These will fail to connect, which is expected
 			db, err := New(tt.cfg, nil)
 			assert.Error(t, err)
@@ -472,6 +492,7 @@ func TestNew_ConnectionFailures(t *testing.T) {
 }
 
 func TestDB_Ping(t *testing.T) {
+	t.Parallel()
 	// Test that Ping would be called on a real DB structure
 	// We can't test actual Ping without a database, but we can verify the DB struct
 	db := &DB{
@@ -483,11 +504,13 @@ func TestDB_Ping(t *testing.T) {
 }
 
 func TestDB_NewLogger(t *testing.T) {
+	t.Parallel()
 	logger := NewLogger()
 	assert.NotNil(t, logger)
 }
 
 func TestConfig_DefaultValues(t *testing.T) {
+	t.Parallel()
 	// Test that config with zero values still generates a valid URL
 	cfg := Config{
 		User:     "user",
@@ -507,6 +530,7 @@ func TestConfig_DefaultValues(t *testing.T) {
 }
 
 func TestOptions_WithTracers(t *testing.T) {
+	t.Parallel()
 	opts := &Options{
 		Tracers: []pgx.QueryTracer{
 			otelpgx.NewTracer(),
@@ -518,6 +542,7 @@ func TestOptions_WithTracers(t *testing.T) {
 }
 
 func TestOptions_NilTracers(t *testing.T) {
+	t.Parallel()
 	opts := &Options{}
 
 	assert.NotNil(t, opts)
@@ -625,6 +650,7 @@ func TestNewDefault_VariousConfigs(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			db, err := NewDefault(tt.cfg)
 
 			if tt.wantErr {
@@ -638,6 +664,7 @@ func TestNewDefault_VariousConfigs(t *testing.T) {
 // TestNewDefault_TracerSetup tests that tracers are properly set up in NewDefault.
 func TestNewDefault_TracerSetup(t *testing.T) {
 	t.Run("NewDefault always adds tracers", func(t *testing.T) {
+		t.Parallel()
 		cfg := Config{
 			User:          "user",
 			Password:      "pass",
@@ -698,6 +725,7 @@ func TestNewDefault_ConnectionFailures(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			db, err := NewDefault(tt.cfg)
 			assert.Error(t, err)
 			assert.Nil(t, db)
@@ -709,6 +737,7 @@ func TestNewDefault_ConnectionFailures(t *testing.T) {
 // TestNewDefault_ConfigVariations tests NewDefault with config variations.
 func TestNewDefault_ConfigVariations(t *testing.T) {
 	t.Run("with very short timeout values", func(t *testing.T) {
+		t.Parallel()
 		cfg := Config{
 			User:            "user",
 			Password:        "pass",
@@ -725,6 +754,7 @@ func TestNewDefault_ConfigVariations(t *testing.T) {
 	})
 
 	t.Run("with very long timeout values", func(t *testing.T) {
+		t.Parallel()
 		cfg := Config{
 			User:            "user",
 			Password:        "pass",
@@ -741,6 +771,7 @@ func TestNewDefault_ConfigVariations(t *testing.T) {
 	})
 
 	t.Run("with very large max connections", func(t *testing.T) {
+		t.Parallel()
 		cfg := Config{
 			User:         "user",
 			Password:     "pass",

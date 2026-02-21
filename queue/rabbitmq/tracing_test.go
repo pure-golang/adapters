@@ -8,7 +8,9 @@ import (
 )
 
 func TestTableCarrier_Get(t *testing.T) {
+	t.Parallel()
 	t.Run("existing key", func(t *testing.T) {
+		t.Parallel()
 		carrier := tableCarrier(amqp.Table{
 			"key1": "value1",
 			"key2": 123,
@@ -19,6 +21,7 @@ func TestTableCarrier_Get(t *testing.T) {
 	})
 
 	t.Run("non-existing key", func(t *testing.T) {
+		t.Parallel()
 		carrier := tableCarrier(amqp.Table{
 			"key1": "value1",
 		})
@@ -28,6 +31,7 @@ func TestTableCarrier_Get(t *testing.T) {
 	})
 
 	t.Run("with integer value", func(t *testing.T) {
+		t.Parallel()
 		carrier := tableCarrier(amqp.Table{
 			"count": 42,
 		})
@@ -37,6 +41,7 @@ func TestTableCarrier_Get(t *testing.T) {
 	})
 
 	t.Run("with boolean value", func(t *testing.T) {
+		t.Parallel()
 		carrier := tableCarrier(amqp.Table{
 			"active": true,
 		})
@@ -47,7 +52,9 @@ func TestTableCarrier_Get(t *testing.T) {
 }
 
 func TestTableCarrier_Set(t *testing.T) {
+	t.Parallel()
 	t.Run("set new key", func(t *testing.T) {
+		t.Parallel()
 		carrier := tableCarrier(amqp.Table{})
 
 		carrier.Set("new-key", "new-value")
@@ -56,6 +63,7 @@ func TestTableCarrier_Set(t *testing.T) {
 	})
 
 	t.Run("overwrite existing key", func(t *testing.T) {
+		t.Parallel()
 		carrier := tableCarrier(amqp.Table{
 			"key": "old-value",
 		})
@@ -66,6 +74,7 @@ func TestTableCarrier_Set(t *testing.T) {
 	})
 
 	t.Run("set multiple keys", func(t *testing.T) {
+		t.Parallel()
 		carrier := tableCarrier(amqp.Table{})
 
 		carrier.Set("key1", "value1")
@@ -77,7 +86,9 @@ func TestTableCarrier_Set(t *testing.T) {
 }
 
 func TestTableCarrier_Keys(t *testing.T) {
+	t.Parallel()
 	t.Run("empty carrier", func(t *testing.T) {
+		t.Parallel()
 		carrier := tableCarrier(amqp.Table{})
 
 		keys := carrier.Keys()
@@ -87,6 +98,7 @@ func TestTableCarrier_Keys(t *testing.T) {
 	})
 
 	t.Run("single key", func(t *testing.T) {
+		t.Parallel()
 		carrier := tableCarrier(amqp.Table{
 			"key1": "value1",
 		})
@@ -98,6 +110,7 @@ func TestTableCarrier_Keys(t *testing.T) {
 	})
 
 	t.Run("multiple keys", func(t *testing.T) {
+		t.Parallel()
 		carrier := tableCarrier(amqp.Table{
 			"key1": "value1",
 			"key2": "value2",
@@ -113,6 +126,7 @@ func TestTableCarrier_Keys(t *testing.T) {
 	})
 
 	t.Run("keys are unique", func(t *testing.T) {
+		t.Parallel()
 		carrier := tableCarrier(amqp.Table{
 			"a": "1",
 			"b": "2",
@@ -130,6 +144,7 @@ func TestTableCarrier_Keys(t *testing.T) {
 }
 
 func TestTableCarrier_CombinedOperations(t *testing.T) {
+	t.Parallel()
 	carrier := tableCarrier(amqp.Table{
 		"existing": "value",
 	})

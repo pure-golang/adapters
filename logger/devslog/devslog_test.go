@@ -10,6 +10,7 @@ import (
 )
 
 func TestNewDefault_DebugLevel(t *testing.T) {
+	t.Parallel()
 	l := NewDefault(slog.LevelDebug)
 
 	assert.NotNil(t, l)
@@ -23,6 +24,7 @@ func TestNewDefault_DebugLevel(t *testing.T) {
 }
 
 func TestNewDefault_InfoLevel(t *testing.T) {
+	t.Parallel()
 	l := NewDefault(slog.LevelInfo)
 
 	assert.NotNil(t, l)
@@ -35,6 +37,7 @@ func TestNewDefault_InfoLevel(t *testing.T) {
 }
 
 func TestNewDefault_WarnLevel(t *testing.T) {
+	t.Parallel()
 	l := NewDefault(slog.LevelWarn)
 
 	assert.NotNil(t, l)
@@ -46,6 +49,7 @@ func TestNewDefault_WarnLevel(t *testing.T) {
 }
 
 func TestNewDefault_ErrorLevel(t *testing.T) {
+	t.Parallel()
 	l := NewDefault(slog.LevelError)
 
 	assert.NotNil(t, l)
@@ -56,6 +60,7 @@ func TestNewDefault_ErrorLevel(t *testing.T) {
 }
 
 func TestNewDefault_WithAttributes(t *testing.T) {
+	t.Parallel()
 	l := NewDefault(slog.LevelInfo)
 
 	require.NotNil(t, l)
@@ -66,6 +71,7 @@ func TestNewDefault_WithAttributes(t *testing.T) {
 }
 
 func TestNewDefault_WithGroup(t *testing.T) {
+	t.Parallel()
 	l := NewDefault(slog.LevelInfo)
 
 	require.NotNil(t, l)
@@ -76,6 +82,7 @@ func TestNewDefault_WithGroup(t *testing.T) {
 }
 
 func TestNewDefault_LogAttrs(t *testing.T) {
+	t.Parallel()
 	l := NewDefault(slog.LevelInfo)
 
 	require.NotNil(t, l)
@@ -85,6 +92,7 @@ func TestNewDefault_LogAttrs(t *testing.T) {
 }
 
 func TestNewDefault_HandlerConfiguration(t *testing.T) {
+	t.Parallel()
 	l := NewDefault(slog.LevelDebug)
 
 	require.NotNil(t, l)
@@ -101,6 +109,7 @@ func TestNewDefault_HandlerConfiguration(t *testing.T) {
 }
 
 func TestNewDefault_HandlerLevelFiltering(t *testing.T) {
+	t.Parallel()
 	l := NewDefault(slog.LevelWarn)
 
 	require.NotNil(t, l)
@@ -116,6 +125,7 @@ func TestNewDefault_HandlerLevelFiltering(t *testing.T) {
 }
 
 func TestNewDefault_HandlerWithOptions(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name        string
 		level       slog.Level
@@ -140,6 +150,7 @@ func TestNewDefault_HandlerWithOptions(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			l := NewDefault(tt.level)
 			h := l.Handler()
 			result := h.Enabled(context.Background(), tt.checkLevel)
@@ -156,6 +167,7 @@ func TestNewDefault_HandlerWithOptions(t *testing.T) {
 }
 
 func TestNewDefault_IntegrationScenarios(t *testing.T) {
+	t.Parallel()
 	scenarios := []struct {
 		name  string
 		level slog.Level
@@ -168,6 +180,7 @@ func TestNewDefault_IntegrationScenarios(t *testing.T) {
 
 	for _, sc := range scenarios {
 		t.Run(sc.name, func(t *testing.T) {
+			t.Parallel()
 			l := NewDefault(sc.level)
 
 			// Simulate typical usage patterns
@@ -188,6 +201,7 @@ func TestNewDefault_IntegrationScenarios(t *testing.T) {
 }
 
 func TestNewDefault_LogLevels(t *testing.T) {
+	t.Parallel()
 	levels := []slog.Level{
 		slog.Level(-8), // LevelDebug - 4
 		slog.LevelDebug,

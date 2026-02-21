@@ -10,6 +10,7 @@ import (
 
 // TestConfig_DefaultValues verifies that config has expected default values
 func TestConfig_DefaultValues(t *testing.T) {
+	t.Parallel()
 	cfg := Config{
 		Host:     "localhost",
 		User:     "user",
@@ -55,10 +56,12 @@ func TestConfig_DefaultValues(t *testing.T) {
 
 // TestConfig_SSLModes verifies SSL mode configurations
 func TestConfig_SSLModes(t *testing.T) {
+	t.Parallel()
 	sslModes := []string{"disable", "require", "verify-ca", "verify-full"}
 
 	for _, mode := range sslModes {
 		t.Run(mode, func(t *testing.T) {
+			t.Parallel()
 			cfg := Config{
 				Host:     "localhost",
 				Port:     5432,
@@ -76,6 +79,7 @@ func TestConfig_SSLModes(t *testing.T) {
 
 // TestConfig_ConnectTimeout verifies connect timeout configuration
 func TestConfig_ConnectTimeout(t *testing.T) {
+	t.Parallel()
 	testCases := []int{
 		0,   // no timeout
 		1,   // 1 second
@@ -103,6 +107,7 @@ func TestConfig_ConnectTimeout(t *testing.T) {
 
 // TestConfig_QueryTimeout verifies query timeout configuration
 func TestConfig_QueryTimeout(t *testing.T) {
+	t.Parallel()
 	testCases := []time.Duration{
 		0,                      // no timeout
 		100 * time.Millisecond, // 100ms
@@ -131,6 +136,7 @@ func TestConfig_QueryTimeout(t *testing.T) {
 
 // TestConfig_ConnectionPoolSettings verifies connection pool settings
 func TestConfig_ConnectionPoolSettings(t *testing.T) {
+	t.Parallel()
 	testCases := []struct {
 		name            string
 		maxOpenConns    int
@@ -170,6 +176,7 @@ func TestConfig_ConnectionPoolSettings(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
 			cfg := Config{
 				Host:            "localhost",
 				Port:            5432,
@@ -192,6 +199,7 @@ func TestConfig_ConnectionPoolSettings(t *testing.T) {
 
 // TestConfig_RequiredFields verifies required field validation
 func TestConfig_RequiredFields(t *testing.T) {
+	t.Parallel()
 	cfg := Config{
 		Host:     "localhost",
 		Port:     5432,

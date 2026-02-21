@@ -21,14 +21,13 @@ type KafkaSuite struct {
 }
 
 func TestKafkaSuite(t *testing.T) {
+	if testing.Short() {
+		t.Skip("integration test")
+	}
 	suite.Run(t, new(KafkaSuite))
 }
 
 func (s *KafkaSuite) SetupSuite() {
-	if testing.Short() {
-		s.T().Skip("integration test is skipped")
-	}
-
 	ctx := context.Background()
 
 	// Запускаем Kafka контейнер через testcontainers

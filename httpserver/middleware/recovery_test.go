@@ -23,6 +23,7 @@ func init() {
 }
 
 func TestRecovery_WithPanic(t *testing.T) {
+	t.Parallel()
 	// Create a handler that panics
 	panicHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		panic("test panic")
@@ -48,6 +49,7 @@ func TestRecovery_WithPanic(t *testing.T) {
 }
 
 func TestRecovery_WithPanicString(t *testing.T) {
+	t.Parallel()
 	// Create a handler that panics with string
 	panicMsg := "something went wrong"
 	panicHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -69,6 +71,7 @@ func TestRecovery_WithPanicString(t *testing.T) {
 }
 
 func TestRecovery_WithPanicError(t *testing.T) {
+	t.Parallel()
 	// Create a handler that panics with error
 	panicHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		panic(assert.AnError)
@@ -88,6 +91,7 @@ func TestRecovery_WithPanicError(t *testing.T) {
 }
 
 func TestRecovery_WithoutPanic(t *testing.T) {
+	t.Parallel()
 	// Create a normal handler
 	successHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
@@ -110,6 +114,7 @@ func TestRecovery_WithoutPanic(t *testing.T) {
 }
 
 func TestRecovery_Returns500Status(t *testing.T) {
+	t.Parallel()
 	panicHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		panic("critical error")
 	})
@@ -129,6 +134,7 @@ func TestRecovery_Returns500Status(t *testing.T) {
 }
 
 func TestRecovery_LogsStack(t *testing.T) {
+	t.Parallel()
 	// We can't directly verify the log output with noop logger,
 	// but we can verify the panic was recovered and 500 returned
 
@@ -154,6 +160,7 @@ func TestRecovery_LogsStack(t *testing.T) {
 }
 
 func TestRecovery_WithNilPanic(t *testing.T) {
+	t.Parallel()
 	// Test with panic(nil)
 	panicHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		panic(nil)
@@ -177,6 +184,7 @@ func TestRecovery_WithNilPanic(t *testing.T) {
 }
 
 func TestRecovery_ChainMiddleware(t *testing.T) {
+	t.Parallel()
 	// Test recovery in a middleware chain
 	middleware1 := func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -207,6 +215,7 @@ func TestRecovery_ChainMiddleware(t *testing.T) {
 }
 
 func TestRecovery_WithDifferentContexts(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name string
 		ctx  context.Context
@@ -223,6 +232,7 @@ func TestRecovery_WithDifferentContexts(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			panicHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				panic("context test")
 			})
@@ -242,6 +252,7 @@ func TestRecovery_WithDifferentContexts(t *testing.T) {
 }
 
 func TestRecovery_WithVariousPanicTypes(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name  string
 		panic interface{}
@@ -254,6 +265,7 @@ func TestRecovery_WithVariousPanicTypes(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			panicHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				panic(tt.panic)
 			})
@@ -276,11 +288,13 @@ func TestRecovery_WithVariousPanicTypes(t *testing.T) {
 }
 
 func TestRecovery_IntegrationWithHandlerMethods(t *testing.T) {
+	t.Parallel()
 	// Test with different HTTP methods
 	methods := []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS", "HEAD"}
 
 	for _, method := range methods {
 		t.Run(method, func(t *testing.T) {
+			t.Parallel()
 			panicHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				panic(method + " panic")
 			})
@@ -310,6 +324,7 @@ func (m *mockHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func TestRecovery_HandlerCalledWhenNoPanic(t *testing.T) {
+	t.Parallel()
 	mock := &mockHandler{}
 	handler := Recovery(mock)
 
@@ -326,6 +341,7 @@ func TestRecovery_HandlerCalledWhenNoPanic(t *testing.T) {
 }
 
 func TestRecovery_HandlerCalledWhenPanicOccurs(t *testing.T) {
+	t.Parallel()
 	mock := &mockHandler{}
 	panicHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		mock.called = true
@@ -348,6 +364,7 @@ func TestRecovery_HandlerCalledWhenPanicOccurs(t *testing.T) {
 }
 
 func TestRecovery_VerifyStackProcessing(t *testing.T) {
+	t.Parallel()
 	// This test verifies that the stack processing logic works
 	// We can't directly test the stack output but we can ensure
 	// the panic is recovered
@@ -373,6 +390,7 @@ func TestRecovery_VerifyStackProcessing(t *testing.T) {
 }
 
 func TestRecovery_RequestBodyHandling(t *testing.T) {
+	t.Parallel()
 	// Test that recovery works with request body present
 	panicHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Try to read body before panicking
@@ -396,6 +414,7 @@ func TestRecovery_RequestBodyHandling(t *testing.T) {
 }
 
 func TestRecovery_ResponseWriter(t *testing.T) {
+	t.Parallel()
 	// Test recovery with header set before panic (but no explicit status write)
 	panicHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
@@ -420,6 +439,7 @@ func TestRecovery_ResponseWriter(t *testing.T) {
 }
 
 func TestRecovery_AfterWriteHeader(t *testing.T) {
+	t.Parallel()
 	// Test behavior when WriteHeader is called before panic
 	// In real HTTP, status can't be changed once sent
 	// The recorder keeps the first status written

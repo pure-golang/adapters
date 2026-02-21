@@ -190,6 +190,7 @@ func TestInitConfig_EnvVarsOverrideDotEnv(t *testing.T) {
 }
 
 func TestInitConfig_NilPointer(t *testing.T) {
+	t.Parallel()
 	err := InitConfig(nil)
 
 	require.Error(t, err)
@@ -197,6 +198,7 @@ func TestInitConfig_NilPointer(t *testing.T) {
 }
 
 func TestInitConfig_NonStructPointer(t *testing.T) {
+	t.Parallel()
 	var notAStruct string
 	err := InitConfig(&notAStruct)
 
@@ -229,5 +231,6 @@ func TestInitConfig_InvalidPortFormat(t *testing.T) {
 }
 
 func TestInitConfig_DefaultEnvFileConstant(t *testing.T) {
+	t.Parallel()
 	assert.Equal(t, ".env", DefaultEnvFile)
 }

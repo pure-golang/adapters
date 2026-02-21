@@ -121,6 +121,7 @@ func (s *miniSMTPServer) messageCount() int {
 
 // TestSender_MiniSMTPServer_Success tests sending with a mini SMTP server
 func TestSender_MiniSMTPServer_Success(t *testing.T) {
+	t.Parallel()
 	server := startMiniSMTPServer(t, 12525)
 	defer server.close()
 
@@ -151,6 +152,7 @@ func TestSender_MiniSMTPServer_Success(t *testing.T) {
 
 // TestSender_MiniSMTPServer_MultipleEmails tests sending multiple emails
 func TestSender_MiniSMTPServer_MultipleEmails(t *testing.T) {
+	t.Parallel()
 	server := startMiniSMTPServer(t, 12526)
 	defer server.close()
 
@@ -185,6 +187,7 @@ func TestSender_MiniSMTPServer_MultipleEmails(t *testing.T) {
 
 // TestSender_MiniSMTPServer_HTMLMessage tests sending HTML message
 func TestSender_MiniSMTPServer_HTMLMessage(t *testing.T) {
+	t.Parallel()
 	server := startMiniSMTPServer(t, 12527)
 	defer server.close()
 
@@ -212,6 +215,7 @@ func TestSender_MiniSMTPServer_HTMLMessage(t *testing.T) {
 
 // TestSender_MiniSMTPServer_MultipleRecipients tests sending to multiple recipients
 func TestSender_MiniSMTPServer_MultipleRecipients(t *testing.T) {
+	t.Parallel()
 	server := startMiniSMTPServer(t, 12528)
 	defer server.close()
 
@@ -247,6 +251,7 @@ func TestSender_MiniSMTPServer_MultipleRecipients(t *testing.T) {
 
 // TestSender_MiniSMTPServer_WithDefaultFrom tests using default From
 func TestSender_MiniSMTPServer_WithDefaultFrom(t *testing.T) {
+	t.Parallel()
 	server := startMiniSMTPServer(t, 12529)
 	defer server.close()
 
@@ -274,6 +279,7 @@ func TestSender_MiniSMTPServer_WithDefaultFrom(t *testing.T) {
 
 // TestSender_MiniSMTPServer_WithCustomHeaders tests custom headers
 func TestSender_MiniSMTPServer_WithCustomHeaders(t *testing.T) {
+	t.Parallel()
 	server := startMiniSMTPServer(t, 12530)
 	defer server.close()
 
@@ -304,6 +310,7 @@ func TestSender_MiniSMTPServer_WithCustomHeaders(t *testing.T) {
 
 // TestSender_MiniSMTPServer_OnlyBccRecipients tests BCC only
 func TestSender_MiniSMTPServer_OnlyBccRecipients(t *testing.T) {
+	t.Parallel()
 	server := startMiniSMTPServer(t, 12531)
 	defer server.close()
 
@@ -330,6 +337,7 @@ func TestSender_MiniSMTPServer_OnlyBccRecipients(t *testing.T) {
 
 // TestSender_MiniSMTPServer_OnlyCcRecipients tests CC only
 func TestSender_MiniSMTPServer_OnlyCcRecipients(t *testing.T) {
+	t.Parallel()
 	server := startMiniSMTPServer(t, 12532)
 	defer server.close()
 
@@ -356,6 +364,7 @@ func TestSender_MiniSMTPServer_OnlyCcRecipients(t *testing.T) {
 
 // TestSender_MiniSMTPServer_EmptySubject tests empty subject
 func TestSender_MiniSMTPServer_EmptySubject(t *testing.T) {
+	t.Parallel()
 	server := startMiniSMTPServer(t, 12533)
 	defer server.close()
 

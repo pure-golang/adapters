@@ -212,6 +212,7 @@ func TestStore_InterfaceImplementation(t *testing.T) {
 }
 
 func TestProvider_Constants(t *testing.T) {
+	t.Parallel()
 	// Test provider constants
 	assert.Equal(t, Provider("redis"), ProviderRedis)
 	assert.Equal(t, Provider("noop"), ProviderNoop)
@@ -253,6 +254,7 @@ func TestConfig_DefaultValues(t *testing.T) {
 
 // Test that redis.Client would implement Store interface if connected
 func TestRedis_ClientImplementsStore(t *testing.T) {
+	t.Parallel()
 	// This is a compile-time check that redis.Client implements Store
 	var _ Store = &redis.Client{}
 }

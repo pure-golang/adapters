@@ -102,6 +102,7 @@ func TestInitSetsGlobalTracerProvider(t *testing.T) {
 
 // TestNoopProviderClose tests that NoopProvider.Close returns nil.
 func TestNoopProviderClose(t *testing.T) {
+	t.Parallel()
 	noop := &NoopProvider{}
 	err := noop.Close()
 	assert.NoError(t, err)
@@ -109,6 +110,7 @@ func TestNoopProviderClose(t *testing.T) {
 
 // TestNoopProviderImplementsProvider tests that NoopProvider implements Provider interface.
 func TestNoopProviderImplementsProvider(t *testing.T) {
+	t.Parallel()
 	// This test verifies at compile time that NoopProvider implements Provider
 	var _ Provider = &NoopProvider{}
 

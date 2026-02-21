@@ -11,6 +11,7 @@ import (
 )
 
 func TestNewNoop_ReturnsLogger(t *testing.T) {
+	t.Parallel()
 	l := NewNoop()
 
 	assert.NotNil(t, l)
@@ -18,6 +19,7 @@ func TestNewNoop_ReturnsLogger(t *testing.T) {
 }
 
 func TestNewNoop_HandlerNotNil(t *testing.T) {
+	t.Parallel()
 	l := NewNoop()
 
 	require.NotNil(t, l)
@@ -27,6 +29,7 @@ func TestNewNoop_HandlerNotNil(t *testing.T) {
 }
 
 func TestNewNoop_AllLogMethods(t *testing.T) {
+	t.Parallel()
 	l := NewNoop()
 
 	// All these should not panic
@@ -39,6 +42,7 @@ func TestNewNoop_AllLogMethods(t *testing.T) {
 }
 
 func TestNewNoop_WithAttributes(t *testing.T) {
+	t.Parallel()
 	l := NewNoop()
 
 	l = l.With("key1", "value1", "key2", 42)
@@ -49,6 +53,7 @@ func TestNewNoop_WithAttributes(t *testing.T) {
 }
 
 func TestNewNoop_LogAttrs(t *testing.T) {
+	t.Parallel()
 	l := NewNoop()
 
 	// Should not panic with various attribute types
@@ -62,6 +67,7 @@ func TestNewNoop_LogAttrs(t *testing.T) {
 }
 
 func TestNewNoop_HandlerEnabled(t *testing.T) {
+	t.Parallel()
 	l := NewNoop()
 	h := l.Handler()
 
@@ -74,6 +80,7 @@ func TestNewNoop_HandlerEnabled(t *testing.T) {
 }
 
 func TestNewNoop_HandlerHandle(t *testing.T) {
+	t.Parallel()
 	l := NewNoop()
 	h := l.Handler()
 
@@ -85,6 +92,7 @@ func TestNewNoop_HandlerHandle(t *testing.T) {
 }
 
 func TestNewNoop_WithHandlerOptions(t *testing.T) {
+	t.Parallel()
 	// The noop logger uses NewJSONHandler with nil options
 	l := NewNoop()
 
@@ -100,6 +108,7 @@ func TestNewNoop_WithHandlerOptions(t *testing.T) {
 }
 
 func TestWriter_Write(t *testing.T) {
+	t.Parallel()
 	w := &writer{}
 
 	// Write should always succeed
@@ -110,6 +119,7 @@ func TestWriter_Write(t *testing.T) {
 }
 
 func TestWriter_WriteEmpty(t *testing.T) {
+	t.Parallel()
 	w := &writer{}
 
 	n, err := w.Write([]byte{})
@@ -119,6 +129,7 @@ func TestWriter_WriteEmpty(t *testing.T) {
 }
 
 func TestWriter_WriteNil(t *testing.T) {
+	t.Parallel()
 	w := &writer{}
 
 	n, err := w.Write(nil)
@@ -128,6 +139,7 @@ func TestWriter_WriteNil(t *testing.T) {
 }
 
 func TestWriter_WriteLargeData(t *testing.T) {
+	t.Parallel()
 	w := &writer{}
 
 	largeData := make([]byte, 1024*1024) // 1MB
@@ -139,6 +151,7 @@ func TestWriter_WriteLargeData(t *testing.T) {
 }
 
 func TestWriter_WriteRepeated(t *testing.T) {
+	t.Parallel()
 	w := &writer{}
 
 	// Multiple writes should all succeed
@@ -150,6 +163,7 @@ func TestWriter_WriteRepeated(t *testing.T) {
 }
 
 func TestNewNoop_Concurrent(t *testing.T) {
+	t.Parallel()
 	l := NewNoop()
 
 	// Concurrent logging should not panic
@@ -170,6 +184,7 @@ func TestNewNoop_Concurrent(t *testing.T) {
 }
 
 func TestNewNoop_NilContext(t *testing.T) {
+	t.Parallel()
 	l := NewNoop()
 
 	// Should handle nil context
@@ -181,6 +196,7 @@ func TestNewNoop_NilContext(t *testing.T) {
 }
 
 func TestNewNoop_WithNilAttributes(t *testing.T) {
+	t.Parallel()
 	l := NewNoop()
 
 	// Test with valid attributes only - slog.With panics with nil
@@ -188,6 +204,7 @@ func TestNewNoop_WithNilAttributes(t *testing.T) {
 }
 
 func TestWriter_ImplementsHandler(t *testing.T) {
+	t.Parallel()
 	w := &writer{}
 
 	// writer should implement slog.Handler interface (via embedding)
@@ -203,6 +220,7 @@ func TestWriter_ImplementsHandler(t *testing.T) {
 }
 
 func TestNewNoop_Reusable(t *testing.T) {
+	t.Parallel()
 	l := NewNoop()
 
 	// Create multiple loggers from the same base
@@ -218,6 +236,7 @@ func TestNewNoop_Reusable(t *testing.T) {
 }
 
 func TestNewNoop_LogLevels(t *testing.T) {
+	t.Parallel()
 	l := NewNoop()
 
 	levels := []slog.Level{
@@ -237,6 +256,7 @@ func TestNewNoop_LogLevels(t *testing.T) {
 }
 
 func TestNewNoop_Formatting(t *testing.T) {
+	t.Parallel()
 	l := NewNoop()
 
 	// Test various message formats
@@ -246,6 +266,7 @@ func TestNewNoop_Formatting(t *testing.T) {
 }
 
 func TestNewNoop_NestedGroups(t *testing.T) {
+	t.Parallel()
 	l := NewNoop()
 
 	// Create nested groups
@@ -254,6 +275,7 @@ func TestNewNoop_NestedGroups(t *testing.T) {
 }
 
 func TestNewNoop_EmptyMessage(t *testing.T) {
+	t.Parallel()
 	l := NewNoop()
 
 	l.Info("")

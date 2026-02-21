@@ -11,6 +11,7 @@ import (
 )
 
 func TestIsNil(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name string
 		err  error
@@ -34,6 +35,7 @@ func TestIsNil(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			if got := IsNil(tt.err); got != tt.want {
 				t.Errorf("IsNil() = %v, want %v", got, tt.want)
 			}
@@ -42,6 +44,7 @@ func TestIsNil(t *testing.T) {
 }
 
 func TestNewLogger(t *testing.T) {
+	t.Parallel()
 	logger := newLogger(nil)
 	if logger == nil {
 		t.Error("newLogger() returned nil")
@@ -50,7 +53,9 @@ func TestNewLogger(t *testing.T) {
 
 // TestClient_Close tests the Close method edge cases.
 func TestClient_Close(t *testing.T) {
+	t.Parallel()
 	t.Run("Close with nil client", func(t *testing.T) {
+		t.Parallel()
 		client := &Client{
 			Client: nil,
 			cfg:    Config{},
@@ -63,6 +68,7 @@ func TestClient_Close(t *testing.T) {
 	})
 
 	t.Run("Close twice on same client", func(t *testing.T) {
+		t.Parallel()
 		// Create a mock redis client
 		mockClient := rclient.NewClient(&rclient.Options{
 			Addr: "localhost:6379",
@@ -86,6 +92,7 @@ func TestClient_Close(t *testing.T) {
 	})
 
 	t.Run("Close with already closed redis client", func(t *testing.T) {
+		t.Parallel()
 		mockClient := rclient.NewClient(&rclient.Options{
 			Addr: "localhost:9999", // Wrong port, won't connect
 		})
@@ -108,7 +115,9 @@ func TestClient_Close(t *testing.T) {
 
 // TestClient_Structure tests the Client structure.
 func TestClient_Structure(t *testing.T) {
+	t.Parallel()
 	t.Run("Client can be created", func(t *testing.T) {
+		t.Parallel()
 		client := &Client{
 			Client: nil,
 			cfg:    Config{},
@@ -118,6 +127,7 @@ func TestClient_Structure(t *testing.T) {
 	})
 
 	t.Run("Client embeds rclient.Client", func(t *testing.T) {
+		t.Parallel()
 		// Verify the Client structure embeds *rclient.Client
 		client := &Client{
 			Client: nil,
@@ -131,6 +141,7 @@ func TestClient_Structure(t *testing.T) {
 
 // TestClient_DeleteWithEmptyKeys tests Delete with empty keys.
 func TestClient_DeleteWithEmptyKeys(t *testing.T) {
+	t.Parallel()
 	client := &Client{
 		Client: nil,
 		cfg:    Config{},
@@ -138,11 +149,13 @@ func TestClient_DeleteWithEmptyKeys(t *testing.T) {
 	}
 
 	t.Run("Delete with no keys returns nil", func(t *testing.T) {
+		t.Parallel()
 		err := client.Delete(context.Background())
 		assert.NoError(t, err)
 	})
 
 	t.Run("Delete with empty slice", func(t *testing.T) {
+		t.Parallel()
 		err := client.Delete(context.Background(), []string{}...)
 		assert.NoError(t, err)
 	})
@@ -150,6 +163,7 @@ func TestClient_DeleteWithEmptyKeys(t *testing.T) {
 
 // TestClient_ExistsWithNoKeys tests Exists with empty keys.
 func TestClient_ExistsWithNoKeys(t *testing.T) {
+	t.Parallel()
 	client := &Client{
 		Client: nil,
 		cfg:    Config{},
@@ -157,12 +171,14 @@ func TestClient_ExistsWithNoKeys(t *testing.T) {
 	}
 
 	t.Run("Exists with no keys returns 0", func(t *testing.T) {
+		t.Parallel()
 		count, err := client.Exists(context.Background())
 		assert.NoError(t, err)
 		assert.Equal(t, int64(0), count)
 	})
 
 	t.Run("Exists with empty slice", func(t *testing.T) {
+		t.Parallel()
 		count, err := client.Exists(context.Background(), []string{}...)
 		assert.NoError(t, err)
 		assert.Equal(t, int64(0), count)
@@ -171,6 +187,7 @@ func TestClient_ExistsWithNoKeys(t *testing.T) {
 
 // TestClient_HDelWithNoFields tests HDel with no fields.
 func TestClient_HDelWithNoFields(t *testing.T) {
+	t.Parallel()
 	client := &Client{
 		Client: nil,
 		cfg:    Config{},
@@ -178,11 +195,13 @@ func TestClient_HDelWithNoFields(t *testing.T) {
 	}
 
 	t.Run("HDel with no fields returns nil", func(t *testing.T) {
+		t.Parallel()
 		err := client.HDel(context.Background(), "key")
 		assert.NoError(t, err)
 	})
 
 	t.Run("HDel with empty slice", func(t *testing.T) {
+		t.Parallel()
 		err := client.HDel(context.Background(), "key", []string{}...)
 		assert.NoError(t, err)
 	})
@@ -190,6 +209,7 @@ func TestClient_HDelWithNoFields(t *testing.T) {
 
 // TestClient_LPushWithNoValues tests LPush with no values.
 func TestClient_LPushWithNoValues(t *testing.T) {
+	t.Parallel()
 	client := &Client{
 		Client: nil,
 		cfg:    Config{},
@@ -197,6 +217,7 @@ func TestClient_LPushWithNoValues(t *testing.T) {
 	}
 
 	t.Run("LPush with no values returns nil", func(t *testing.T) {
+		t.Parallel()
 		err := client.LPush(context.Background(), "key")
 		assert.NoError(t, err)
 	})
@@ -204,6 +225,7 @@ func TestClient_LPushWithNoValues(t *testing.T) {
 
 // TestClient_RPushWithNoValues tests RPush with no values.
 func TestClient_RPushWithNoValues(t *testing.T) {
+	t.Parallel()
 	client := &Client{
 		Client: nil,
 		cfg:    Config{},
@@ -211,6 +233,7 @@ func TestClient_RPushWithNoValues(t *testing.T) {
 	}
 
 	t.Run("RPush with no values returns nil", func(t *testing.T) {
+		t.Parallel()
 		err := client.RPush(context.Background(), "key")
 		assert.NoError(t, err)
 	})
@@ -218,6 +241,7 @@ func TestClient_RPushWithNoValues(t *testing.T) {
 
 // TestClient_SAddWithNoMembers tests SAdd with no members.
 func TestClient_SAddWithNoMembers(t *testing.T) {
+	t.Parallel()
 	client := &Client{
 		Client: nil,
 		cfg:    Config{},
@@ -225,6 +249,7 @@ func TestClient_SAddWithNoMembers(t *testing.T) {
 	}
 
 	t.Run("SAdd with no members returns nil", func(t *testing.T) {
+		t.Parallel()
 		err := client.SAdd(context.Background(), "key")
 		assert.NoError(t, err)
 	})
@@ -232,6 +257,7 @@ func TestClient_SAddWithNoMembers(t *testing.T) {
 
 // TestClient_SRemWithNoMembers tests SRem with no members.
 func TestClient_SRemWithNoMembers(t *testing.T) {
+	t.Parallel()
 	client := &Client{
 		Client: nil,
 		cfg:    Config{},
@@ -239,6 +265,7 @@ func TestClient_SRemWithNoMembers(t *testing.T) {
 	}
 
 	t.Run("SRem with no members returns nil", func(t *testing.T) {
+		t.Parallel()
 		err := client.SRem(context.Background(), "key")
 		assert.NoError(t, err)
 	})
@@ -246,13 +273,16 @@ func TestClient_SRemWithNoMembers(t *testing.T) {
 
 // TestClient_ContextVariations tests context handling without calling methods on nil client.
 func TestClient_ContextVariations(t *testing.T) {
+	t.Parallel()
 	t.Run("Cancelled context can be created", func(t *testing.T) {
+		t.Parallel()
 		ctx, cancel := context.WithCancel(context.Background())
 		cancel()
 		assert.NotNil(t, ctx)
 	})
 
 	t.Run("Context can have deadline", func(t *testing.T) {
+		t.Parallel()
 		ctx, cancel := context.WithTimeout(context.Background(), 1*time.Hour)
 		defer cancel()
 		assert.NotNil(t, ctx)
@@ -264,6 +294,7 @@ func TestClient_ContextVariations(t *testing.T) {
 
 // TestClient_KeyVariations tests methods with various key formats.
 func TestClient_KeyVariations(t *testing.T) {
+	t.Parallel()
 	keys := []string{
 		"simple",
 		"with:colon",
@@ -286,6 +317,7 @@ func TestClient_KeyVariations(t *testing.T) {
 
 // TestClient_ValueVariations tests Set with various value types.
 func TestClient_ValueVariations(t *testing.T) {
+	t.Parallel()
 	values := []struct {
 		name  string
 		value interface{}
@@ -303,12 +335,14 @@ func TestClient_ValueVariations(t *testing.T) {
 
 	for _, tt := range values {
 		t.Run("value_type_"+tt.name, func(t *testing.T) {
+			t.Parallel()
 			// Just verify value can be passed
 			assert.NotNil(t, tt.value)
 		})
 	}
 
 	t.Run("value_type_nil", func(t *testing.T) {
+		t.Parallel()
 		// nil is a valid value in Redis
 		var nilVal interface{} = nil
 		assert.Nil(t, nilVal)
@@ -317,6 +351,7 @@ func TestClient_ValueVariations(t *testing.T) {
 
 // TestClient_ExpirationVariations tests Set with various expiration values.
 func TestClient_ExpirationVariations(t *testing.T) {
+	t.Parallel()
 	expirations := []time.Duration{
 		0, // No expiration
 		1 * time.Second,
@@ -337,14 +372,17 @@ func TestClient_ExpirationVariations(t *testing.T) {
 
 // TestClient_ConfigDefaults tests Config default values.
 func TestClient_ConfigDefaults(t *testing.T) {
+	t.Parallel()
 	cfg := Config{}
 
 	t.Run("Config has default values", func(t *testing.T) {
+		t.Parallel()
 		// Just verify structure exists
 		assert.NotNil(t, cfg)
 	})
 
 	t.Run("Config with Addr set", func(t *testing.T) {
+		t.Parallel()
 		cfg := Config{
 			Addr: "localhost:6379",
 		}
@@ -354,7 +392,9 @@ func TestClient_ConfigDefaults(t *testing.T) {
 
 // TestClient_ErrorWrapping tests that errors are properly wrapped.
 func TestClient_ErrorWrapping(t *testing.T) {
+	t.Parallel()
 	t.Run("Get error wraps key name", func(t *testing.T) {
+		t.Parallel()
 		// This verifies the error message format
 		expectedMsg := "failed to get key \"test-key\""
 
@@ -366,23 +406,28 @@ func TestClient_ErrorWrapping(t *testing.T) {
 
 // TestClient_IsNil_Variations tests IsNil with various error types.
 func TestClient_IsNil_Variations(t *testing.T) {
+	t.Parallel()
 	t.Run("IsNil with standard errors", func(t *testing.T) {
+		t.Parallel()
 		stdErr := errors.New("standard error")
 		assert.False(t, IsNil(stdErr))
 	})
 
 	t.Run("IsNil with wrapped Nil", func(t *testing.T) {
+		t.Parallel()
 		wrapped := errors.Wrap(Nil{}, "wrapped")
 		// IsNil checks exact equality, not type - wrapping changes the error
 		assert.False(t, IsNil(wrapped))
 	})
 
 	t.Run("IsNil with multiple wrapped Nil", func(t *testing.T) {
+		t.Parallel()
 		wrapped := errors.Wrap(errors.Wrap(Nil{}, "wrapped1"), "wrapped2")
 		assert.False(t, IsNil(wrapped)) // Type is not Nil anymore
 	})
 
 	t.Run("IsNil with direct Nil type", func(t *testing.T) {
+		t.Parallel()
 		assert.True(t, IsNil(Nil{}))
 	})
 }

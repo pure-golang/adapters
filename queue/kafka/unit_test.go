@@ -14,6 +14,7 @@ import (
 )
 
 func TestNewPublisher_WithNilEncoder(t *testing.T) {
+	t.Parallel()
 	cfg := Config{
 		Brokers: []string{"localhost:9092"},
 	}
@@ -33,6 +34,7 @@ func TestNewPublisher_WithNilEncoder(t *testing.T) {
 }
 
 func TestNewPublisher_WithCustomBalancer(t *testing.T) {
+	t.Parallel()
 	cfg := Config{
 		Brokers: []string{"localhost:9092"},
 	}
@@ -54,6 +56,7 @@ func TestNewPublisher_WithCustomBalancer(t *testing.T) {
 }
 
 func TestPublisher_CloseTwice(t *testing.T) {
+	t.Parallel()
 	cfg := Config{
 		Brokers: []string{"localhost:9092"},
 	}
@@ -76,6 +79,7 @@ func TestPublisher_CloseTwice(t *testing.T) {
 }
 
 func TestNewSubscriber_WithDefaultConfig(t *testing.T) {
+	t.Parallel()
 	cfg := Config{
 		Brokers: []string{"localhost:9092"},
 	}
@@ -99,6 +103,7 @@ func TestNewSubscriber_WithDefaultConfig(t *testing.T) {
 }
 
 func TestNewSubscriber_WithCustomConfig(t *testing.T) {
+	t.Parallel()
 	cfg := Config{
 		Brokers: []string{"localhost:9092"},
 		GroupID: "my-group",
@@ -128,6 +133,7 @@ func TestNewSubscriber_WithCustomConfig(t *testing.T) {
 }
 
 func TestSubscriber_CloseTwice(t *testing.T) {
+	t.Parallel()
 	cfg := Config{
 		Brokers: []string{"localhost:9092"},
 	}
@@ -148,6 +154,7 @@ func TestSubscriber_CloseTwice(t *testing.T) {
 }
 
 func TestSubscriber_WithInfiniteRetries(t *testing.T) {
+	t.Parallel()
 	cfg := Config{
 		Brokers: []string{"localhost:9092"},
 	}
@@ -169,6 +176,7 @@ func TestSubscriber_WithInfiniteRetries(t *testing.T) {
 }
 
 func TestSubscriber_WithZeroTryNum(t *testing.T) {
+	t.Parallel()
 	cfg := Config{
 		Brokers: []string{"localhost:9092"},
 	}
@@ -190,6 +198,7 @@ func TestSubscriber_WithZeroTryNum(t *testing.T) {
 }
 
 func TestSubscriber_WithZeroPrefetchCount(t *testing.T) {
+	t.Parallel()
 	cfg := Config{
 		Brokers: []string{"localhost:9092"},
 	}
@@ -211,6 +220,7 @@ func TestSubscriber_WithZeroPrefetchCount(t *testing.T) {
 }
 
 func TestSubscriber_HandlerReturnsError(t *testing.T) {
+	t.Parallel()
 	cfg := Config{
 		Brokers: []string{"localhost:9092"},
 	}
@@ -236,6 +246,7 @@ func TestSubscriber_HandlerReturnsError(t *testing.T) {
 }
 
 func TestSubscriber_HandlerSuccess(t *testing.T) {
+	t.Parallel()
 	cfg := Config{
 		Brokers: []string{"localhost:9092"},
 	}
@@ -261,6 +272,7 @@ func TestSubscriber_HandlerSuccess(t *testing.T) {
 }
 
 func TestPublisher_EncodeValue(t *testing.T) {
+	t.Parallel()
 	// Проверяем кодировку сообщения через encoder
 	msg := queue.Message{
 		Topic: "test-topic",

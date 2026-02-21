@@ -15,7 +15,9 @@ import (
 
 // TestCreateMultipartUpload_Extended tests the CreateMultipartUpload method.
 func TestCreateMultipartUpload_Extended(t *testing.T) {
+	t.Parallel()
 	t.Run("with nil client returns error", func(t *testing.T) {
+		t.Parallel()
 		client := &Client{
 			cfg:    Config{DefaultBucket: "bucket"},
 			logger: slog.Default(),
@@ -29,6 +31,7 @@ func TestCreateMultipartUpload_Extended(t *testing.T) {
 	})
 
 	t.Run("with empty bucket uses default", func(t *testing.T) {
+		t.Parallel()
 		client := &Client{
 			cfg:    Config{DefaultBucket: "default-bucket"},
 			logger: slog.Default(),
@@ -42,6 +45,7 @@ func TestCreateMultipartUpload_Extended(t *testing.T) {
 	})
 
 	t.Run("with nil options uses defaults", func(t *testing.T) {
+		t.Parallel()
 		client := &Client{
 			cfg:    Config{DefaultBucket: "bucket"},
 			logger: slog.Default(),
@@ -54,6 +58,7 @@ func TestCreateMultipartUpload_Extended(t *testing.T) {
 	})
 
 	t.Run("with options", func(t *testing.T) {
+		t.Parallel()
 		client := &Client{
 			cfg:    Config{DefaultBucket: "bucket"},
 			logger: slog.Default(),
@@ -72,6 +77,7 @@ func TestCreateMultipartUpload_Extended(t *testing.T) {
 
 // TestCreateMultipartUpload_DefaultBucket tests CreateMultipartUpload with default bucket.
 func TestCreateMultipartUpload_DefaultBucket(t *testing.T) {
+	t.Parallel()
 	client := &Client{
 		cfg:    Config{DefaultBucket: "default-bucket"},
 		logger: slog.Default(),
@@ -79,6 +85,7 @@ func TestCreateMultipartUpload_DefaultBucket(t *testing.T) {
 	stor := NewStorage(client, nil)
 
 	t.Run("empty bucket uses default", func(t *testing.T) {
+		t.Parallel()
 		upload, err := stor.CreateMultipartUpload(context.Background(), "", "key.txt", nil)
 		assert.Error(t, err)
 		assert.Nil(t, upload)
@@ -86,6 +93,7 @@ func TestCreateMultipartUpload_DefaultBucket(t *testing.T) {
 	})
 
 	t.Run("explicit bucket overrides default", func(t *testing.T) {
+		t.Parallel()
 		upload, err := stor.CreateMultipartUpload(context.Background(), "explicit-bucket", "key.txt", nil)
 		assert.Error(t, err)
 		assert.Nil(t, upload)
@@ -95,6 +103,7 @@ func TestCreateMultipartUpload_DefaultBucket(t *testing.T) {
 
 // TestCreateMultipartUpload_KeyVariations tests various key formats.
 func TestCreateMultipartUpload_KeyVariations(t *testing.T) {
+	t.Parallel()
 	client := &Client{
 		cfg:    Config{DefaultBucket: "bucket"},
 		logger: slog.Default(),
@@ -112,6 +121,7 @@ func TestCreateMultipartUpload_KeyVariations(t *testing.T) {
 
 	for _, key := range keys {
 		t.Run("key_"+key, func(t *testing.T) {
+			t.Parallel()
 			upload, err := stor.CreateMultipartUpload(context.Background(), "bucket", key, nil)
 			assert.Error(t, err)
 			assert.Nil(t, upload)
@@ -121,7 +131,9 @@ func TestCreateMultipartUpload_KeyVariations(t *testing.T) {
 
 // TestUploadPart_Extended tests the UploadPart method.
 func TestUploadPart_Extended(t *testing.T) {
+	t.Parallel()
 	t.Run("with nil client returns error", func(t *testing.T) {
+		t.Parallel()
 		client := &Client{
 			cfg:    Config{DefaultBucket: "bucket"},
 			logger: slog.Default(),
@@ -136,6 +148,7 @@ func TestUploadPart_Extended(t *testing.T) {
 	})
 
 	t.Run("with empty bucket uses default", func(t *testing.T) {
+		t.Parallel()
 		client := &Client{
 			cfg:    Config{DefaultBucket: "default-bucket"},
 			logger: slog.Default(),
@@ -150,6 +163,7 @@ func TestUploadPart_Extended(t *testing.T) {
 	})
 
 	t.Run("with various part numbers", func(t *testing.T) {
+		t.Parallel()
 		client := &Client{
 			cfg:    Config{DefaultBucket: "bucket"},
 			logger: slog.Default(),
@@ -160,6 +174,7 @@ func TestUploadPart_Extended(t *testing.T) {
 
 		for _, partNumber := range partNumbers {
 			t.Run("part_number_"+string(rune(partNumber)), func(t *testing.T) {
+				t.Parallel()
 				reader := strings.NewReader("test data")
 				part, err := stor.UploadPart(context.Background(), "bucket", "key", "upload-123", partNumber, reader)
 				assert.Error(t, err)
@@ -171,7 +186,9 @@ func TestUploadPart_Extended(t *testing.T) {
 
 // TestUploadPart_SizeInterface tests UploadPart with readers that implement Size().
 func TestUploadPart_SizeInterface(t *testing.T) {
+	t.Parallel()
 	t.Run("with SizeInterface reader", func(t *testing.T) {
+		t.Parallel()
 		client := &Client{
 			cfg:    Config{DefaultBucket: "bucket"},
 			logger: slog.Default(),
@@ -191,6 +208,7 @@ func TestUploadPart_SizeInterface(t *testing.T) {
 	})
 
 	t.Run("with bytes.Reader (has Size method)", func(t *testing.T) {
+		t.Parallel()
 		client := &Client{
 			cfg:    Config{DefaultBucket: "bucket"},
 			logger: slog.Default(),
@@ -209,6 +227,7 @@ func TestUploadPart_SizeInterface(t *testing.T) {
 
 // TestUploadPart_ReaderVariations tests various reader types.
 func TestUploadPart_ReaderVariations(t *testing.T) {
+	t.Parallel()
 	client := &Client{
 		cfg:    Config{DefaultBucket: "bucket"},
 		logger: slog.Default(),
@@ -216,6 +235,7 @@ func TestUploadPart_ReaderVariations(t *testing.T) {
 	stor := NewStorage(client, nil)
 
 	t.Run("strings.Reader", func(t *testing.T) {
+		t.Parallel()
 		reader := strings.NewReader("test data")
 		part, err := stor.UploadPart(context.Background(), "bucket", "key", "upload-123", 1, reader)
 		assert.Error(t, err)
@@ -223,6 +243,7 @@ func TestUploadPart_ReaderVariations(t *testing.T) {
 	})
 
 	t.Run("bytes.Reader", func(t *testing.T) {
+		t.Parallel()
 		reader := bytes.NewReader([]byte("test data"))
 		part, err := stor.UploadPart(context.Background(), "bucket", "key", "upload-123", 1, reader)
 		assert.Error(t, err)
@@ -230,6 +251,7 @@ func TestUploadPart_ReaderVariations(t *testing.T) {
 	})
 
 	t.Run("empty reader", func(t *testing.T) {
+		t.Parallel()
 		reader := strings.NewReader("")
 		part, err := stor.UploadPart(context.Background(), "bucket", "key", "upload-123", 1, reader)
 		assert.Error(t, err)
@@ -237,6 +259,7 @@ func TestUploadPart_ReaderVariations(t *testing.T) {
 	})
 
 	t.Run("large data reader", func(t *testing.T) {
+		t.Parallel()
 		data := bytes.Repeat([]byte("x"), 1024*1024) // 1MB
 		reader := bytes.NewReader(data)
 		part, err := stor.UploadPart(context.Background(), "bucket", "key", "upload-123", 1, reader)
@@ -258,7 +281,9 @@ func (sr *sizeReader) Size() int64 {
 
 // TestCompleteMultipartUpload_Extended tests the CompleteMultipartUpload method.
 func TestCompleteMultipartUpload_Extended(t *testing.T) {
+	t.Parallel()
 	t.Run("with nil client returns error", func(t *testing.T) {
+		t.Parallel()
 		client := &Client{
 			cfg:    Config{DefaultBucket: "bucket"},
 			logger: slog.Default(),
@@ -273,6 +298,7 @@ func TestCompleteMultipartUpload_Extended(t *testing.T) {
 	})
 
 	t.Run("with empty bucket uses default", func(t *testing.T) {
+		t.Parallel()
 		client := &Client{
 			cfg:    Config{DefaultBucket: "default-bucket"},
 			logger: slog.Default(),
@@ -287,6 +313,7 @@ func TestCompleteMultipartUpload_Extended(t *testing.T) {
 	})
 
 	t.Run("with parts", func(t *testing.T) {
+		t.Parallel()
 		client := &Client{
 			cfg:    Config{DefaultBucket: "bucket"},
 			logger: slog.Default(),
@@ -305,6 +332,7 @@ func TestCompleteMultipartUpload_Extended(t *testing.T) {
 	})
 
 	t.Run("with empty parts list", func(t *testing.T) {
+		t.Parallel()
 		client := &Client{
 			cfg:    Config{DefaultBucket: "bucket"},
 			logger: slog.Default(),
@@ -320,6 +348,7 @@ func TestCompleteMultipartUpload_Extended(t *testing.T) {
 	})
 
 	t.Run("with single part", func(t *testing.T) {
+		t.Parallel()
 		client := &Client{
 			cfg:    Config{DefaultBucket: "bucket"},
 			logger: slog.Default(),
@@ -337,6 +366,7 @@ func TestCompleteMultipartUpload_Extended(t *testing.T) {
 	})
 
 	t.Run("with many parts", func(t *testing.T) {
+		t.Parallel()
 		client := &Client{
 			cfg:    Config{DefaultBucket: "bucket"},
 			logger: slog.Default(),
@@ -363,7 +393,9 @@ func TestCompleteMultipartUpload_Extended(t *testing.T) {
 
 // TestAbortMultipartUpload_Extended tests the AbortMultipartUpload method.
 func TestAbortMultipartUpload_Extended(t *testing.T) {
+	t.Parallel()
 	t.Run("with nil client returns error", func(t *testing.T) {
+		t.Parallel()
 		client := &Client{
 			cfg:    Config{DefaultBucket: "bucket"},
 			logger: slog.Default(),
@@ -376,6 +408,7 @@ func TestAbortMultipartUpload_Extended(t *testing.T) {
 	})
 
 	t.Run("with empty bucket uses default", func(t *testing.T) {
+		t.Parallel()
 		client := &Client{
 			cfg:    Config{DefaultBucket: "default-bucket"},
 			logger: slog.Default(),
@@ -388,6 +421,7 @@ func TestAbortMultipartUpload_Extended(t *testing.T) {
 	})
 
 	t.Run("with various upload IDs", func(t *testing.T) {
+		t.Parallel()
 		client := &Client{
 			cfg:    Config{DefaultBucket: "bucket"},
 			logger: slog.Default(),
@@ -405,6 +439,7 @@ func TestAbortMultipartUpload_Extended(t *testing.T) {
 
 		for _, uploadID := range uploadIDs {
 			t.Run("upload_id_"+uploadID, func(t *testing.T) {
+				t.Parallel()
 				err := stor.AbortMultipartUpload(context.Background(), "bucket", "key", uploadID)
 				assert.Error(t, err)
 				assert.Contains(t, err.Error(), "not initialized")
@@ -415,7 +450,9 @@ func TestAbortMultipartUpload_Extended(t *testing.T) {
 
 // TestListMultipartUploads_Extended tests the ListMultipartUploads method.
 func TestListMultipartUploads_Extended(t *testing.T) {
+	t.Parallel()
 	t.Run("with nil client", func(t *testing.T) {
+		t.Parallel()
 		client := &Client{
 			cfg:    Config{DefaultBucket: "bucket"},
 			logger: slog.Default(),
@@ -429,6 +466,7 @@ func TestListMultipartUploads_Extended(t *testing.T) {
 	})
 
 	t.Run("with empty bucket uses default", func(t *testing.T) {
+		t.Parallel()
 		client := &Client{
 			cfg:    Config{DefaultBucket: "default-bucket"},
 			logger: slog.Default(),
@@ -440,6 +478,7 @@ func TestListMultipartUploads_Extended(t *testing.T) {
 	})
 
 	t.Run("with cancelled context", func(t *testing.T) {
+		t.Parallel()
 		client := &Client{
 			cfg:    Config{DefaultBucket: "bucket"},
 			logger: slog.Default(),
@@ -455,6 +494,7 @@ func TestListMultipartUploads_Extended(t *testing.T) {
 	})
 
 	t.Run("verify storage has default bucket configured", func(t *testing.T) {
+		t.Parallel()
 		client := &Client{
 			cfg:    Config{DefaultBucket: "my-default-bucket"},
 			logger: slog.Default(),
@@ -467,6 +507,7 @@ func TestListMultipartUploads_Extended(t *testing.T) {
 
 // TestMultipartUpload_Structure tests the MultipartUpload structure.
 func TestMultipartUpload_Structure(t *testing.T) {
+	t.Parallel()
 	now := time.Now()
 
 	upload := &storage.MultipartUpload{
@@ -484,6 +525,7 @@ func TestMultipartUpload_Structure(t *testing.T) {
 
 // TestUploadedPart_Structure tests the UploadedPart structure.
 func TestUploadedPart_Structure(t *testing.T) {
+	t.Parallel()
 	part := &storage.UploadedPart{
 		PartNumber: 1,
 		ETag:       "etag-123",
@@ -497,6 +539,7 @@ func TestUploadedPart_Structure(t *testing.T) {
 
 // TestCompleteMultipartUploadOptions_Structure tests the options structure.
 func TestCompleteMultipartUploadOptions_Structure(t *testing.T) {
+	t.Parallel()
 	opts := &storage.CompleteMultipartUploadOptions{
 		Parts: []storage.UploadedPart{
 			{PartNumber: 1, ETag: "etag1", Size: 100},
@@ -512,6 +555,7 @@ func TestCompleteMultipartUploadOptions_Structure(t *testing.T) {
 
 // TestMultipart_ContextTests tests multipart methods with various contexts.
 func TestMultipart_ContextTests(t *testing.T) {
+	t.Parallel()
 	client := &Client{
 		cfg:    Config{DefaultBucket: "bucket"},
 		logger: slog.Default(),
@@ -519,6 +563,7 @@ func TestMultipart_ContextTests(t *testing.T) {
 	stor := NewStorage(client, nil)
 
 	t.Run("CreateMultipartUpload with cancelled context", func(t *testing.T) {
+		t.Parallel()
 		ctx, cancel := context.WithCancel(context.Background())
 		cancel()
 
@@ -528,6 +573,7 @@ func TestMultipart_ContextTests(t *testing.T) {
 	})
 
 	t.Run("UploadPart with cancelled context", func(t *testing.T) {
+		t.Parallel()
 		ctx, cancel := context.WithCancel(context.Background())
 		cancel()
 
@@ -538,6 +584,7 @@ func TestMultipart_ContextTests(t *testing.T) {
 	})
 
 	t.Run("CompleteMultipartUpload with cancelled context", func(t *testing.T) {
+		t.Parallel()
 		ctx, cancel := context.WithCancel(context.Background())
 		cancel()
 
@@ -548,6 +595,7 @@ func TestMultipart_ContextTests(t *testing.T) {
 	})
 
 	t.Run("AbortMultipartUpload with cancelled context", func(t *testing.T) {
+		t.Parallel()
 		ctx, cancel := context.WithCancel(context.Background())
 		cancel()
 
@@ -558,6 +606,7 @@ func TestMultipart_ContextTests(t *testing.T) {
 
 // TestMultipart_KeyVariations tests various key formats for multipart operations.
 func TestMultipart_KeyVariations(t *testing.T) {
+	t.Parallel()
 	client := &Client{
 		cfg:    Config{DefaultBucket: "bucket"},
 		logger: slog.Default(),
@@ -576,6 +625,7 @@ func TestMultipart_KeyVariations(t *testing.T) {
 
 	for _, key := range keys {
 		t.Run("key_"+strings.ReplaceAll(key, "/", "_"), func(t *testing.T) {
+			t.Parallel()
 			// CreateMultipartUpload
 			upload, err := stor.CreateMultipartUpload(context.Background(), "bucket", key, nil)
 			assert.Error(t, err)
@@ -602,7 +652,9 @@ func TestMultipart_KeyVariations(t *testing.T) {
 
 // TestCore_ReturnsCoreClient tests the core() method returns a valid minio.Core.
 func TestCore_ReturnsCoreClient(t *testing.T) {
+	t.Parallel()
 	t.Run("core returns non-nil Core", func(t *testing.T) {
+		t.Parallel()
 		client := &Client{
 			cfg:    Config{},
 			logger: slog.Default(),
@@ -614,6 +666,7 @@ func TestCore_ReturnsCoreClient(t *testing.T) {
 	})
 
 	t.Run("core wraps the client correctly", func(t *testing.T) {
+		t.Parallel()
 		minioClient := &Client{
 			cfg:    Config{},
 			logger: slog.Default(),
@@ -630,6 +683,7 @@ func TestCore_ReturnsCoreClient(t *testing.T) {
 
 // TestMultipartUpload_CompleteWithEmptyParts tests CompleteMultipartUpload with empty parts.
 func TestMultipartUpload_CompleteWithEmptyParts(t *testing.T) {
+	t.Parallel()
 	client := &Client{
 		cfg:    Config{DefaultBucket: "bucket"},
 		logger: slog.Default(),
@@ -647,6 +701,7 @@ func TestMultipartUpload_CompleteWithEmptyParts(t *testing.T) {
 
 // TestMultipartUpload_WithRealisticETags tests with realistic ETag values.
 func TestMultipartUpload_WithRealisticETags(t *testing.T) {
+	t.Parallel()
 	client := &Client{
 		cfg:    Config{DefaultBucket: "bucket"},
 		logger: slog.Default(),
@@ -663,6 +718,7 @@ func TestMultipartUpload_WithRealisticETags(t *testing.T) {
 
 	for _, etag := range realisticETags {
 		t.Run("etag_"+etag[:8], func(t *testing.T) {
+			t.Parallel()
 			opts := &storage.CompleteMultipartUploadOptions{
 				Parts: []storage.UploadedPart{
 					{PartNumber: 1, ETag: etag, Size: 1024},
@@ -677,6 +733,7 @@ func TestMultipartUpload_WithRealisticETags(t *testing.T) {
 
 // TestMultipartUpload_PartNumberEdgeCases tests edge cases for part numbers.
 func TestMultipartUpload_PartNumberEdgeCases(t *testing.T) {
+	t.Parallel()
 	client := &Client{
 		cfg:    Config{DefaultBucket: "bucket"},
 		logger: slog.Default(),
@@ -695,6 +752,7 @@ func TestMultipartUpload_PartNumberEdgeCases(t *testing.T) {
 
 	for _, tc := range edgeCases {
 		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
 			reader := strings.NewReader("test data")
 			part, err := stor.UploadPart(context.Background(), "bucket", "key", "upload-123", tc.partNumber, reader)
 			assert.Error(t, err)
@@ -706,6 +764,7 @@ func TestMultipartUpload_PartNumberEdgeCases(t *testing.T) {
 
 // TestMultipartUpload_KeyVariationsExtended tests various key formats.
 func TestMultipartUpload_KeyVariationsExtended(t *testing.T) {
+	t.Parallel()
 	client := &Client{
 		cfg:    Config{DefaultBucket: "bucket"},
 		logger: slog.Default(),
@@ -737,6 +796,7 @@ func TestMultipartUpload_KeyVariationsExtended(t *testing.T) {
 
 	for _, key := range keys {
 		t.Run("key_"+key, func(t *testing.T) {
+			t.Parallel()
 			upload, err := stor.CreateMultipartUpload(context.Background(), "bucket", key, nil)
 			assert.Error(t, err)
 			assert.Nil(t, upload)
@@ -761,6 +821,7 @@ func TestMultipartUpload_KeyVariationsExtended(t *testing.T) {
 
 // TestMultipartUpload_BucketVariations tests bucket name variations.
 func TestMultipartUpload_BucketVariations(t *testing.T) {
+	t.Parallel()
 	client := &Client{
 		cfg:    Config{DefaultBucket: "default-bucket"},
 		logger: slog.Default(),
@@ -779,6 +840,7 @@ func TestMultipartUpload_BucketVariations(t *testing.T) {
 
 	for _, bucket := range buckets {
 		t.Run("bucket_"+bucket, func(t *testing.T) {
+			t.Parallel()
 			upload, err := stor.CreateMultipartUpload(context.Background(), bucket, "key.txt", nil)
 			assert.Error(t, err)
 			assert.Nil(t, upload)
@@ -788,6 +850,7 @@ func TestMultipartUpload_BucketVariations(t *testing.T) {
 
 // TestMultipartUpload_UploadIDVariations tests various upload ID formats.
 func TestMultipartUpload_UploadIDVariations(t *testing.T) {
+	t.Parallel()
 	client := &Client{
 		cfg:    Config{DefaultBucket: "bucket"},
 		logger: slog.Default(),
@@ -810,6 +873,7 @@ func TestMultipartUpload_UploadIDVariations(t *testing.T) {
 
 	for _, uploadID := range uploadIDs {
 		t.Run("upload_id_"+uploadID[:min(10, len(uploadID))], func(t *testing.T) {
+			t.Parallel()
 			reader := strings.NewReader("test")
 			part, err := stor.UploadPart(context.Background(), "bucket", "key", uploadID, 1, reader)
 			assert.Error(t, err)
@@ -832,6 +896,7 @@ func TestMultipartUpload_UploadIDVariations(t *testing.T) {
 
 // TestMultipartUpload_OptionsVariations tests various PutOptions.
 func TestMultipartUpload_OptionsVariations(t *testing.T) {
+	t.Parallel()
 	client := &Client{
 		cfg:    Config{DefaultBucket: "bucket"},
 		logger: slog.Default(),
@@ -850,6 +915,7 @@ func TestMultipartUpload_OptionsVariations(t *testing.T) {
 
 	for _, ct := range contentTypes {
 		t.Run("content_type_"+ct, func(t *testing.T) {
+			t.Parallel()
 			opts := &storage.PutOptions{
 				ContentType: ct,
 			}
@@ -860,6 +926,7 @@ func TestMultipartUpload_OptionsVariations(t *testing.T) {
 	}
 
 	t.Run("with metadata", func(t *testing.T) {
+		t.Parallel()
 		opts := &storage.PutOptions{
 			ContentType: "application/json",
 			Metadata: map[string]string{
@@ -876,6 +943,7 @@ func TestMultipartUpload_OptionsVariations(t *testing.T) {
 
 // TestMultipartUpload_ContextTimeoutVariations tests various timeout scenarios.
 func TestMultipartUpload_ContextTimeoutVariations(t *testing.T) {
+	t.Parallel()
 	client := &Client{
 		cfg:    Config{DefaultBucket: "bucket"},
 		logger: slog.Default(),
@@ -890,6 +958,7 @@ func TestMultipartUpload_ContextTimeoutVariations(t *testing.T) {
 
 	for _, timeout := range timeouts {
 		t.Run("timeout_"+timeout.String(), func(t *testing.T) {
+			t.Parallel()
 			ctx, cancel := context.WithTimeout(context.Background(), timeout)
 			defer cancel()
 
@@ -908,7 +977,9 @@ func TestMultipartUpload_ContextTimeoutVariations(t *testing.T) {
 
 // TestMultipartUpload_NilClientErrorPaths tests error paths with nil client.
 func TestMultipartUpload_NilClientErrorPaths(t *testing.T) {
+	t.Parallel()
 	t.Run("CreateMultipartUpload with nil client", func(t *testing.T) {
+		t.Parallel()
 		client := &Client{
 			cfg:    Config{DefaultBucket: "bucket"},
 			logger: slog.Default(),
@@ -921,6 +992,7 @@ func TestMultipartUpload_NilClientErrorPaths(t *testing.T) {
 	})
 
 	t.Run("CompleteMultipartUpload with nil client", func(t *testing.T) {
+		t.Parallel()
 		client := &Client{
 			cfg:    Config{DefaultBucket: "bucket"},
 			logger: slog.Default(),
@@ -942,6 +1014,7 @@ func TestMultipartUpload_NilClientErrorPaths(t *testing.T) {
 
 // TestMultipartUpload_KeyVariations tests with various key formats.
 func TestMultipartUpload_KeyVariations(t *testing.T) {
+	t.Parallel()
 	client := &Client{
 		cfg:    Config{DefaultBucket: "bucket"},
 		logger: slog.Default(),
@@ -960,6 +1033,7 @@ func TestMultipartUpload_KeyVariations(t *testing.T) {
 
 	for _, key := range keys {
 		t.Run("key_"+key[:min(5, len(key))], func(t *testing.T) {
+			t.Parallel()
 			upload, err := stor.CreateMultipartUpload(context.Background(), "bucket", key, nil)
 			assert.Error(t, err)
 			assert.Nil(t, upload)
@@ -969,6 +1043,7 @@ func TestMultipartUpload_KeyVariations(t *testing.T) {
 
 // TestMultipartUpload_AbortUploadIDVariations tests Abort with various upload ID formats.
 func TestMultipartUpload_AbortUploadIDVariations(t *testing.T) {
+	t.Parallel()
 	client := &Client{
 		cfg:    Config{DefaultBucket: "bucket"},
 		logger: slog.Default(),
@@ -985,6 +1060,7 @@ func TestMultipartUpload_AbortUploadIDVariations(t *testing.T) {
 
 	for _, uploadID := range uploadIDs {
 		t.Run("upload_"+uploadID, func(t *testing.T) {
+			t.Parallel()
 			err := stor.AbortMultipartUpload(context.Background(), "bucket", "key", uploadID)
 			assert.Error(t, err)
 		})
