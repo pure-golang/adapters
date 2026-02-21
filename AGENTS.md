@@ -271,11 +271,28 @@ func TestMain(m *testing.M) {
 }
 ```
 
+### Test Type Markers
+The project uses specific markers to distinguish between unit and integration tests:
+
+- **Unit tests**: Use `t.Parallel()` at the beginning of the test function
+  - These tests don't require external services (Docker, databases, etc.)
+  - They can run in parallel and complete quickly
+
+- **Integration tests**: Use `t.Skip("integration test")` with `testing.Short()` check
+  - These tests require external services (Docker containers, databases, message queues)
+  - They are skipped when running with `-short` flag
+
+**Why this matters:**
+- Unit tests with `t.Parallel()` run quickly and can be executed frequently during development
+- Integration tests are slower and require Docker, so they're skipped in CI/CD with `-short` flag
+- This separation allows developers to run fast unit tests without waiting for Docker containers
+
 ### Test Assertions
 - Use `github.com/stretchr/testify` for assertions
 - `assert.NoError(t, err)`: Fail immediately on error
 - `require.NoError(t, err)`: Continue test, fail at end
 - `assert.ErrorIs(t, err, expectedErr)`: Check for specific error
+- **AAA Pattern**: Arrange (setup), Act (execute), Assert (verify)
 
 ### Cleanup with t.Cleanup
 For proper resource cleanup in tests, prefer `t.Cleanup()` over `defer`
