@@ -359,7 +359,7 @@ func TestDB_Ping_NilPool(t *testing.T) {
 	// Ping on nil pool would panic if not handled
 	// In real usage, this shouldn't happen as New validates the pool
 	if db.Pool != nil {
-		err := db.Pool.Ping(context.Background())
+		err := db.Ping(context.Background())
 		assert.NoError(t, err)
 	}
 }

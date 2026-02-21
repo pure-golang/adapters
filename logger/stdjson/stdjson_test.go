@@ -84,10 +84,10 @@ func TestNewDefault_HandlerConfiguration(t *testing.T) {
 	assert.NotNil(t, h)
 
 	// Verify levels are enabled correctly
-	assert.True(t, h.Enabled(nil, slog.LevelDebug))
-	assert.True(t, h.Enabled(nil, slog.LevelInfo))
-	assert.True(t, h.Enabled(nil, slog.LevelWarn))
-	assert.True(t, h.Enabled(nil, slog.LevelError))
+	assert.True(t, h.Enabled(context.TODO(), slog.LevelDebug))
+	assert.True(t, h.Enabled(context.TODO(), slog.LevelInfo))
+	assert.True(t, h.Enabled(context.TODO(), slog.LevelWarn))
+	assert.True(t, h.Enabled(context.TODO(), slog.LevelError))
 }
 
 func TestNewDefault_LevelFiltering(t *testing.T) {

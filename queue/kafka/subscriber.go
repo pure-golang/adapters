@@ -7,9 +7,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/pure-golang/adapters/queue"
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
+	"github.com/pure-golang/adapters/queue"
 	"github.com/segmentio/kafka-go"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
@@ -186,7 +186,7 @@ func (s *Subscriber) handleMessageWithRetry(msg kafka.Message, handler queue.Han
 
 		span.SetAttributes(
 			attribute.String("topic", msg.Topic),
-			attribute.Int("partition", int(msg.Partition)),
+			attribute.Int("partition", msg.Partition),
 			attribute.Int64("offset", msg.Offset),
 			attribute.Int("body_size", len(msg.Value)),
 			attribute.Int("headers_count", len(msg.Headers)),

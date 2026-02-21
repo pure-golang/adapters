@@ -38,7 +38,7 @@ func NewDefault(c Config, h http.Handler) *Server {
 	return s
 }
 
-func New(c Config, h http.Handler /*ext: option functions*/) *Server {
+func New(c Config, h http.Handler /* ext: option functions */) *Server {
 	return &Server{
 		server: &http.Server{
 			Addr:              fmt.Sprintf("%s:%d", c.Host, c.Port),

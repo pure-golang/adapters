@@ -30,7 +30,7 @@ func (c *Connection) Get(ctx context.Context, dst interface{}, query string, arg
 	ctx, span := c.WithTracing(ctx, "Get", query)
 	defer span.End()
 
-	err := c.DB.GetContext(ctx, dst, query, args...)
+	err := c.GetContext(ctx, dst, query, args...)
 	if err != nil {
 		span.RecordError(err)
 		if err == sql.ErrNoRows {
@@ -49,7 +49,7 @@ func (c *Connection) Select(ctx context.Context, dst interface{}, query string, 
 	ctx, span := c.WithTracing(ctx, "Select", query)
 	defer span.End()
 
-	err := c.DB.SelectContext(ctx, dst, query, args...)
+	err := c.SelectContext(ctx, dst, query, args...)
 	if err != nil {
 		span.RecordError(err)
 		return errors.Wrap(err, "failed to execute select query")
@@ -65,7 +65,7 @@ func (c *Connection) Exec(ctx context.Context, query string, args ...interface{}
 	ctx, span := c.WithTracing(ctx, "Exec", query)
 	defer span.End()
 
-	result, err := c.DB.ExecContext(ctx, query, args...)
+	result, err := c.ExecContext(ctx, query, args...)
 	if err != nil {
 		span.RecordError(err)
 		return nil, errors.Wrap(err, "failed to execute query")

@@ -5,8 +5,8 @@ import (
 	"log/slog"
 	"time"
 
-	"github.com/pure-golang/adapters/logger"
 	"github.com/jackc/pgx/v5/tracelog"
+	"github.com/pure-golang/adapters/logger"
 )
 
 type Logger struct {
@@ -17,7 +17,7 @@ func NewLogger() *Logger {
 	return &Logger{}
 }
 
-func (l *Logger) Log(ctx context.Context, level tracelog.LogLevel, msg string, data map[string]interface{}) {
+func (l *Logger) Log(ctx context.Context, level tracelog.LogLevel, msg string, data map[string]any) {
 	if level < l.minLevel {
 		return
 	}

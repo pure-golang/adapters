@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/pure-golang/adapters/tracing"
 	"github.com/pkg/errors"
+	"github.com/pure-golang/adapters/tracing"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp"
 	"go.opentelemetry.io/otel/sdk/resource"
@@ -30,13 +30,13 @@ func (j *Provider) Close() error {
 	ctx := context.Background()
 	if err := j.ForceFlush(ctx); err != nil {
 		// Ensure shutdown is called even if ForceFlush fails
-		shutdownErr := j.TracerProvider.Shutdown(ctx)
+		shutdownErr := j.Shutdown(ctx)
 		if shutdownErr != nil {
 			return errors.Wrap(err, "jaeger force flush failed (also shutdown failed)")
 		}
 		return errors.Wrap(err, "jaeger force flush failed")
 	}
-	err := j.TracerProvider.Shutdown(ctx)
+	err := j.Shutdown(ctx)
 
 	return errors.Wrap(err, "shutdown jaeger")
 }

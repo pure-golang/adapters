@@ -309,9 +309,8 @@ func TestInitDefault(t *testing.T) {
 		require.NoError(t, err)
 		require.NotNil(t, closer)
 
-		// Verify it implements io.Closer
-		_, ok := closer.(io.Closer)
-		assert.True(t, ok)
+		// closer already is io.Closer, no need for type assertion
+		assert.NotNil(t, closer)
 
 		closer.Close()
 	})

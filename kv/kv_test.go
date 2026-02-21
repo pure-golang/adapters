@@ -182,7 +182,7 @@ func TestStore_InterfaceImplementation(t *testing.T) {
 	require.NotNil(t, store)
 
 	// Verify it implements the interface by checking type
-	var _ Store = store
+	var _ = store
 	ctx := context.Background()
 
 	// Test all interface methods are implemented

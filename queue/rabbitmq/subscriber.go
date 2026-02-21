@@ -9,8 +9,8 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/pure-golang/adapters/queue"
 	"github.com/pkg/errors"
+	"github.com/pure-golang/adapters/queue"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
@@ -188,8 +188,8 @@ func (s *Subscriber) handleDelivery(channel *amqp.Channel, delivery amqp.Deliver
 	defer span.End()
 
 	// TODO
-	//s.logger.With("trace_id", span.SpanContext().TraceID())
-	//ctx = log.NewContext(ctx, logger) // pass ctx into  handler
+	// s.logger.With("trace_id", span.SpanContext().TraceID())
+	// ctx = log.NewContext(ctx, logger) // pass ctx into  handler
 
 	span.SetAttributes(
 		attribute.String("id", delivery.MessageId),

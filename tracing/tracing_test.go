@@ -125,7 +125,7 @@ type testProvider struct {
 
 func (t *testProvider) Close() error {
 	if t.TracerProvider != nil {
-		return t.TracerProvider.Shutdown(context.Background())
+		return t.Shutdown(context.Background())
 	}
 	return nil
 }

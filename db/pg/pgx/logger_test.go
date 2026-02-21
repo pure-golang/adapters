@@ -39,9 +39,9 @@ func TestLogger_Log(t *testing.T) {
 
 	t.Run("Log with Trace level", func(t *testing.T) {
 		records = nil // clear records
-		data := map[string]interface{}{
+		data := map[string]any{
 			"sql":  "SELECT 1",
-			"args": []interface{}{},
+			"args": []any{},
 		}
 		pgxLogger.Log(ctx, tracelog.LogLevelTrace, "trace message", data)
 		// Record should be captured (minLevel check happens at slog level)
