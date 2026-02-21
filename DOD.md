@@ -41,11 +41,9 @@
 
 - [ ] Поддержка флага `-short` для пропуска Docker-тестов:
   ```go
-  func skipShort(t *testing.T) {
-      if testing.Short() {
-          t.Skip("skipping integration test in short mode")
-      }
-  }
+    if testing.Short() {
+        t.Skip("integration test")
+    }
   ```
 - [ ] Автоматический запуск и остановка контейнеров через testcontainers
 - [ ] Ожидание готовности сервиса перед выполнением тестов

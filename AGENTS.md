@@ -258,10 +258,8 @@ Integration tests use `github.com/ory/dockertest` to:
 
 **Key pattern**: Use `testing.Short()` flag to skip integration tests:
 ```go
-func skipShort(t *testing.T) {
-    if testing.Short() {
-        t.Skip("skipping integration test in short mode")
-    }
+if testing.Short() {
+    t.Skip("integration test")
 }
 
 func TestMain(m *testing.M) {
@@ -288,7 +286,9 @@ In integration tests use `context.WithTimeout(context.Background(), 5*time.Secon
 ### Common Test Patterns
 ```go
 func TestConnection_Exec(t *testing.T) {
-    skipShort(t)
+	if testing.Short() {
+		t.Skip("integration test")
+	}
     ctx := context.Background()
 
     // Setup: Create table

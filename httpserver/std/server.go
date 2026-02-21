@@ -8,8 +8,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/pure-golang/adapters/httpserver"
 	"github.com/pkg/errors"
+	"github.com/pure-golang/adapters/httpserver"
 )
 
 const ShutdownTimeout = 15 * time.Second
@@ -52,7 +52,7 @@ func New(c Config, h http.Handler /*ext: option functions*/) *Server {
 
 func (s *Server) Start() error {
 	var err error
-	s.logger.With().Info("server starting", slog.String("addr", s.server.Addr))
+	s.logger.Info("server starting", slog.String("addr", s.server.Addr))
 
 	if s.config.TLSCertPath == "" {
 		err = s.server.ListenAndServe()

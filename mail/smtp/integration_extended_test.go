@@ -20,16 +20,11 @@ import (
 	"github.com/testcontainers/testcontainers-go/wait"
 )
 
-// skipShort skips the test in short mode
-func skipShortExtended(t *testing.T) {
-	if testing.Short() {
-		t.Skip("skipping extended integration test in short mode")
-	}
-}
-
 // startSMTPContainer starts a MailHog container for testing
 func startSMTPContainer(t *testing.T) testcontainers.Container {
-	skipShortExtended(t)
+	if testing.Short() {
+		t.Skip("integration test")
+	}
 
 	ctx := context.Background()
 

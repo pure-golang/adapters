@@ -23,7 +23,7 @@ func TestRedisSuite(t *testing.T) {
 
 func (s *RedisSuite) SetupSuite() {
 	if testing.Short() {
-		s.T().Skip("skipping integration test in short mode")
+		s.T().Skip("integration test")
 	}
 
 	ctx := context.Background()

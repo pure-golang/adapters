@@ -116,14 +116,10 @@ func TestMain(m *testing.M) {
 	os.Exit(code)
 }
 
-func skipShort(t *testing.T) {
-	if testing.Short() {
-		t.Skip("skipping integration test in short mode")
-	}
-}
-
 func TestConnection_Exec(t *testing.T) {
-	skipShort(t)
+	if testing.Short() {
+		t.Skip("integration test")
+	}
 	ctx := context.Background()
 
 	// Создаем тестовую таблицу
@@ -156,7 +152,9 @@ func TestConnection_Exec(t *testing.T) {
 }
 
 func TestConnection_Transaction(t *testing.T) {
-	skipShort(t)
+	if testing.Short() {
+		t.Skip("integration test")
+	}
 	ctx := context.Background()
 
 	// Создаем тестовую таблицу с проверкой баланса
@@ -214,7 +212,9 @@ func TestConnection_Transaction(t *testing.T) {
 }
 
 func TestConnection_Get(t *testing.T) {
-	skipShort(t)
+	if testing.Short() {
+		t.Skip("integration test")
+	}
 	ctx := context.Background()
 
 	// Создаем тестовую таблицу и данные
@@ -251,7 +251,9 @@ func TestConnection_Get(t *testing.T) {
 }
 
 func TestConnection_Select(t *testing.T) {
-	skipShort(t)
+	if testing.Short() {
+		t.Skip("integration test")
+	}
 	ctx := context.Background()
 
 	// Создаем тестовую таблицу и данные
@@ -296,7 +298,9 @@ func TestConnection_Select(t *testing.T) {
 }
 
 func TestConnection_QueryTimeout(t *testing.T) {
-	skipShort(t)
+	if testing.Short() {
+		t.Skip("integration test")
+	}
 	ctx := context.Background()
 
 	// Создаем запрос с искусственной задержкой
@@ -321,7 +325,9 @@ func TestConnection_QueryTimeout(t *testing.T) {
 }
 
 func TestConnection_ErrorHandling(t *testing.T) {
-	skipShort(t)
+	if testing.Short() {
+		t.Skip("integration test")
+	}
 	ctx := context.Background()
 
 	// Создаем тестовую таблицу с ограничениями
@@ -370,7 +376,9 @@ func TestConnection_ErrorHandling(t *testing.T) {
 }
 
 func TestConnection_NamedQueries(t *testing.T) {
-	skipShort(t)
+	if testing.Short() {
+		t.Skip("integration test")
+	}
 
 	// Создаем тестовую таблицу
 	createCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
@@ -452,7 +460,9 @@ func TestConnection_NamedQueries(t *testing.T) {
 }
 
 func TestConnection_TransactionIsolation(t *testing.T) {
-	skipShort(t)
+	if testing.Short() {
+		t.Skip("integration test")
+	}
 	ctx := context.Background()
 
 	// Создаем тестовую таблицу
@@ -519,7 +529,9 @@ func TestConnection_TransactionIsolation(t *testing.T) {
 }
 
 func TestConnection_ConcurrentTransactions(t *testing.T) {
-	skipShort(t)
+	if testing.Short() {
+		t.Skip("integration test")
+	}
 	ctx := context.Background()
 
 	// Создаем тестовую таблицу
@@ -586,7 +598,9 @@ func TestConnection_ConcurrentTransactions(t *testing.T) {
 }
 
 func TestConnection_Query(t *testing.T) {
-	skipShort(t)
+	if testing.Short() {
+		t.Skip("integration test")
+	}
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
@@ -622,7 +636,9 @@ func TestConnection_Query(t *testing.T) {
 }
 
 func TestConnection_QueryRow(t *testing.T) {
-	skipShort(t)
+	if testing.Short() {
+		t.Skip("integration test")
+	}
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
@@ -655,7 +671,9 @@ func TestConnection_QueryRow(t *testing.T) {
 }
 
 func TestConnection_Close(t *testing.T) {
-	skipShort(t)
+	if testing.Short() {
+		t.Skip("integration test")
+	}
 
 	// Создаем новое соединение для теста закрытия
 	cfg := Config{
@@ -689,7 +707,9 @@ func TestConnection_Close(t *testing.T) {
 }
 
 func TestConnection_NamedQuery_Close(t *testing.T) {
-	skipShort(t)
+	if testing.Short() {
+		t.Skip("integration test")
+	}
 	ctx := context.Background()
 
 	// Создаем тестовую таблицу
@@ -744,7 +764,9 @@ func TestConnection_NamedQuery_Close(t *testing.T) {
 }
 
 func TestTx_Select(t *testing.T) {
-	skipShort(t)
+	if testing.Short() {
+		t.Skip("integration test")
+	}
 	ctx := context.Background()
 
 	// Создаем тестовую таблицу
@@ -793,7 +815,9 @@ func TestTx_Select(t *testing.T) {
 }
 
 func TestTx_Query(t *testing.T) {
-	skipShort(t)
+	if testing.Short() {
+		t.Skip("integration test")
+	}
 	ctx := context.Background()
 
 	// Создаем тестовую таблицу
@@ -828,7 +852,9 @@ func TestTx_Query(t *testing.T) {
 }
 
 func TestTx_QueryRow(t *testing.T) {
-	skipShort(t)
+	if testing.Short() {
+		t.Skip("integration test")
+	}
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
@@ -876,7 +902,9 @@ func TestDefaultTxOptions(t *testing.T) {
 }
 
 func TestConnection_BeginTx(t *testing.T) {
-	skipShort(t)
+	if testing.Short() {
+		t.Skip("integration test")
+	}
 	ctx := context.Background()
 
 	// Создаем тестовую таблицу
@@ -926,7 +954,9 @@ func TestConnection_BeginTx(t *testing.T) {
 }
 
 func TestTx_Commit(t *testing.T) {
-	skipShort(t)
+	if testing.Short() {
+		t.Skip("integration test")
+	}
 	ctx := context.Background()
 
 	// Создаем тестовую таблицу
@@ -962,7 +992,9 @@ func TestTx_Commit(t *testing.T) {
 }
 
 func TestTx_Rollback(t *testing.T) {
-	skipShort(t)
+	if testing.Short() {
+		t.Skip("integration test")
+	}
 	ctx := context.Background()
 
 	// Создаем тестовую таблицу
@@ -998,7 +1030,9 @@ func TestTx_Rollback(t *testing.T) {
 }
 
 func TestConnection_Query_ErrorHandling(t *testing.T) {
-	skipShort(t)
+	if testing.Short() {
+		t.Skip("integration test")
+	}
 	ctx := context.Background()
 
 	// Тестируем Query с синтаксической ошибкой
@@ -1039,7 +1073,9 @@ func TestConnection_WithTimeout(t *testing.T) {
 
 func TestIsConstraintViolation(t *testing.T) {
 	// Создаем таблицу с ограничениями для тестов
-	skipShort(t)
+	if testing.Short() {
+		t.Skip("integration test")
+	}
 	ctx := context.Background()
 
 	_, err := testDB.Exec(ctx, `
@@ -1082,7 +1118,9 @@ func TestGetConstraintName(t *testing.T) {
 	require.Empty(t, name)
 
 	// Создаем таблицу с именованным ограничением для теста
-	skipShort(t)
+	if testing.Short() {
+		t.Skip("integration test")
+	}
 	ctx := context.Background()
 
 	_, err := testDB.Exec(ctx, `

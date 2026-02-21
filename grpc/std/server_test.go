@@ -397,7 +397,7 @@ func TestShutdownTimeout_Constant(t *testing.T) {
 
 func TestServer_Start_ListenOnAvailablePort(t *testing.T) {
 	if testing.Short() {
-		t.Skip("skipping integration test in short mode")
+		t.Skip("integration test")
 	}
 
 	// Find an available port
@@ -437,7 +437,7 @@ func TestServer_Start_ListenOnAvailablePort(t *testing.T) {
 
 func TestServer_Close_WithListener(t *testing.T) {
 	if testing.Short() {
-		t.Skip("skipping integration test in short mode")
+		t.Skip("integration test")
 	}
 
 	// Find an available port
@@ -563,7 +563,7 @@ func TestServer_Start_AlreadyListening(t *testing.T) {
 
 func TestServer_Close_Timeout(t *testing.T) {
 	if testing.Short() {
-		t.Skip("skipping integration test in short mode")
+		t.Skip("integration test")
 	}
 
 	// Find an available port
@@ -714,7 +714,7 @@ func TestServer_Run_Panics(t *testing.T) {
 
 func TestServer_Start_NetworkErrClosed(t *testing.T) {
 	if testing.Short() {
-		t.Skip("skipping integration test in short mode")
+		t.Skip("integration test")
 	}
 
 	// Find an available port

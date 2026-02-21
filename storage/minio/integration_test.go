@@ -23,7 +23,7 @@ import (
 // TestIntegrationWithTestcontainers runs integration tests using testcontainers-go.
 func TestIntegrationWithTestcontainers(t *testing.T) {
 	if testing.Short() {
-		t.Skip("skipping integration test in short mode")
+		t.Skip("integration test")
 	}
 
 	ctx := context.Background()

@@ -92,7 +92,7 @@ func TestNewDialer(t *testing.T) {
 
 func (s *RabbitMQSuite) TestDialer_ReconnectWithRetryPolicy() {
 	if testing.Short() {
-		s.T().Skip("skipping integration test in short mode")
+		s.T().Skip("integration test")
 	}
 
 	t := s.T()
@@ -116,7 +116,7 @@ func (s *RabbitMQSuite) TestDialer_ReconnectWithRetryPolicy() {
 
 func (s *RabbitMQSuite) TestDialer_ConnectMultipleTimes() {
 	if testing.Short() {
-		s.T().Skip("skipping integration test in short mode")
+		s.T().Skip("integration test")
 	}
 
 	t := s.T()
@@ -141,7 +141,7 @@ func (s *RabbitMQSuite) TestDialer_ConnectMultipleTimes() {
 
 func (s *RabbitMQSuite) TestDialer_CloseIdempotent() {
 	if testing.Short() {
-		s.T().Skip("skipping integration test in short mode")
+		s.T().Skip("integration test")
 	}
 
 	t := s.T()

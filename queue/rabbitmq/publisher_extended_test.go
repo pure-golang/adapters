@@ -15,7 +15,7 @@ import (
 
 func (s *RabbitMQSuite) TestPublisher_WithContextCancellation() {
 	if testing.Short() {
-		s.T().Skip("skipping integration test in short mode")
+		s.T().Skip("integration test")
 	}
 
 	t := s.T()
@@ -60,7 +60,7 @@ func (s *RabbitMQSuite) TestPublisher_WithContextCancellation() {
 
 func (s *RabbitMQSuite) TestPublisher_WithMessageHeaders() {
 	if testing.Short() {
-		s.T().Skip("skipping integration test in short mode")
+		s.T().Skip("integration test")
 	}
 
 	t := s.T()
@@ -116,7 +116,7 @@ func (s *RabbitMQSuite) TestPublisher_WithMessageHeaders() {
 
 func (s *RabbitMQSuite) TestPublisher_BatchMessages() {
 	if testing.Short() {
-		s.T().Skip("skipping integration test in short mode")
+		s.T().Skip("integration test")
 	}
 
 	t := s.T()
@@ -174,7 +174,7 @@ func (s *RabbitMQSuite) TestPublisher_BatchMessages() {
 
 func (s *RabbitMQSuite) TestPublisher_WithTopicOverride() {
 	if testing.Short() {
-		s.T().Skip("skipping integration test in short mode")
+		s.T().Skip("integration test")
 	}
 
 	t := s.T()
@@ -240,7 +240,7 @@ func (s *RabbitMQSuite) TestPublisher_WithTopicOverride() {
 
 func (s *RabbitMQSuite) TestPublisher_WithMessageTTL() {
 	if testing.Short() {
-		s.T().Skip("skipping integration test in short mode")
+		s.T().Skip("integration test")
 	}
 
 	t := s.T()
@@ -284,7 +284,7 @@ func (s *RabbitMQSuite) TestPublisher_WithMessageTTL() {
 
 func (s *RabbitMQSuite) TestPublisher_WithPerMessageTTL() {
 	if testing.Short() {
-		s.T().Skip("skipping integration test in short mode")
+		s.T().Skip("integration test")
 	}
 
 	t := s.T()
@@ -331,7 +331,7 @@ func (s *RabbitMQSuite) TestPublisher_WithPerMessageTTL() {
 
 func (s *RabbitMQSuite) TestPublisher_TransientDeliveryMode() {
 	if testing.Short() {
-		s.T().Skip("skipping integration test in short mode")
+		s.T().Skip("integration test")
 	}
 
 	t := s.T()
@@ -374,7 +374,7 @@ func (s *RabbitMQSuite) TestPublisher_TransientDeliveryMode() {
 
 func (s *RabbitMQSuite) TestPublisher_WithExchange() {
 	if testing.Short() {
-		s.T().Skip("skipping integration test in short mode")
+		s.T().Skip("integration test")
 	}
 
 	t := s.T()

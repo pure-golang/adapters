@@ -386,7 +386,7 @@ func TestClient_Initialization(t *testing.T) {
 // TestClient_ConnectionTimeout tests that connection timeout is respected.
 func TestClient_ConnectionTimeout(t *testing.T) {
 	if testing.Short() {
-		t.Skip("skipping timeout test in short mode")
+		t.Skip("integration test")
 	}
 
 	// Use a non-routable IP to trigger timeout

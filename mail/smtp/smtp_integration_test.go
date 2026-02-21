@@ -90,14 +90,10 @@ func TestMain(m *testing.M) {
 	os.Exit(code)
 }
 
-func skipShort(t *testing.T) {
-	if testing.Short() {
-		t.Skip("skipping integration test in short mode")
-	}
-}
-
 func TestSender_Integration_Send_Success(t *testing.T) {
-	skipShort(t)
+	if testing.Short() {
+		t.Skip("integration test")
+	}
 	ctx := context.Background()
 
 	email := mail.Email{
@@ -112,7 +108,9 @@ func TestSender_Integration_Send_Success(t *testing.T) {
 }
 
 func TestSender_Integration_Send_WithName(t *testing.T) {
-	skipShort(t)
+	if testing.Short() {
+		t.Skip("integration test")
+	}
 	ctx := context.Background()
 
 	email := mail.Email{
@@ -130,7 +128,9 @@ func TestSender_Integration_Send_WithName(t *testing.T) {
 }
 
 func TestSender_Integration_Send_WithHTML(t *testing.T) {
-	skipShort(t)
+	if testing.Short() {
+		t.Skip("integration test")
+	}
 	ctx := context.Background()
 
 	email := mail.Email{
@@ -146,7 +146,9 @@ func TestSender_Integration_Send_WithHTML(t *testing.T) {
 }
 
 func TestSender_Integration_Send_WithCcAndBcc(t *testing.T) {
-	skipShort(t)
+	if testing.Short() {
+		t.Skip("integration test")
+	}
 	ctx := context.Background()
 
 	email := mail.Email{
@@ -163,7 +165,9 @@ func TestSender_Integration_Send_WithCcAndBcc(t *testing.T) {
 }
 
 func TestSender_Integration_Send_WithCustomHeaders(t *testing.T) {
-	skipShort(t)
+	if testing.Short() {
+		t.Skip("integration test")
+	}
 	ctx := context.Background()
 
 	email := mail.Email{
@@ -182,7 +186,9 @@ func TestSender_Integration_Send_WithCustomHeaders(t *testing.T) {
 }
 
 func TestSender_Integration_Send_MultipleEmails(t *testing.T) {
-	skipShort(t)
+	if testing.Short() {
+		t.Skip("integration test")
+	}
 	ctx := context.Background()
 
 	emails := []mail.Email{
@@ -205,7 +211,9 @@ func TestSender_Integration_Send_MultipleEmails(t *testing.T) {
 }
 
 func TestSender_Integration_Send_WithSpecialCharacters(t *testing.T) {
-	skipShort(t)
+	if testing.Short() {
+		t.Skip("integration test")
+	}
 	ctx := context.Background()
 
 	email := mail.Email{
@@ -220,7 +228,9 @@ func TestSender_Integration_Send_WithSpecialCharacters(t *testing.T) {
 }
 
 func TestSender_Integration_Send_LongSubject(t *testing.T) {
-	skipShort(t)
+	if testing.Short() {
+		t.Skip("integration test")
+	}
 	ctx := context.Background()
 
 	longSubject := "This is a very long subject line that might exceed typical email header length limits " +

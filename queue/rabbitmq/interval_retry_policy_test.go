@@ -9,7 +9,7 @@ import (
 
 func TestNewMaxInterval(t *testing.T) {
 	if testing.Short() {
-		t.Skip("skipping test in short mode.")
+		t.Skip("integration test")
 	}
 
 	correctBaseInterval := DefaultRetryInterval
@@ -77,7 +77,7 @@ func TestNewMaxInterval(t *testing.T) {
 
 func TestMaxInterval_TryNum(t *testing.T) {
 	if testing.Short() {
-		t.Skip("skipping test in short mode.")
+		t.Skip("integration test")
 	}
 
 	testCases := []struct {

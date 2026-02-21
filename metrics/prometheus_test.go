@@ -11,7 +11,7 @@ import (
 func TestInitPrometheus(t *testing.T) {
 	t.Run("success initializes prometheus", func(t *testing.T) {
 		if testing.Short() {
-			t.Skip("skipping test in short mode")
+			t.Skip("integration test")
 		}
 
 		err := InitPrometheus()
@@ -23,7 +23,7 @@ func TestInitPrometheus(t *testing.T) {
 
 	t.Run("sets meter provider", func(t *testing.T) {
 		if testing.Short() {
-			t.Skip("skipping test in short mode")
+			t.Skip("integration test")
 		}
 
 		err := InitPrometheus()
@@ -39,7 +39,7 @@ func TestInitPrometheus(t *testing.T) {
 
 	t.Run("starts runtime instrumentation", func(t *testing.T) {
 		if testing.Short() {
-			t.Skip("skipping test in short mode")
+			t.Skip("integration test")
 		}
 
 		// This test verifies that runtime instrumentation starts without error
@@ -56,7 +56,7 @@ func TestInitPrometheus(t *testing.T) {
 
 	t.Run("can be called multiple times", func(t *testing.T) {
 		if testing.Short() {
-			t.Skip("skipping test in short mode")
+			t.Skip("integration test")
 		}
 
 		// First call
@@ -73,7 +73,7 @@ func TestInitPrometheus(t *testing.T) {
 
 	t.Run("meter provider returns valid meter", func(t *testing.T) {
 		if testing.Short() {
-			t.Skip("skipping test in short mode")
+			t.Skip("integration test")
 		}
 
 		err := InitPrometheus()

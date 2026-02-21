@@ -24,7 +24,7 @@ func TestRabbitMQSuite(t *testing.T) {
 func (s *RabbitMQSuite) SetupSuite() {
 	t := s.T()
 	if testing.Short() {
-		t.Skip("integration test is skipped")
+		t.Skip("integration test")
 	}
 
 	pool, err := dockertest.NewPool("")

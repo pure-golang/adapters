@@ -95,7 +95,7 @@ func TestNewHttpServer(t *testing.T) {
 func TestMetrics_Start(t *testing.T) {
 	t.Run("success initializes prometheus and starts server", func(t *testing.T) {
 		if testing.Short() {
-			t.Skip("skipping test in short mode")
+			t.Skip("integration test")
 		}
 
 		// Use a random port to avoid conflicts
@@ -117,7 +117,7 @@ func TestMetrics_Start(t *testing.T) {
 
 	t.Run("registers prometheus metrics", func(t *testing.T) {
 		if testing.Short() {
-			t.Skip("skipping test in short mode")
+			t.Skip("integration test")
 		}
 
 		config := Config{
@@ -143,7 +143,7 @@ func TestMetrics_Start(t *testing.T) {
 
 	t.Run("multiple starts with close", func(t *testing.T) {
 		if testing.Short() {
-			t.Skip("skipping test in short mode")
+			t.Skip("integration test")
 		}
 
 		config := Config{
@@ -170,7 +170,7 @@ func TestMetrics_Start(t *testing.T) {
 func TestMetrics_Close(t *testing.T) {
 	t.Run("closes the server successfully", func(t *testing.T) {
 		if testing.Short() {
-			t.Skip("skipping test in short mode")
+			t.Skip("integration test")
 		}
 
 		config := Config{
@@ -223,7 +223,7 @@ func TestMetrics_Close(t *testing.T) {
 func TestMetrics_Concurrent(t *testing.T) {
 	t.Run("concurrent start and close", func(t *testing.T) {
 		if testing.Short() {
-			t.Skip("skipping test in short mode")
+			t.Skip("integration test")
 		}
 
 		config := Config{
@@ -268,7 +268,7 @@ func TestMetrics_Concurrent(t *testing.T) {
 func TestInitDefault(t *testing.T) {
 	t.Run("starts server successfully", func(t *testing.T) {
 		if testing.Short() {
-			t.Skip("skipping test in short mode")
+			t.Skip("integration test")
 		}
 
 		config := Config{
@@ -291,7 +291,7 @@ func TestInitDefault(t *testing.T) {
 
 	t.Run("returns io.Closer implementation", func(t *testing.T) {
 		if testing.Short() {
-			t.Skip("skipping test in short mode")
+			t.Skip("integration test")
 		}
 
 		config := Config{

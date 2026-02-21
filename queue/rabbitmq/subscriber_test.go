@@ -17,7 +17,7 @@ import (
 
 func (s *RabbitMQSuite) TestSubscriber_NewDefaultSubscriber() {
 	if testing.Short() {
-		s.T().Skip("skipping integration test in short mode")
+		s.T().Skip("integration test")
 	}
 
 	t := s.T()
@@ -43,7 +43,7 @@ func (s *RabbitMQSuite) TestSubscriber_NewDefaultSubscriber() {
 
 func (s *RabbitMQSuite) TestSubscriber_NewSubscriber() {
 	if testing.Short() {
-		s.T().Skip("skipping integration test in short mode")
+		s.T().Skip("integration test")
 	}
 
 	t := s.T()
@@ -100,7 +100,7 @@ func (s *RabbitMQSuite) TestSubscriber_NewSubscriber() {
 
 func (s *RabbitMQSuite) TestSubscriber_Close() {
 	if testing.Short() {
-		s.T().Skip("skipping integration test in short mode")
+		s.T().Skip("integration test")
 	}
 
 	t := s.T()
@@ -118,7 +118,7 @@ func (s *RabbitMQSuite) TestSubscriber_Close() {
 
 func (s *RabbitMQSuite) TestSubscriber_AckHandling() {
 	if testing.Short() {
-		s.T().Skip("skipping integration test in short mode")
+		s.T().Skip("integration test")
 	}
 
 	t := s.T()
@@ -177,7 +177,7 @@ func (s *RabbitMQSuite) TestSubscriber_AckHandling() {
 
 func (s *RabbitMQSuite) TestSubscriber_NackHandling() {
 	if testing.Short() {
-		s.T().Skip("skipping integration test in short mode")
+		s.T().Skip("integration test")
 	}
 
 	t := s.T()
@@ -237,7 +237,7 @@ func (s *RabbitMQSuite) TestSubscriber_NackHandling() {
 
 func (s *RabbitMQSuite) TestSubscriber_InfiniteRetries() {
 	if testing.Short() {
-		s.T().Skip("skipping integration test in short mode")
+		s.T().Skip("integration test")
 	}
 
 	t := s.T()
