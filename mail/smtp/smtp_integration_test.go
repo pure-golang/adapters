@@ -13,11 +13,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/pure-golang/adapters/mail"
-
 	"github.com/ory/dockertest/v3"
 	"github.com/ory/dockertest/v3/docker"
 	"github.com/stretchr/testify/require"
+
+	"github.com/pure-golang/adapters/mail"
 )
 
 var testSender *Sender

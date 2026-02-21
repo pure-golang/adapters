@@ -16,3 +16,5 @@
 
 SUMMARY.md
 IMPROVE*.md
+
+.gitlab-ci.yml

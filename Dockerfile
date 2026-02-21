@@ -1,4 +1,4 @@
-FROM golang:1.24.12
+FROM golang:1.25
 
 # Install Go CI/CD tools with pinned versions
 RUN go install honnef.co/go/tools/cmd/staticcheck@2025.1 && \

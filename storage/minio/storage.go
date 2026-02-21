@@ -8,11 +8,12 @@ import (
 
 	"github.com/minio/minio-go/v7"
 	"github.com/pkg/errors"
-	"github.com/pure-golang/adapters/storage"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/trace"
+
+	"github.com/pure-golang/adapters/storage"
 )
 
 var _ storage.Storage = (*Storage)(nil)

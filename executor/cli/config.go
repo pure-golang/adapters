@@ -16,8 +16,7 @@ type SSHConfig struct {
 // Config содержит конфигурацию CLI executor
 type Config struct {
 	// Command - имя исполняемой команды (например, "ffmpeg", "gsutil", "aws")
-	// Загружается из переменной окружения CLI_COMMAND
-	Command string `envconfig:"CLI_COMMAND" required:"true"`
+	Command string
 
 	// SSH - параметры для удалённого выполнения команд
 	SSH SSHConfig
