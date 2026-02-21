@@ -139,7 +139,7 @@
 				
 				<option value="file41">github.com/pure-golang/adapters/queue/kafka/dialer.go (100.0%)</option>
 				
-				<option value="file42">github.com/pure-golang/adapters/queue/kafka/publisher.go (94.8%)</option>
+				<option value="file42">github.com/pure-golang/adapters/queue/kafka/publisher.go (89.7%)</option>
 				
 				<option value="file43">github.com/pure-golang/adapters/queue/kafka/subscriber.go (89.7%)</option>
 				
@@ -2331,8 +2331,8 @@ import (
         "net/http"
         "time"
 
-        "github.com/pure-golang/adapters/httpserver"
         "github.com/pkg/errors"
+        "github.com/pure-golang/adapters/httpserver"
 )
 
 const ShutdownTimeout = 15 * time.Second
@@ -2375,7 +2375,7 @@ func New(c Config, h http.Handler /*ext: option functions*/) *Server <span class
 
 func (s *Server) Start() error <span class="cov6" title="6">{
         var err error
-        s.logger.With().Info("server starting", slog.String("addr", s.server.Addr))
+        s.logger.Info("server starting", slog.String("addr", s.server.Addr))
 
         if s.config.TLSCertPath == "" </span><span class="cov6" title="6">{
                 err = s.server.ListenAndServe()
@@ -4036,11 +4036,11 @@ import (
 
 type Text struct{}
 
-func (t Text) Encode(i any) ([]byte, error) <span class="cov10" title="25">{
+func (t Text) Encode(i any) ([]byte, error) <span class="cov10" title="24">{
         switch i := i.(type) </span>{
         case []byte:<span class="cov4" title="3">
                 return i, nil</span>
-        case string:<span class="cov9" title="19">
+        case string:<span class="cov9" title="18">
                 return []byte(i), nil</span>
         default:<span class="cov4" title="3">
                 return nil, errors.Errorf("unknown type %T to encode with %T", i, t)</span>
@@ -4175,9 +4175,9 @@ func NewPublisher(dialer *Dialer, cfg PublisherConfig) *Publisher <span class="c
 }
 
 // Publish публикует сообщения в Kafka (синхронно)
-func (p *Publisher) Publish(ctx context.Context, messages ...queue.Message) error <span class="cov8" title="10">{
-        for _, msg := range messages </span><span class="cov9" title="12">{
-                if err := p.publish(ctx, msg); err != nil </span><span class="cov3" title="2">{
+func (p *Publisher) Publish(ctx context.Context, messages ...queue.Message) error <span class="cov8" title="9">{
+        for _, msg := range messages </span><span class="cov9" title="11">{
+                if err := p.publish(ctx, msg); err != nil </span><span class="cov1" title="1">{
                         return err
                 }</span>
         }
@@ -4185,7 +4185,7 @@ func (p *Publisher) Publish(ctx context.Context, messages ...queue.Message) erro
 }
 
 // publish публикует одно сообщение в Kafka
-func (p *Publisher) publish(ctx context.Context, msg queue.Message) error <span class="cov9" title="12">{
+func (p *Publisher) publish(ctx context.Context, msg queue.Message) error <span class="cov9" title="11">{
         ctx, span := tracer.Start(ctx, "Kafka.Publish", trace.WithSpanKind(trace.SpanKindProducer))
         defer span.End()
 
@@ -4198,13 +4198,13 @@ func (p *Publisher) publish(ctx context.Context, msg queue.Message) error <span 
         }</span>
 
         // Определяем тему (используем Topic из сообщения или дефолтное значение)
-        <span class="cov9" title="12">topic := msg.Topic
+        <span class="cov9" title="11">topic := msg.Topic
         if topic == "" </span><span class="cov0" title="0">{
                 topic = p.dialer.cfg.Brokers[0] // fallback: используем первый брокер как дефолтный topic (не идеально, но для совместимости)
         }</span>
 
         // Получаем или создаем writer для темы
-        <span class="cov9" title="12">writer, err := p.getWriter(topic)
+        <span class="cov9" title="11">writer, err := p.getWriter(topic)
         if err != nil </span><span class="cov1" title="1">{
                 span.RecordError(err)
                 span.SetStatus(codes.Error, err.Error())
@@ -4212,7 +4212,7 @@ func (p *Publisher) publish(ctx context.Context, msg queue.Message) error <span 
         }</span>
 
         // Создаем Kafka message
-        <span class="cov9" title="11">kafkaMsg := kafka.Message{
+        <span class="cov8" title="10">kafkaMsg := kafka.Message{
                 Topic: topic,
                 Key:   []byte(uuid.NewString()), // используем UUID как ключ для распределения по партициям
                 Value: body,
@@ -4225,13 +4225,13 @@ func (p *Publisher) publish(ctx context.Context, msg queue.Message) error <span 
         }</span>
 
         // Внедряем трейсинг в заголовки
-        <span class="cov9" title="11">prop.Inject(ctx, headersCarrier(headers))
+        <span class="cov8" title="10">prop.Inject(ctx, headersCarrier(headers))
         for k, v := range headers </span><span class="cov3" title="2">{
                 kafkaMsg.Headers = append(kafkaMsg.Headers, kafka.Header{Key: k, Value: []byte(v)})
         }</span>
 
         // Устанавливаем атрибуты спана
-        <span class="cov9" title="11">span.SetAttributes(
+        <span class="cov8" title="10">span.SetAttributes(
                 attribute.String("topic", topic),
                 attribute.String("key", string(kafkaMsg.Key)),
                 attribute.Int("body_size", len(kafkaMsg.Value)),
@@ -4241,7 +4241,7 @@ func (p *Publisher) publish(ctx context.Context, msg queue.Message) error <span 
         // Публикуем сообщение
         err = writer.WriteMessages(ctx, kafkaMsg)
 
-        if err != nil </span><span class="cov1" title="1">{
+        if err != nil </span><span class="cov0" title="0">{
                 span.RecordError(err)
                 span.SetStatus(codes.Error, err.Error())
                 return errors.Wrap(err, "failed to publish message to Kafka")
@@ -4252,7 +4252,7 @@ func (p *Publisher) publish(ctx context.Context, msg queue.Message) error <span 
 }
 
 // getWriter возвращает или создает writer для указанной темы
-func (p *Publisher) getWriter(topic string) (*kafka.Writer, error) <span class="cov9" title="12">{
+func (p *Publisher) getWriter(topic string) (*kafka.Writer, error) <span class="cov9" title="11">{
         p.mx.Lock()
         defer p.mx.Unlock()
 
@@ -4260,7 +4260,7 @@ func (p *Publisher) getWriter(topic string) (*kafka.Writer, error) <span class="
                 return nil, errors.New("publisher is closed")
         }</span>
 
-        <span class="cov9" title="11">if writer, exists := p.writers[topic]; exists </span><span class="cov5" title="4">{
+        <span class="cov8" title="10">if writer, exists := p.writers[topic]; exists </span><span class="cov4" title="3">{
                 return writer, nil
         }</span>
 
@@ -4669,11 +4669,11 @@ type Message struct {
 }
 
 // EncodeValue converts Body to []byte using Encoder if Body != nil.
-func (m *Message) EncodeValue(enc Encoder) ([]byte, error) <span class="cov10" title="42">{
+func (m *Message) EncodeValue(enc Encoder) ([]byte, error) <span class="cov10" title="41">{
         if m.Body == nil </span><span class="cov3" title="3">{
                 return nil, nil
         }</span>
-        <span class="cov9" title="39">return enc.Encode(m.Body)</span>
+        <span class="cov9" title="38">return enc.Encode(m.Body)</span>
 }
 
 // Delivery is used to consume messages from message broker.
@@ -5170,9 +5170,9 @@ func (s *Subscriber) listen(handler queue.Handler) (bool, error) <span class="co
                 return true, errors.Wrapf(err, "failed to start consuming from %q", s.queueName)
         }</span>
 
-        <span class="cov1" title="2">for </span><span class="cov10" title="64652">{
+        <span class="cov1" title="2">for </span><span class="cov10" title="65715">{
                 select </span>{
-                case &lt;-s.close:<span class="cov9" title="64650">
+                case &lt;-s.close:<span class="cov9" title="65713">
                         if err := channel.Cancel(s.name, false); err != nil </span><span class="cov1" title="2">{
                                 return true, errors.Wrapf(err, "cancel consumer %q", s.name)
                         }</span>
