@@ -95,17 +95,16 @@ func (e *Executor) Execute(ctx context.Context, args ...string) error {
 		return errors.New("executor is closed")
 	}
 	// Создание команды
-	var cmd *exec.Cmd
+	var tmpCmd string
+	var tmpArgs []string
 	if e.ssh.Host != "" {
-		sshCmd, sshArgs := e.buildSSHCommand(args...)
-		//nolint:gosec // G204: Subprocess launched with a potential tainted input or cmd arguments - validated in Start()
-		cmd = exec.CommandContext(ctx, sshCmd, sshArgs...)
+		tmpCmd, tmpArgs = e.buildSSHCommand(args...)
 	} else {
-		//nolint:gosec // G204: Subprocess launched with a potential tainted input or cmd arguments - e.cmd is validated in Start(), args are user-controlled but not shell-expanded
-		cmd = exec.CommandContext(ctx, e.cmd, args...)
+		tmpCmd, tmpArgs = e.cmd, args
 	}
-	cmd.Stdout = e.stdout
-	cmd.Stderr = e.stderr
+	execCmd := exec.CommandContext(ctx, tmpCmd, tmpArgs...)
+	execCmd.Stdout = e.stdout
+	execCmd.Stderr = e.stderr
 	e.mx.Unlock()
 
 	e.logger.Info("executing command", "command", e.cmd, "args", args)
@@ -114,7 +113,7 @@ func (e *Executor) Execute(ctx context.Context, args ...string) error {
 	defer span.End()
 
 	startTime := time.Now()
-	err := cmd.Run()
+	err := execCmd.Run()
 	duration := time.Since(startTime).Seconds()
 
 	if err != nil {
