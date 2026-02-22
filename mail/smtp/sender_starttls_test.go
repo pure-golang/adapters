@@ -17,9 +17,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/pure-golang/adapters/mail"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/pure-golang/adapters/mail"
 )
 
 // generateTestCert generates a self-signed certificate for testing
@@ -107,7 +108,7 @@ func (s *starttlssmtpServer) handleConn(t *testing.T, conn net.Conn) {
 	writer := bufio.NewWriter(conn)
 
 	// Send greeting
-	writer.WriteString("220 localhost ESMTP Test Server\r\n")
+	_, _ = writer.WriteString("220 localhost ESMTP Test Server\r\n")
 	writer.Flush()
 
 	for {
@@ -121,13 +122,13 @@ func (s *starttlssmtpServer) handleConn(t *testing.T, conn net.Conn) {
 		switch {
 		case strings.ToUpper(line) == "EHLO localhost" || strings.HasPrefix(strings.ToUpper(line), "EHLO"):
 			// Respond with EHLO and advertise STARTTLS
-			writer.WriteString("250-localhost\r\n")
-			writer.WriteString("250-STARTTLS\r\n")
-			writer.WriteString("250 HELP\r\n")
+			_, _ = writer.WriteString("250-localhost\r\n")
+			_, _ = writer.WriteString("250-STARTTLS\r\n")
+			_, _ = writer.WriteString("250 HELP\r\n")
 			writer.Flush()
 		case strings.ToUpper(line) == "STARTTLS":
 			// Respond to STARTTLS
-			writer.WriteString("220 Ready to start TLS\r\n")
+			_, _ = writer.WriteString("220 Ready to start TLS\r\n")
 			writer.Flush()
 
 			// Upgrade to TLS
@@ -149,13 +150,13 @@ func (s *starttlssmtpServer) handleConn(t *testing.T, conn net.Conn) {
 			conn = tlsConn
 
 		case strings.HasPrefix(strings.ToUpper(line), "MAIL FROM:"):
-			writer.WriteString("250 OK\r\n")
+			_, _ = writer.WriteString("250 OK\r\n")
 			writer.Flush()
 		case strings.HasPrefix(strings.ToUpper(line), "RCPT TO:"):
-			writer.WriteString("250 OK\r\n")
+			_, _ = writer.WriteString("250 OK\r\n")
 			writer.Flush()
 		case line == "DATA":
-			writer.WriteString("354 End data with <CR><LF>.<CR><LF>\r\n")
+			_, _ = writer.WriteString("354 End data with <CR><LF>.<CR><LF>\r\n")
 			writer.Flush()
 
 			// Read message
@@ -166,19 +167,19 @@ func (s *starttlssmtpServer) handleConn(t *testing.T, conn net.Conn) {
 				}
 			}
 
-			writer.WriteString("250 OK\r\n")
+			_, _ = writer.WriteString("250 OK\r\n")
 			writer.Flush()
 		case strings.HasPrefix(strings.ToUpper(line), "AUTH PLAIN"):
 			// Accept AUTH
-			writer.WriteString("235 OK\r\n")
+			_, _ = writer.WriteString("235 OK\r\n")
 			writer.Flush()
 		case strings.ToUpper(line) == "QUIT":
-			writer.WriteString("221 Bye\r\n")
+			_, _ = writer.WriteString("221 Bye\r\n")
 			writer.Flush()
 			return
 		default:
 			// Unknown command - try to handle gracefully
-			writer.WriteString("500 Syntax error\r\n")
+			_, _ = writer.WriteString("500 Syntax error\r\n")
 			writer.Flush()
 		}
 	}

@@ -63,7 +63,7 @@ func TestMain(m *testing.M) {
 	// Получаем порт
 	host, err := container.Host(ctx)
 	if err != nil {
-		log.Fatalf("Could not get container host: %s", err)
+		log.Fatalf("Could not get container host: %s", err) //nolint:gocritic
 	}
 
 	mappedPort, err := container.MappedPort(ctx, "5432")
@@ -92,7 +92,7 @@ func TestMain(m *testing.M) {
 	maxRetries := 30
 	retryInterval := 500 * time.Millisecond
 
-	for i := 0; i < maxRetries; i++ {
+	for i := range maxRetries {
 		testDB, err = Connect(ctx, cfg)
 		if err == nil {
 			break
@@ -560,11 +560,11 @@ func TestConnection_ConcurrentTransactions(t *testing.T) {
 		errs  []error
 	)
 
-	for i := 0; i < goroutines; i++ {
+	for range goroutines {
 		go func() {
 			defer wg.Done()
 
-			for j := 0; j < iterations; j++ {
+			for range iterations {
 				err := testDB.RunTx(ctx, nil, func(ctx context.Context, tx *Tx) error {
 					// Блокируем строку для обновления
 					var counter int
@@ -1044,7 +1044,7 @@ func TestConnection_Query_ErrorHandling(t *testing.T) {
 	row := testDB.QueryRow(ctx, "SELECT * FROM nonexistent_table")
 	require.NotNil(t, row)
 
-	var result interface{}
+	var result any
 	err = row.Scan(&result)
 	require.Error(t, err)
 }

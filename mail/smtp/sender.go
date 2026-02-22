@@ -10,12 +10,12 @@ import (
 	"sync"
 	"time"
 
-	"github.com/pure-golang/adapters/mail"
-
 	"github.com/pkg/errors"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/trace"
+
+	"github.com/pure-golang/adapters/mail"
 )
 
 var _ mail.Sender = (*Sender)(nil)
@@ -33,7 +33,7 @@ type SenderOptions struct {
 }
 
 // NewSender creates a new SMTP Sender.
-func NewSender(cfg Config, options *SenderOptions) *Sender {
+func NewSender(cfg Config, options *SenderOptions) *Sender { //nolint:gocritic
 	return &Sender{
 		cfg:    cfg,
 		closed: false,
@@ -51,7 +51,7 @@ func (s *Sender) Send(ctx context.Context, emails ...mail.Email) error {
 }
 
 // send sends a single email.
-func (s *Sender) send(ctx context.Context, email mail.Email) error {
+func (s *Sender) send(ctx context.Context, email mail.Email) error { //nolint:gocritic
 	ctx, span := tracer.Start(ctx, "SMTP.Send", trace.WithSpanKind(trace.SpanKindClient))
 	defer span.End()
 
@@ -103,7 +103,9 @@ func (s *Sender) send(ctx context.Context, email mail.Email) error {
 		auth = smtp.PlainAuth("", s.cfg.Username, s.cfg.Password, s.cfg.Host)
 	}
 
-	allTo := append(toAddresses, ccAddresses...)
+	allTo := make([]string, 0, len(toAddresses)+len(ccAddresses))
+	allTo = append(allTo, toAddresses...)
+	allTo = append(allTo, ccAddresses...)
 
 	maxRetries := s.cfg.MaxRetries
 	if maxRetries <= 0 {
@@ -208,7 +210,9 @@ func (s *Sender) sendMail(ctx context.Context, addr string, auth smtp.Auth, from
 	}
 
 	// Set recipients
-	allRecipients := append(to, bcc...)
+	allRecipients := make([]string, 0, len(to)+len(bcc))
+	allRecipients = append(allRecipients, to...)
+	allRecipients = append(allRecipients, bcc...)
 	for _, addr := range allRecipients {
 		if err := client.Rcpt(addr); err != nil {
 			span.RecordError(err)
@@ -320,7 +324,9 @@ func (s *Sender) sendMailWithTLS(ctx context.Context, addr string, auth smtp.Aut
 	}
 
 	// Set recipients
-	allRecipients := append(to, bcc...)
+	allRecipients := make([]string, 0, len(to)+len(bcc))
+	allRecipients = append(allRecipients, to...)
+	allRecipients = append(allRecipients, bcc...)
 	for _, addr := range allRecipients {
 		if err := client.Rcpt(addr); err != nil {
 			span.RecordError(err)
@@ -354,7 +360,7 @@ func (s *Sender) sendMailWithTLS(ctx context.Context, addr string, auth smtp.Aut
 }
 
 // buildMessage builds the raw email message.
-func (s *Sender) buildMessage(email mail.Email) []byte {
+func (s *Sender) buildMessage(email mail.Email) []byte { //nolint:gocritic
 	var msg strings.Builder
 
 	// Headers

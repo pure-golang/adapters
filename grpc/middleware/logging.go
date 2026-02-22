@@ -11,7 +11,7 @@ import (
 
 // LoggingInterceptor создает интерцептор для логирования gRPC запросов
 func LoggingInterceptor(logger *slog.Logger) grpc.UnaryServerInterceptor {
-	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
+	return func(ctx context.Context, req any, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (any, error) {
 		start := time.Now()
 		resp, err := handler(ctx, req)
 		duration := time.Since(start)
@@ -40,7 +40,7 @@ func LoggingInterceptor(logger *slog.Logger) grpc.UnaryServerInterceptor {
 
 // RecoveryInterceptor создает интерцептор для восстановления после паники
 func RecoveryInterceptor(logger *slog.Logger) grpc.UnaryServerInterceptor {
-	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp interface{}, err error) {
+	return func(ctx context.Context, req any, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp any, err error) {
 		defer func() {
 			if r := recover(); r != nil {
 				logger.ErrorContext(ctx, "Recovered from panic in gRPC handler",
@@ -56,7 +56,7 @@ func RecoveryInterceptor(logger *slog.Logger) grpc.UnaryServerInterceptor {
 
 // LoggingStreamInterceptor создает интерцептор для логирования потоковых gRPC запросов
 func LoggingStreamInterceptor(logger *slog.Logger) grpc.StreamServerInterceptor {
-	return func(srv interface{}, ss grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) error {
+	return func(srv any, ss grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) error {
 		start := time.Now()
 		err := handler(srv, ss)
 		duration := time.Since(start)
@@ -86,7 +86,7 @@ func LoggingStreamInterceptor(logger *slog.Logger) grpc.StreamServerInterceptor 
 
 // RecoveryStreamInterceptor создает интерцептор для восстановления в потоковых запросах
 func RecoveryStreamInterceptor(logger *slog.Logger) grpc.StreamServerInterceptor {
-	return func(srv interface{}, ss grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) (err error) {
+	return func(srv any, ss grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) (err error) {
 		defer func() {
 			if r := recover(); r != nil {
 				logger.ErrorContext(ss.Context(), "Recovered from panic in gRPC stream handler",

@@ -4,10 +4,11 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/pure-golang/adapters/tracing"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	tracesdk "go.opentelemetry.io/otel/sdk/trace"
+
+	"github.com/pure-golang/adapters/tracing"
 )
 
 // TestNewProviderBuilderWithValidConfig tests that NewProviderBuilder with valid config

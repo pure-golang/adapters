@@ -3,14 +3,16 @@ package minio
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"io"
 	"log/slog"
 	"strings"
 	"testing"
 	"time"
 
-	"github.com/pure-golang/adapters/storage"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/pure-golang/adapters/storage"
 )
 
 // TestCreateMultipartUpload_Extended tests the CreateMultipartUpload method.
@@ -173,7 +175,7 @@ func TestUploadPart_Extended(t *testing.T) {
 		partNumbers := []int32{1, 2, 5, 100, 1000, 10000}
 
 		for _, partNumber := range partNumbers {
-			t.Run("part_number_"+string(rune(partNumber)), func(t *testing.T) {
+			t.Run("part_number_"+fmt.Sprintf("%d", partNumber), func(t *testing.T) {
 				t.Parallel()
 				reader := strings.NewReader("test data")
 				part, err := stor.UploadPart(context.Background(), "bucket", "key", "upload-123", partNumber, reader)
@@ -374,9 +376,9 @@ func TestCompleteMultipartUpload_Extended(t *testing.T) {
 		stor := NewStorage(client, nil)
 
 		parts := make([]storage.UploadedPart, 10000)
-		for i := 0; i < 10000; i++ {
+		for i := range 10000 {
 			parts[i] = storage.UploadedPart{
-				PartNumber: int32(i + 1),
+				PartNumber: int32(i + 1), //nolint:gosec
 				ETag:       "etag" + string(rune(i)),
 				Size:       5 * 1024 * 1024,
 			}
@@ -872,7 +874,7 @@ func TestMultipartUpload_UploadIDVariations(t *testing.T) {
 	}
 
 	for _, uploadID := range uploadIDs {
-		t.Run("upload_id_"+uploadID[:min(10, len(uploadID))], func(t *testing.T) {
+		t.Run("upload_id_"+uploadID[:testMin(10, len(uploadID))], func(t *testing.T) {
 			t.Parallel()
 			reader := strings.NewReader("test")
 			part, err := stor.UploadPart(context.Background(), "bucket", "key", uploadID, 1, reader)
@@ -1032,7 +1034,7 @@ func TestMultipartUpload_KeyVariations(t *testing.T) {
 	}
 
 	for _, key := range keys {
-		t.Run("key_"+key[:min(5, len(key))], func(t *testing.T) {
+		t.Run("key_"+key[:testMin(5, len(key))], func(t *testing.T) {
 			t.Parallel()
 			upload, err := stor.CreateMultipartUpload(context.Background(), "bucket", key, nil)
 			assert.Error(t, err)
@@ -1067,8 +1069,8 @@ func TestMultipartUpload_AbortUploadIDVariations(t *testing.T) {
 	}
 }
 
-// min returns the minimum of two integers for testing purposes.
-func min(a, b int) int {
+// testMin returns the minimum of two integers for testing purposes.
+func testMin(a, b int) int {
 	if a < b {
 		return a
 	}

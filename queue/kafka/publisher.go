@@ -2,10 +2,9 @@ package kafka
 
 import (
 	"context"
+	"maps"
 	"sync"
 
-	"github.com/pure-golang/adapters/queue"
-	"github.com/pure-golang/adapters/queue/encoders"
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
 	"github.com/segmentio/kafka-go"
@@ -13,6 +12,9 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/trace"
+
+	"github.com/pure-golang/adapters/queue"
+	"github.com/pure-golang/adapters/queue/encoders"
 )
 
 var _ queue.Publisher = (*Publisher)(nil)
@@ -95,9 +97,7 @@ func (p *Publisher) publish(ctx context.Context, msg queue.Message) error {
 
 	// Копируем заголовки и добавляем трейсинг
 	headers := make(map[string]string)
-	for k, v := range msg.Headers {
-		headers[k] = v
-	}
+	maps.Copy(headers, msg.Headers)
 
 	// Внедряем трейсинг в заголовки
 	prop.Inject(ctx, headersCarrier(headers))

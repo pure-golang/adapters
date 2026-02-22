@@ -207,7 +207,7 @@ func TestTracer_SpanIsTracer(t *testing.T) {
 	_, span := conn.WithTracing(ctx, "Get", "SELECT 1")
 
 	// Verify span implements expected interface
-	_, ok := interface{}(span).(trace.Span)
+	_, ok := any(span).(trace.Span)
 	assert.True(t, ok, "Span should implement trace.Span interface")
 
 	span.End()

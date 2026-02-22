@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v5/tracelog"
+
 	"github.com/pure-golang/adapters/logger"
 )
 

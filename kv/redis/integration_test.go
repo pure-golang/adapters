@@ -156,7 +156,7 @@ func (s *RedisSuite) TestDelete() {
 	})
 
 	// Set keys
-	for i := 0; i < 3; i++ {
+	for i := range 3 {
 		s.Require().NoError(client.Set(ctx, fmt.Sprintf("key%d", i), fmt.Sprintf("value%d", i), 0))
 	}
 
@@ -318,9 +318,9 @@ func (s *RedisSuite) TestConcurrentOperations() {
 	const iterations = 10
 
 	done := make(chan bool, goroutines)
-	for i := 0; i < goroutines; i++ {
+	for i := range goroutines {
 		go func(n int) {
-			for j := 0; j < iterations; j++ {
+			for range iterations {
 				key := fmt.Sprintf("counter%d", n)
 				if _, err := client.Incr(ctx, key); err != nil {
 					s.T().Errorf("Incr failed: %v", err)
@@ -330,12 +330,12 @@ func (s *RedisSuite) TestConcurrentOperations() {
 		}(i)
 	}
 
-	for i := 0; i < goroutines; i++ {
+	for range goroutines {
 		<-done
 	}
 
 	// Проверяем результаты
-	for i := 0; i < goroutines; i++ {
+	for i := range goroutines {
 		val, err := client.Get(ctx, fmt.Sprintf("counter%d", i))
 		s.Require().NoError(err)
 		// В JSON формате Redis хранит числа

@@ -8,7 +8,6 @@ import (
 	"github.com/google/uuid"
 	kafkago "github.com/segmentio/kafka-go"
 	"github.com/stretchr/testify/suite"
-
 	kafkatestcontainers "github.com/testcontainers/testcontainers-go/modules/kafka"
 )
 
@@ -47,7 +46,7 @@ func (s *KafkaSuite) SetupSuite() {
 
 	// Ждем готовности Kafka
 	var errConnect error
-	for i := 0; i < 30; i++ {
+	for range 30 {
 		s.conn, errConnect = kafkago.Dial("tcp", s.brokers[0])
 		if errConnect == nil {
 			break

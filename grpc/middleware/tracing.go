@@ -44,7 +44,7 @@ func (s metadataSupplier) Keys() []string {
 
 // TracingUnaryInterceptor создает интерцептор для трассировки унарных RPC
 func TracingUnaryInterceptor() grpc.UnaryServerInterceptor {
-	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
+	return func(ctx context.Context, req any, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (any, error) {
 		// Извлекаем метаданные
 		md, ok := metadata.FromIncomingContext(ctx)
 		if !ok {
@@ -110,7 +110,7 @@ func TracingUnaryInterceptor() grpc.UnaryServerInterceptor {
 
 // TracingStreamInterceptor создает интерцептор для трассировки потоковых RPC
 func TracingStreamInterceptor() grpc.StreamServerInterceptor {
-	return func(srv interface{}, ss grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) error {
+	return func(srv any, ss grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) error {
 		// Извлекаем метаданные
 		ctx := ss.Context()
 		md, ok := metadata.FromIncomingContext(ctx)

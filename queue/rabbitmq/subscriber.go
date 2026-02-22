@@ -8,15 +8,14 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-
 	"github.com/pkg/errors"
-	"github.com/pure-golang/adapters/queue"
+	amqp "github.com/rabbitmq/amqp091-go"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/trace"
 
-	amqp "github.com/rabbitmq/amqp091-go"
+	"github.com/pure-golang/adapters/queue"
 )
 
 const (
@@ -180,7 +179,7 @@ func (s *Subscriber) Close() error {
 	return nil
 }
 
-func (s *Subscriber) handleDelivery(channel *amqp.Channel, delivery amqp.Delivery, handler queue.Handler) error {
+func (s *Subscriber) handleDelivery(channel *amqp.Channel, delivery amqp.Delivery, handler queue.Handler) error { //nolint:gocritic
 	s.logger.Debug("handleDelivery")
 	s.lastMessageTime = time.Now()
 	ctx := otel.GetTextMapPropagator().Extract(context.Background(), tableCarrier(delivery.Headers))
@@ -260,7 +259,7 @@ func (s *Subscriber) handleDelivery(channel *amqp.Channel, delivery amqp.Deliver
 	return nil
 }
 
-func newDelivery(msg amqp.Delivery) queue.Delivery {
+func newDelivery(msg amqp.Delivery) queue.Delivery { //nolint:gocritic
 	headers := make(map[string]string, len(msg.Headers))
 	for k, v := range msg.Headers {
 		headers[k] = fmt.Sprintf("%v", v)

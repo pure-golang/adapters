@@ -126,7 +126,7 @@ func TestInitConfig_WithDotEnvFile(t *testing.T) {
 	require.NoError(t, err)
 	err = os.Chdir(tmpDir)
 	require.NoError(t, err)
-	defer os.Chdir(oldWd)
+	defer func() { _ = os.Chdir(oldWd) }()
 
 	var cfg TestConfig
 	err = InitConfig(&cfg)
@@ -145,7 +145,7 @@ func TestInitConfig_WithoutDotEnvFile(t *testing.T) {
 	require.NoError(t, err)
 	err = os.Chdir(tmpDir)
 	require.NoError(t, err)
-	defer os.Chdir(oldWd)
+	defer func() { _ = os.Chdir(oldWd) }()
 
 	// Set env vars directly instead
 	t.Setenv("HOST", "direct")
@@ -174,7 +174,7 @@ func TestInitConfig_EnvVarsOverrideDotEnv(t *testing.T) {
 	require.NoError(t, err)
 	err = os.Chdir(tmpDir)
 	require.NoError(t, err)
-	defer os.Chdir(oldWd)
+	defer func() { _ = os.Chdir(oldWd) }()
 
 	// Set env var that should override .env
 	t.Setenv("HOST", "override")

@@ -67,7 +67,7 @@ func TestNewDefault_WithCustomOutput(t *testing.T) {
 	l.Info("test message", "key", "value")
 
 	// Verify output is JSON
-	var result map[string]interface{}
+	var result map[string]any
 	err := json.Unmarshal(buf.Bytes(), &result)
 	require.NoError(t, err)
 	assert.Equal(t, "test message", result["msg"])
@@ -98,10 +98,10 @@ func TestNewDefault_LevelFiltering(t *testing.T) {
 	assert.NotNil(t, h)
 
 	// At Warn level, Debug and Info should not be enabled
-	assert.False(t, h.Enabled(nil, slog.LevelDebug))
-	assert.False(t, h.Enabled(nil, slog.LevelInfo))
-	assert.True(t, h.Enabled(nil, slog.LevelWarn))
-	assert.True(t, h.Enabled(nil, slog.LevelError))
+	assert.False(t, h.Enabled(context.TODO(), slog.LevelDebug))
+	assert.False(t, h.Enabled(context.TODO(), slog.LevelInfo))
+	assert.True(t, h.Enabled(context.TODO(), slog.LevelWarn))
+	assert.True(t, h.Enabled(context.TODO(), slog.LevelError))
 }
 
 func TestNewDefault_JSONOutput(t *testing.T) {
@@ -120,11 +120,11 @@ func TestNewDefault_JSONOutput(t *testing.T) {
 
 	// Read captured output
 	var buf bytes.Buffer
-	buf.ReadFrom(r)
+	_, _ = buf.ReadFrom(r)
 	output := buf.String()
 
 	// Verify it's valid JSON
-	var result map[string]interface{}
+	var result map[string]any
 	err := json.Unmarshal([]byte(output), &result)
 	assert.NoError(t, err)
 	assert.Contains(t, strings.ToLower(output), "json test")
@@ -139,7 +139,7 @@ func TestNewDefault_WithAttributes(t *testing.T) {
 	l = l.With("component", "test", "env", "unit")
 	l.Info("message with attrs")
 
-	var result map[string]interface{}
+	var result map[string]any
 	err := json.Unmarshal(buf.Bytes(), &result)
 	require.NoError(t, err)
 
@@ -157,7 +157,7 @@ func TestNewDefault_WithGroup(t *testing.T) {
 	l = l.WithGroup("request")
 	l.Info("message with group", "id", "123")
 
-	var result map[string]interface{}
+	var result map[string]any
 	err := json.Unmarshal(buf.Bytes(), &result)
 	require.NoError(t, err)
 
@@ -171,13 +171,13 @@ func TestNewDefault_LogAttrs(t *testing.T) {
 
 	l := slog.New(slog.NewJSONHandler(&buf, &slog.HandlerOptions{Level: slog.LevelInfo}))
 
-	l.LogAttrs(nil, slog.LevelInfo, "log attrs test",
+	l.LogAttrs(context.TODO(), slog.LevelInfo, "log attrs test",
 		slog.String("string_key", "string_value"),
 		slog.Int("int_key", 42),
 		slog.Bool("bool_key", true),
 	)
 
-	var result map[string]interface{}
+	var result map[string]any
 	err := json.Unmarshal(buf.Bytes(), &result)
 	require.NoError(t, err)
 
@@ -208,8 +208,9 @@ func TestNewDefault_ContextSupport(t *testing.T) {
 	t.Parallel()
 	l := NewDefault(slog.LevelInfo)
 
+	type stdjsonCtxKey string
 	ctx := context.Background()
-	ctx = context.WithValue(ctx, "trace_id", "abc123")
+	ctx = context.WithValue(ctx, stdjsonCtxKey("trace_id"), "abc123")
 
 	l.LogAttrs(ctx, slog.LevelInfo, "context test", slog.String("key", "value"))
 	// Should not panic
@@ -219,7 +220,7 @@ func TestNewDefault_NilContext(t *testing.T) {
 	t.Parallel()
 	l := NewDefault(slog.LevelInfo)
 
-	l.LogAttrs(nil, slog.LevelInfo, "nil context test")
+	l.LogAttrs(context.TODO(), slog.LevelInfo, "nil context test")
 	// Should not panic
 }
 
@@ -246,7 +247,7 @@ func TestNewDefault_StructuredLogging(t *testing.T) {
 
 	l.Info("user created", "user", user)
 
-	var result map[string]interface{}
+	var result map[string]any
 	err := json.Unmarshal(buf.Bytes(), &result)
 	require.NoError(t, err)
 
@@ -274,7 +275,7 @@ func TestNewDefault_SpecialCharacters(t *testing.T) {
 
 	l.Info("message with \"quotes\"", "key", "value with\nnewline")
 
-	var result map[string]interface{}
+	var result map[string]any
 	err := json.Unmarshal(buf.Bytes(), &result)
 	require.NoError(t, err)
 
@@ -300,7 +301,7 @@ func TestNewDefault_LowerLevel(t *testing.T) {
 
 	assert.NotNil(t, l)
 
-	l.Log(nil, slog.Level(-50), "very verbose message")
+	l.Log(context.TODO(), slog.Level(-50), "very verbose message")
 	// Should not panic
 }
 
@@ -318,7 +319,7 @@ func TestNewDefault_MultipleAttributes(t *testing.T) {
 		"key5", []string{"a", "b", "c"},
 	)
 
-	var result map[string]interface{}
+	var result map[string]any
 	err := json.Unmarshal(buf.Bytes(), &result)
 	require.NoError(t, err)
 
@@ -337,16 +338,16 @@ func TestNewDefault_ConcurrentLogging(t *testing.T) {
 	done := make(chan bool)
 
 	// Concurrent logging
-	for i := 0; i < 10; i++ {
+	for i := range 10 {
 		go func(n int) {
-			for j := 0; j < 10; j++ {
+			for j := range 10 {
 				l.Info("concurrent", "worker", n, "iteration", j)
 			}
 			done <- true
 		}(i)
 	}
 
-	for i := 0; i < 10; i++ {
+	for range 10 {
 		<-done
 	}
 
@@ -363,7 +364,7 @@ func TestNewDefault_NestedGroups(t *testing.T) {
 	l = l.WithGroup("outer").WithGroup("inner")
 	l.Info("nested message", "key", "value")
 
-	var result map[string]interface{}
+	var result map[string]any
 	err := json.Unmarshal(buf.Bytes(), &result)
 	require.NoError(t, err)
 
@@ -379,7 +380,7 @@ func TestNewDefault_TimeField(t *testing.T) {
 
 	l.Info("time test")
 
-	var result map[string]interface{}
+	var result map[string]any
 	err := json.Unmarshal(buf.Bytes(), &result)
 	require.NoError(t, err)
 
@@ -395,7 +396,7 @@ func TestNewDefault_LevelField(t *testing.T) {
 
 	l.Info("level test")
 
-	var result map[string]interface{}
+	var result map[string]any
 	err := json.Unmarshal(buf.Bytes(), &result)
 	require.NoError(t, err)
 
@@ -417,9 +418,9 @@ func TestNewDefault_CustomLevels(t *testing.T) {
 	// Warn (4) should be enabled (4 >= 2)
 	// Error (8) should be enabled (8 >= 2)
 	h := l.Handler()
-	assert.False(t, h.Enabled(nil, slog.LevelInfo))
-	assert.True(t, h.Enabled(nil, slog.LevelWarn))
-	assert.True(t, h.Enabled(nil, slog.LevelError))
+	assert.False(t, h.Enabled(context.TODO(), slog.LevelInfo))
+	assert.True(t, h.Enabled(context.TODO(), slog.LevelWarn))
+	assert.True(t, h.Enabled(context.TODO(), slog.LevelError))
 }
 
 func TestNewDefault_Reusable(t *testing.T) {
@@ -475,7 +476,7 @@ func BenchmarkLogging_LogAttrs(b *testing.B) {
 	l := NewDefault(slog.LevelInfo)
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		l.LogAttrs(nil, slog.LevelInfo, "benchmark",
+		l.LogAttrs(context.TODO(), slog.LevelInfo, "benchmark",
 			slog.String("service", "test"),
 			slog.Int("iteration", i),
 		)

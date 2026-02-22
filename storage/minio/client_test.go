@@ -339,7 +339,7 @@ func TestClient_IsClosed(t *testing.T) {
 
 		// Start goroutines that check IsClosed
 		done := make(chan bool)
-		for i := 0; i < 10; i++ {
+		for range 10 {
 			go func() {
 				_ = client.IsClosed()
 				done <- true
@@ -351,7 +351,7 @@ func TestClient_IsClosed(t *testing.T) {
 		assert.NoError(t, err)
 
 		// Wait for all goroutines
-		for i := 0; i < 10; i++ {
+		for range 10 {
 			<-done
 		}
 

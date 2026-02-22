@@ -23,7 +23,7 @@ type Options struct {
 	Tracers []pgx.QueryTracer
 }
 
-func New(cfg Config, options *Options) (*DB, error) {
+func New(cfg Config, options *Options) (*DB, error) { //nolint:gocritic
 	dsn := cfg.URL().String()
 	poolCfg, err := pgxpool.ParseConfig(dsn)
 	if err != nil {
@@ -57,7 +57,7 @@ func New(cfg Config, options *Options) (*DB, error) {
 	return &DB{Pool: pool}, nil
 }
 
-func NewDefault(c Config) (*DB, error) {
+func NewDefault(c Config) (*DB, error) { //nolint:gocritic
 	return New(c, &Options{
 		Tracers: []pgx.QueryTracer{
 			otelpgx.NewTracer(),

@@ -42,7 +42,7 @@ func (c *Connection) BeginTx(ctx context.Context, opts *TxOptions) (*Tx, error) 
 		}
 	}
 
-	tx, err := c.DB.BeginTxx(ctx, txOpts)
+	tx, err := c.BeginTxx(ctx, txOpts)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to begin transaction")
 	}
@@ -117,7 +117,7 @@ func (tx *Tx) Rollback() error {
 }
 
 // Get выполняет запрос в транзакции и заполняет одну запись
-func (tx *Tx) Get(ctx context.Context, dst interface{}, query string, args ...interface{}) error {
+func (tx *Tx) Get(ctx context.Context, dst any, query string, args ...any) error {
 	ctx, cancel := WithTimeout(ctx, tx.cfg.QueryTimeout)
 	defer cancel()
 
@@ -136,7 +136,7 @@ func (tx *Tx) Get(ctx context.Context, dst interface{}, query string, args ...in
 }
 
 // Select выполняет запрос в транзакции и заполняет срез записей
-func (tx *Tx) Select(ctx context.Context, dst interface{}, query string, args ...interface{}) error {
+func (tx *Tx) Select(ctx context.Context, dst any, query string, args ...any) error {
 	ctx, cancel := WithTimeout(ctx, tx.cfg.QueryTimeout)
 	defer cancel()
 
@@ -152,7 +152,7 @@ func (tx *Tx) Select(ctx context.Context, dst interface{}, query string, args ..
 }
 
 // Exec выполняет запрос в транзакции и возвращает результат
-func (tx *Tx) Exec(ctx context.Context, query string, args ...interface{}) (sql.Result, error) {
+func (tx *Tx) Exec(ctx context.Context, query string, args ...any) (sql.Result, error) {
 	ctx, cancel := WithTimeout(ctx, tx.cfg.QueryTimeout)
 	defer cancel()
 
@@ -168,7 +168,7 @@ func (tx *Tx) Exec(ctx context.Context, query string, args ...interface{}) (sql.
 }
 
 // Query выполняет запрос в транзакции и возвращает строки результата
-func (tx *Tx) Query(ctx context.Context, query string, args ...interface{}) (*sqlx.Rows, error) {
+func (tx *Tx) Query(ctx context.Context, query string, args ...any) (*sqlx.Rows, error) {
 	ctx, cancel := WithTimeout(ctx, tx.cfg.QueryTimeout)
 	defer cancel()
 
@@ -187,7 +187,7 @@ func (tx *Tx) Query(ctx context.Context, query string, args ...interface{}) (*sq
 // Note: This method returns a lazy *sqlx.Row. The query is executed when Scan() is called.
 // The context timeout is applied per the original context, as we cannot defer cleanup
 // before Scan() is called by the caller.
-func (tx *Tx) QueryRow(ctx context.Context, query string, args ...interface{}) *sqlx.Row {
+func (tx *Tx) QueryRow(ctx context.Context, query string, args ...any) *sqlx.Row {
 	ctx, span := tx.WithTracing(ctx, "QueryRow", query)
 	// End the span after the row is created (the actual query happens during Scan)
 	// This is a limitation of the lazy evaluation pattern in sqlx.Row

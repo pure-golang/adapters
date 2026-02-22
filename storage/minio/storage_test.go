@@ -11,10 +11,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/pure-golang/adapters/storage"
 	"github.com/minio/minio-go/v7"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/pure-golang/adapters/storage"
 )
 
 // TestStorage getClient tests the getClient method.

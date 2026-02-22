@@ -6,12 +6,13 @@ import (
 	"io"
 	"time"
 
-	"github.com/pure-golang/adapters/storage"
 	"github.com/minio/minio-go/v7"
 	"github.com/pkg/errors"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/trace"
+
+	"github.com/pure-golang/adapters/storage"
 )
 
 // core returns the minio.Core client for low-level operations.

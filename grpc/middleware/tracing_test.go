@@ -5,14 +5,13 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"go.opentelemetry.io/otel"
+	sdktrace "go.opentelemetry.io/otel/sdk/trace"
+	"go.opentelemetry.io/otel/trace"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
-
-	"go.opentelemetry.io/otel"
-	sdktrace "go.opentelemetry.io/otel/sdk/trace"
-	"go.opentelemetry.io/otel/trace"
 )
 
 // TestSplitMethodName_ValidPath tests splitMethodName with valid method paths
@@ -221,13 +220,14 @@ func TestWrappedServerStream_Context(t *testing.T) {
 // TestWrappedServerStream_ContextWithValue tests wrappedServerStream with custom context
 func TestWrappedServerStream_ContextWithValue(t *testing.T) {
 	t.Parallel()
-	ctxWithValue := context.WithValue(context.Background(), "test-key", "test-value")
+	type tracingCtxKey string
+	ctxWithValue := context.WithValue(context.Background(), tracingCtxKey("test-key"), "test-value")
 	wss := &wrappedServerStream{
 		ctx: ctxWithValue,
 	}
 
 	ctx := wss.Context()
-	assert.Equal(t, "test-value", ctx.Value("test-key"))
+	assert.Equal(t, "test-value", ctx.Value(tracingCtxKey("test-key")))
 }
 
 // TestTracingUnaryInterceptor_CreatesSpan tests that TracingUnaryInterceptor creates a span
@@ -246,7 +246,7 @@ func TestTracingUnaryInterceptor_CreatesSpan(t *testing.T) {
 		FullMethod: "/test.service/TestMethod",
 	}
 
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+	handler := func(ctx context.Context, req any) (any, error) {
 		// Verify span exists in context
 		span := trace.SpanFromContext(ctx)
 		assert.NotNil(t, span)
@@ -279,7 +279,7 @@ func TestTracingUnaryInterceptor_WithError(t *testing.T) {
 	}
 
 	expectedErr := status.Error(codes.NotFound, "not found")
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+	handler := func(ctx context.Context, req any) (any, error) {
 		return nil, expectedErr
 	}
 
@@ -324,7 +324,7 @@ func TestTracingUnaryInterceptor_ExtractsTraceContext(t *testing.T) {
 
 	var capturedSpanContext trace.SpanContext
 
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+	handler := func(ctx context.Context, req any) (any, error) {
 		// Verify trace context was extracted
 		span := trace.SpanFromContext(ctx)
 		capturedSpanContext = span.SpanContext()
@@ -356,7 +356,7 @@ func TestTracingUnaryInterceptor_NoMetadata(t *testing.T) {
 		FullMethod: "/test.service/NoMetadataMethod",
 	}
 
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+	handler := func(ctx context.Context, req any) (any, error) {
 		// Should still have a span
 		span := trace.SpanFromContext(ctx)
 		assert.NotNil(t, span)
@@ -402,7 +402,7 @@ func TestTracingStreamInterceptor_CreatesSpan(t *testing.T) {
 
 	ss := &mockServerStreamForTracing{ctx: context.Background()}
 
-	handler := func(srv interface{}, stream grpc.ServerStream) error {
+	handler := func(srv any, stream grpc.ServerStream) error {
 		// Verify span exists in stream context
 		span := trace.SpanFromContext(stream.Context())
 		assert.NotNil(t, span)
@@ -440,7 +440,7 @@ func TestTracingStreamInterceptor_WithError(t *testing.T) {
 	ss := &mockServerStreamForTracing{ctx: context.Background()}
 
 	expectedErr := status.Error(codes.Aborted, "stream aborted")
-	handler := func(srv interface{}, stream grpc.ServerStream) error {
+	handler := func(srv any, stream grpc.ServerStream) error {
 		return expectedErr
 	}
 
@@ -503,7 +503,7 @@ func TestTracingStreamInterceptor_DetectsStreamType(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			ss := &mockServerStreamForTracing{ctx: context.Background()}
 
-			handler := func(srv interface{}, stream grpc.ServerStream) error {
+			handler := func(srv any, stream grpc.ServerStream) error {
 				return nil
 			}
 
@@ -547,7 +547,7 @@ func TestTracingStreamInterceptor_ExtractsTraceContext(t *testing.T) {
 
 	var capturedSpanContext trace.SpanContext
 
-	handler := func(srv interface{}, stream grpc.ServerStream) error {
+	handler := func(srv any, stream grpc.ServerStream) error {
 		// Verify trace context was extracted
 		span := trace.SpanFromContext(stream.Context())
 		capturedSpanContext = span.SpanContext()
@@ -582,7 +582,7 @@ func TestTracingUnaryInterceptor_SpanAttributes(t *testing.T) {
 		FullMethod: "/test.v1.Service/Method",
 	}
 
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+	handler := func(ctx context.Context, req any) (any, error) {
 		// Verify span exists in context
 		span := trace.SpanFromContext(ctx)
 		assert.NotNil(t, span)
@@ -619,7 +619,7 @@ func TestTracingStreamInterceptor_SpanAttributes(t *testing.T) {
 
 	ss := &mockServerStreamForTracing{ctx: context.Background()}
 
-	handler := func(srv interface{}, stream grpc.ServerStream) error {
+	handler := func(srv any, stream grpc.ServerStream) error {
 		// Verify span exists in stream context
 		span := trace.SpanFromContext(stream.Context())
 		assert.NotNil(t, span)
@@ -681,7 +681,7 @@ func TestTracingUnaryInterceptor_DifferentStatusCodes(t *testing.T) {
 				FullMethod: "/test.service/" + code.String(),
 			}
 
-			handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+			handler := func(ctx context.Context, req any) (any, error) {
 				return nil, status.Error(code, code.String())
 			}
 
@@ -733,14 +733,14 @@ type testSpanExporter struct {
 
 type testSpan struct {
 	name       string
-	attributes map[string]interface{}
+	attributes map[string]any
 }
 
 func (e *testSpanExporter) ExportSpans(ctx context.Context, spans []sdktrace.ReadOnlySpan) error {
 	for _, span := range spans {
 		ts := testSpan{
 			name:       span.Name(),
-			attributes: make(map[string]interface{}),
+			attributes: make(map[string]any),
 		}
 
 		// Extract some key attributes for testing

@@ -19,7 +19,7 @@ func Recovery(next http.Handler) http.Handler {
 
 			rawStack := strings.ReplaceAll(string(debug.Stack()), "\t", "")
 			var stack []string
-			for _, line := range strings.Split(rawStack, "\n") {
+			for line := range strings.SplitSeq(rawStack, "\n") {
 				if line != "" {
 					stack = append(stack, line)
 				}

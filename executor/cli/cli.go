@@ -30,7 +30,7 @@ type Executor struct {
 }
 
 // New создаёт новый CLI executor
-func New(cfg Config, stdout, stderr io.Writer) *Executor {
+func New(cfg Config, stdout, stderr io.Writer) *Executor { //nolint:gocritic
 	var tmpStdout io.Writer
 	if stdout == nil {
 		tmpStdout = os.Stdout

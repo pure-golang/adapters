@@ -50,7 +50,7 @@ func NewStorage(client *Client, opts *StorageOptions) *Storage {
 }
 
 // NewDefault creates a Storage with a new client.
-func NewDefault(cfg Config) (*Storage, error) {
+func NewDefault(cfg Config) (*Storage, error) { //nolint:gocritic
 	client, err := NewDefaultClient(cfg)
 	if err != nil {
 		return nil, err
@@ -351,7 +351,11 @@ func (s *Storage) GetFileHeader(ctx context.Context, bucket, key string) ([]byte
 
 	// Prepare range options to read first 4096 bytes (bytes 0-4095 inclusive)
 	opts := minio.GetObjectOptions{}
-	opts.SetRange(0, 4095) // 4096 bytes: 0..4095 in inclusive range
+	if err := opts.SetRange(0, 4095); err != nil { // 4096 bytes: 0..4095 in inclusive range
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
+		return nil, err
+	}
 
 	obj, err := client.GetObject(ctx, bucket, key, opts)
 	if err != nil {

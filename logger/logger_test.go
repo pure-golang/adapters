@@ -5,9 +5,10 @@ import (
 	"log/slog"
 	"testing"
 
-	"github.com/pure-golang/adapters/logger/noop"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/pure-golang/adapters/logger/noop"
 )
 
 func TestNewDefault_ProviderDev(t *testing.T) {
@@ -418,8 +419,9 @@ func TestFromContext_ContextChain(t *testing.T) {
 
 	ctx = NewContext(ctx, testLogger)
 	// Create derived contexts
-	ctx1 := context.WithValue(ctx, "key1", "value1")
-	ctx2 := context.WithValue(ctx1, "key2", "value2")
+	type testCtxKey string
+	ctx1 := context.WithValue(ctx, testCtxKey("key1"), "value1")
+	ctx2 := context.WithValue(ctx1, testCtxKey("key2"), "value2")
 
 	retrieved := FromContext(ctx2)
 	assert.Same(t, testLogger, retrieved)

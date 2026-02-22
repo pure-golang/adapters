@@ -6,14 +6,15 @@ import (
 	"sync"
 	"time"
 
-	"github.com/pure-golang/adapters/queue"
-	"github.com/pure-golang/adapters/queue/encoders"
 	"github.com/google/uuid"
 	amqp "github.com/rabbitmq/amqp091-go"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/trace"
+
+	"github.com/pure-golang/adapters/queue"
+	"github.com/pure-golang/adapters/queue/encoders"
 )
 
 var _ queue.Publisher = (*Publisher)(nil)

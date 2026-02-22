@@ -4,11 +4,12 @@ import (
 	"context"
 	"log/slog"
 
+	"github.com/pkg/errors"
+	"go.opentelemetry.io/otel"
+
 	"github.com/pure-golang/adapters/logger/devslog"
 	"github.com/pure-golang/adapters/logger/noop"
 	"github.com/pure-golang/adapters/logger/stdjson"
-	"github.com/pkg/errors"
-	"go.opentelemetry.io/otel"
 )
 
 type Level string

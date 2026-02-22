@@ -8,9 +8,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/pure-golang/adapters/mail"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/pure-golang/adapters/mail"
 )
 
 // miniSMTPServer is a minimal SMTP server for testing
@@ -54,7 +55,7 @@ func (s *miniSMTPServer) handleSMTP(t *testing.T, conn net.Conn) {
 	writer := bufio.NewWriter(conn)
 
 	// Send greeting
-	writer.WriteString("220 localhost ESMTP Test Server\r\n")
+	_, _ = writer.WriteString("220 localhost ESMTP Test Server\r\n")
 	writer.Flush()
 
 	for {
@@ -67,16 +68,16 @@ func (s *miniSMTPServer) handleSMTP(t *testing.T, conn net.Conn) {
 
 		switch {
 		case strings.HasPrefix(line, "EHLO") || strings.HasPrefix(line, "HELO"):
-			writer.WriteString("250-localhost\r\n250-SIZE 10240000\r\n250 HELP\r\n")
+			_, _ = writer.WriteString("250-localhost\r\n250-SIZE 10240000\r\n250 HELP\r\n")
 			writer.Flush()
 		case strings.HasPrefix(line, "MAIL FROM:"):
-			writer.WriteString("250 OK\r\n")
+			_, _ = writer.WriteString("250 OK\r\n")
 			writer.Flush()
 		case strings.HasPrefix(line, "RCPT TO:"):
-			writer.WriteString("250 OK\r\n")
+			_, _ = writer.WriteString("250 OK\r\n")
 			writer.Flush()
 		case line == "DATA":
-			writer.WriteString("354 End data with <CR><LF>.<CR><LF>\r\n")
+			_, _ = writer.WriteString("354 End data with <CR><LF>.<CR><LF>\r\n")
 			writer.Flush()
 
 			// Read the message
@@ -92,18 +93,18 @@ func (s *miniSMTPServer) handleSMTP(t *testing.T, conn net.Conn) {
 			}
 
 			s.messages = append(s.messages, []byte(msg.String()))
-			writer.WriteString("250 OK\r\n")
+			_, _ = writer.WriteString("250 OK\r\n")
 			writer.Flush()
 		case line == "QUIT":
-			writer.WriteString("221 localhost closing connection\r\n")
+			_, _ = writer.WriteString("221 localhost closing connection\r\n")
 			writer.Flush()
 			return
 		case line == "NOOP":
-			writer.WriteString("250 OK\r\n")
+			_, _ = writer.WriteString("250 OK\r\n")
 			writer.Flush()
 		default:
 			// Unknown command
-			writer.WriteString("500 Syntax error\r\n")
+			_, _ = writer.WriteString("500 Syntax error\r\n")
 			writer.Flush()
 		}
 	}

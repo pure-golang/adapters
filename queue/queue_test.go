@@ -4,9 +4,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/pure-golang/adapters/queue/encoders"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/pure-golang/adapters/queue/encoders"
 )
 
 // TestMessage_EncodeValue_NilBody tests EncodeValue with nil body.

@@ -7,8 +7,9 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v5/tracelog"
-	"github.com/pure-golang/adapters/logger"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/pure-golang/adapters/logger"
 )
 
 // TestNewLogger tests NewLogger function.
@@ -49,16 +50,16 @@ func TestLogger_Log(t *testing.T) {
 
 	t.Run("Log with Debug level", func(t *testing.T) {
 		records = nil
-		data := map[string]interface{}{
+		data := map[string]any{
 			"sql":  "SELECT 1",
-			"args": []interface{}{},
+			"args": []any{},
 		}
 		pgxLogger.Log(ctx, tracelog.LogLevelDebug, "debug message", data)
 	})
 
 	t.Run("Log with Info level", func(t *testing.T) {
 		records = nil
-		data := map[string]interface{}{
+		data := map[string]any{
 			"sql": "SELECT * FROM users",
 		}
 		pgxLogger.Log(ctx, tracelog.LogLevelInfo, "info message", data)
@@ -66,7 +67,7 @@ func TestLogger_Log(t *testing.T) {
 
 	t.Run("Log with Warn level", func(t *testing.T) {
 		records = nil
-		data := map[string]interface{}{
+		data := map[string]any{
 			"sql": "SELECT 1",
 		}
 		pgxLogger.Log(ctx, tracelog.LogLevelWarn, "warn message", data)
@@ -74,7 +75,7 @@ func TestLogger_Log(t *testing.T) {
 
 	t.Run("Log with Error level", func(t *testing.T) {
 		records = nil
-		data := map[string]interface{}{
+		data := map[string]any{
 			"sql":   "SELECT 1",
 			"error": "connection failed",
 		}
@@ -83,7 +84,7 @@ func TestLogger_Log(t *testing.T) {
 
 	t.Run("Log with None level", func(t *testing.T) {
 		records = nil
-		data := map[string]interface{}{
+		data := map[string]any{
 			"sql": "SELECT 1",
 		}
 		pgxLogger.Log(ctx, tracelog.LogLevelNone, "none message", data)
@@ -108,7 +109,7 @@ func TestLogger_LogWithDuration(t *testing.T) {
 
 	t.Run("duration is converted to duration_ms", func(t *testing.T) {
 		records = nil
-		data := map[string]interface{}{
+		data := map[string]any{
 			"sql":  "SELECT 1",
 			"time": 150 * time.Millisecond,
 		}
@@ -144,7 +145,7 @@ func TestLogger_LogWithNilData(t *testing.T) {
 
 	t.Run("Log with empty data", func(t *testing.T) {
 		assert.NotPanics(t, func() {
-			data := map[string]interface{}{}
+			data := map[string]any{}
 			pgxLogger.Log(ctx, tracelog.LogLevelInfo, "message with empty data", data)
 		})
 	})
@@ -224,9 +225,9 @@ func TestLogger_LogWithComplexData(t *testing.T) {
 
 	t.Run("Log with various data types", func(t *testing.T) {
 		assert.NotPanics(t, func() {
-			data := map[string]interface{}{
+			data := map[string]any{
 				"sql":        "SELECT * FROM users WHERE id = $1",
-				"args":       []interface{}{123},
+				"args":       []any{123},
 				"rows":       5,
 				"duration":   250 * time.Millisecond,
 				"success":    true,
@@ -239,7 +240,7 @@ func TestLogger_LogWithComplexData(t *testing.T) {
 
 	t.Run("Log with nil args", func(t *testing.T) {
 		assert.NotPanics(t, func() {
-			data := map[string]interface{}{
+			data := map[string]any{
 				"sql":  "SELECT 1",
 				"args": nil,
 			}
@@ -278,7 +279,7 @@ func TestLogger_LogWithSpecialDurationValues(t *testing.T) {
 	for _, d := range durations {
 		t.Run("duration_"+d.String(), func(t *testing.T) {
 			assert.NotPanics(t, func() {
-				data := map[string]interface{}{
+				data := map[string]any{
 					"sql":  "SELECT 1",
 					"time": d,
 				}
@@ -306,7 +307,7 @@ func TestLogger_LogWithNonDurationTimeValue(t *testing.T) {
 
 	t.Run("time value is string", func(t *testing.T) {
 		assert.NotPanics(t, func() {
-			data := map[string]interface{}{
+			data := map[string]any{
 				"sql":  "SELECT 1",
 				"time": "2024-01-01T00:00:00Z",
 			}
@@ -316,7 +317,7 @@ func TestLogger_LogWithNonDurationTimeValue(t *testing.T) {
 
 	t.Run("time value is int", func(t *testing.T) {
 		assert.NotPanics(t, func() {
-			data := map[string]interface{}{
+			data := map[string]any{
 				"sql":  "SELECT 1",
 				"time": 12345,
 			}
@@ -334,7 +335,7 @@ func (h *testHandler) Enabled(ctx context.Context, level slog.Level) bool {
 	return true
 }
 
-func (h *testHandler) Handle(ctx context.Context, r slog.Record) error {
+func (h *testHandler) Handle(ctx context.Context, r slog.Record) error { //nolint:gocritic
 	*h.records = append(*h.records, r)
 	return nil
 }

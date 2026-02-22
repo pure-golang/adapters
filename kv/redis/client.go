@@ -2,9 +2,8 @@ package redis
 
 import (
 	"context"
-	"time"
-
 	"log/slog"
+	"time"
 
 	"github.com/pkg/errors"
 	rclient "github.com/redis/go-redis/v9"
@@ -19,7 +18,7 @@ type Client struct {
 }
 
 // Connect создаёт новое подключение к Redis
-func Connect(ctx context.Context, cfg Config) (*Client, error) {
+func Connect(ctx context.Context, cfg Config) (*Client, error) { //nolint:gocritic
 	logger := newLogger(nil)
 	logger.Debug("connecting to redis", "addr", cfg.Addr)
 
@@ -108,7 +107,7 @@ func (c *Client) Get(ctx context.Context, key string) (string, error) {
 }
 
 // Set устанавливает значение по ключу с опциональным TTL
-func (c *Client) Set(ctx context.Context, key string, value interface{}, expiration time.Duration) error {
+func (c *Client) Set(ctx context.Context, key string, value any, expiration time.Duration) error {
 	ctx, span := startSpan(ctx, "Set", key, c.cfg.DB)
 	defer span.End()
 
@@ -237,7 +236,7 @@ func (c *Client) HGet(ctx context.Context, key, field string) (string, error) {
 }
 
 // HSet устанавливает значение поля в хеше
-func (c *Client) HSet(ctx context.Context, key, field string, value interface{}) error {
+func (c *Client) HSet(ctx context.Context, key, field string, value any) error {
 	ctx, span := startSpan(ctx, "HSet", key, c.cfg.DB)
 	defer span.End()
 
@@ -284,7 +283,7 @@ func (c *Client) HDel(ctx context.Context, key string, fields ...string) error {
 }
 
 // LPush добавляет значения в начало списка
-func (c *Client) LPush(ctx context.Context, key string, values ...interface{}) error {
+func (c *Client) LPush(ctx context.Context, key string, values ...any) error {
 	ctx, span := startSpan(ctx, "LPush", key, c.cfg.DB)
 	defer span.End()
 
@@ -302,7 +301,7 @@ func (c *Client) LPush(ctx context.Context, key string, values ...interface{}) e
 }
 
 // RPush добавляет значения в конец списка
-func (c *Client) RPush(ctx context.Context, key string, values ...interface{}) error {
+func (c *Client) RPush(ctx context.Context, key string, values ...any) error {
 	ctx, span := startSpan(ctx, "RPush", key, c.cfg.DB)
 	defer span.End()
 
@@ -373,7 +372,7 @@ func (c *Client) LLen(ctx context.Context, key string) (int64, error) {
 }
 
 // SAdd добавляет члены в множество
-func (c *Client) SAdd(ctx context.Context, key string, members ...interface{}) error {
+func (c *Client) SAdd(ctx context.Context, key string, members ...any) error {
 	ctx, span := startSpan(ctx, "SAdd", key, c.cfg.DB)
 	defer span.End()
 
@@ -406,7 +405,7 @@ func (c *Client) SMembers(ctx context.Context, key string) ([]string, error) {
 }
 
 // SIsMember проверяет наличие элемента в множестве
-func (c *Client) SIsMember(ctx context.Context, key string, member interface{}) (bool, error) {
+func (c *Client) SIsMember(ctx context.Context, key string, member any) (bool, error) {
 	ctx, span := startSpan(ctx, "SIsMember", key, c.cfg.DB)
 	defer span.End()
 
@@ -421,7 +420,7 @@ func (c *Client) SIsMember(ctx context.Context, key string, member interface{}) 
 }
 
 // SRem удаляет члены из множества
-func (c *Client) SRem(ctx context.Context, key string, members ...interface{}) error {
+func (c *Client) SRem(ctx context.Context, key string, members ...any) error {
 	ctx, span := startSpan(ctx, "SRem", key, c.cfg.DB)
 	defer span.End()
 

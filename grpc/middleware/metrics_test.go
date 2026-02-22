@@ -5,16 +5,15 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/metric/noop"
+	sdktrace "go.opentelemetry.io/otel/sdk/trace"
+	"go.opentelemetry.io/otel/trace"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/wrapperspb"
-
-	"go.opentelemetry.io/otel"
-	"go.opentelemetry.io/otel/metric/noop"
-	sdktrace "go.opentelemetry.io/otel/sdk/trace"
-	"go.opentelemetry.io/otel/trace"
 )
 
 // TestGetMessageSize_ProtoMessage tests getMessageSize with protobuf messages
@@ -22,7 +21,7 @@ func TestGetMessageSize_ProtoMessage(t *testing.T) {
 	t.Parallel()
 	testCases := []struct {
 		name     string
-		msg      interface{}
+		msg      any
 		expected int64
 	}{
 		{
@@ -66,7 +65,7 @@ func TestGetMessageSize_NonProtoMessage(t *testing.T) {
 	t.Parallel()
 	testCases := []struct {
 		name     string
-		msg      interface{}
+		msg      any
 		expected int64
 	}{
 		{
@@ -121,7 +120,7 @@ func TestMetricsUnaryInterceptor_Success(t *testing.T) {
 		FullMethod: "/test.service/TestMethod",
 	}
 
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+	handler := func(ctx context.Context, req any) (any, error) {
 		return wrapperspb.String("success"), nil
 	}
 
@@ -143,7 +142,7 @@ func TestMetricsUnaryInterceptor_WithError(t *testing.T) {
 	}
 
 	expectedErr := status.Error(codes.NotFound, "not found")
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+	handler := func(ctx context.Context, req any) (any, error) {
 		return nil, expectedErr
 	}
 
@@ -168,7 +167,7 @@ func TestMetricsUnaryInterceptor_WithProtoMessage(t *testing.T) {
 	request := wrapperspb.String("request message")
 	var capturedReqSize int64
 
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+	handler := func(ctx context.Context, req any) (any, error) {
 		// Capture request size
 		capturedReqSize = getMessageSize(req)
 		return wrapperspb.String("response message"), nil
@@ -200,7 +199,7 @@ func TestMetricsUnaryInterceptor_WithNonProtoMessage(t *testing.T) {
 
 	var capturedReqSize int64
 
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+	handler := func(ctx context.Context, req any) (any, error) {
 		capturedReqSize = getMessageSize(req)
 		return struct{ Result string }{"success"}, nil
 	}
@@ -267,7 +266,7 @@ func TestMetricsUnaryInterceptor_DifferentStatusCodes(t *testing.T) {
 				FullMethod: "/test.service/" + tc.name,
 			}
 
-			handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+			handler := func(ctx context.Context, req any) (any, error) {
 				return nil, tc.err
 			}
 
@@ -294,17 +293,18 @@ func TestMetricsUnaryInterceptor_Context(t *testing.T) {
 		FullMethod: "/test.service/ContextMethod",
 	}
 
-	ctxWithValue := context.WithValue(context.Background(), "test_key", "test_value")
+	type metricsUnaryCtxKey string
+	ctxWithValue := context.WithValue(context.Background(), metricsUnaryCtxKey("test_key"), "test_value")
 	var capturedCtx context.Context
 
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+	handler := func(ctx context.Context, req any) (any, error) {
 		capturedCtx = ctx
 		return "success", nil
 	}
 
-	interceptor(ctxWithValue, nil, info, handler)
+	_, _ = interceptor(ctxWithValue, nil, info, handler)
 
-	assert.Equal(t, "test_value", capturedCtx.Value("test_key"))
+	assert.Equal(t, "test_value", capturedCtx.Value(metricsUnaryCtxKey("test_key")))
 }
 
 // mockServerStreamForMetrics is a mock implementation of grpc.ServerStream for metrics testing
@@ -317,11 +317,11 @@ func (m *mockServerStreamForMetrics) Context() context.Context {
 	return m.ctx
 }
 
-func (m *mockServerStreamForMetrics) SendMsg(msg interface{}) error {
+func (m *mockServerStreamForMetrics) SendMsg(msg any) error {
 	return nil
 }
 
-func (m *mockServerStreamForMetrics) RecvMsg(msg interface{}) error {
+func (m *mockServerStreamForMetrics) RecvMsg(msg any) error {
 	return nil
 }
 
@@ -337,7 +337,7 @@ func TestMetricsStreamInterceptor_Success(t *testing.T) {
 
 	ss := &mockServerStreamForMetrics{ctx: context.Background()}
 
-	handler := func(srv interface{}, stream grpc.ServerStream) error {
+	handler := func(srv any, stream grpc.ServerStream) error {
 		return nil
 	}
 
@@ -359,7 +359,7 @@ func TestMetricsStreamInterceptor_WithError(t *testing.T) {
 	ss := &mockServerStreamForMetrics{ctx: context.Background()}
 
 	expectedErr := status.Error(codes.Aborted, "stream aborted")
-	handler := func(srv interface{}, stream grpc.ServerStream) error {
+	handler := func(srv any, stream grpc.ServerStream) error {
 		return expectedErr
 	}
 
@@ -410,7 +410,7 @@ func TestMetricsStreamInterceptor_StreamTypes(t *testing.T) {
 			t.Parallel()
 			ss := &mockServerStreamForMetrics{ctx: context.Background()}
 
-			handler := func(srv interface{}, stream grpc.ServerStream) error {
+			handler := func(srv any, stream grpc.ServerStream) error {
 				return nil
 			}
 
@@ -430,12 +430,13 @@ func TestMetricsStreamInterceptor_Context(t *testing.T) {
 		FullMethod: "/test.service/StreamContext",
 	}
 
-	ctxWithValue := context.WithValue(context.Background(), "stream_key", "stream_value")
+	type metricsStreamCtxKey string
+	ctxWithValue := context.WithValue(context.Background(), metricsStreamCtxKey("stream_key"), "stream_value")
 	ss := &mockServerStreamForMetrics{ctx: ctxWithValue}
 
 	var capturedCtx context.Context
 
-	handler := func(srv interface{}, stream grpc.ServerStream) error {
+	handler := func(srv any, stream grpc.ServerStream) error {
 		capturedCtx = stream.Context()
 		return nil
 	}
@@ -443,7 +444,7 @@ func TestMetricsStreamInterceptor_Context(t *testing.T) {
 	err := interceptor(nil, ss, info, handler)
 
 	assert.NoError(t, err)
-	assert.Equal(t, "stream_value", capturedCtx.Value("stream_key"))
+	assert.Equal(t, "stream_value", capturedCtx.Value(metricsStreamCtxKey("stream_key")))
 }
 
 // TestMetricsUnaryInterceptor_DifferentMessageSizes tests with messages of various sizes
@@ -481,7 +482,7 @@ func TestMetricsUnaryInterceptor_DifferentMessageSizes(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
-			handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+			handler := func(ctx context.Context, req any) (any, error) {
 				return wrapperspb.String("response"), nil
 			}
 
@@ -503,13 +504,13 @@ func TestMetricsUnaryInterceptor_WithPanic(t *testing.T) {
 		FullMethod: "/test.service/PanicMethod",
 	}
 
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+	handler := func(ctx context.Context, req any) (any, error) {
 		panic("test panic")
 	}
 
 	// The metrics interceptor doesn't catch panics - they will propagate
 	assert.Panics(t, func() {
-		interceptor(context.Background(), nil, info, handler)
+		_, _ = interceptor(context.Background(), nil, info, handler)
 	})
 }
 
@@ -525,13 +526,13 @@ func TestMetricsStreamInterceptor_WithPanic(t *testing.T) {
 
 	ss := &mockServerStreamForMetrics{ctx: context.Background()}
 
-	handler := func(srv interface{}, stream grpc.ServerStream) error {
+	handler := func(srv any, stream grpc.ServerStream) error {
 		panic("stream panic")
 	}
 
 	// The metrics interceptor doesn't catch panics - they will propagate
 	assert.Panics(t, func() {
-		interceptor(nil, ss, info, handler)
+		_ = interceptor(nil, ss, info, handler)
 	})
 }
 
@@ -559,7 +560,7 @@ func TestMetricsUnaryInterceptor_WithErrorInProto(t *testing.T) {
 	}
 
 	for _, wrapper := range wrappers {
-		handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		handler := func(ctx context.Context, req any) (any, error) {
 			return wrapperspb.String("ok"), nil
 		}
 
@@ -629,7 +630,7 @@ func TestMetricsStreamInterceptor_DifferentStatusCodes(t *testing.T) {
 
 			ss := &mockServerStreamForMetrics{ctx: context.Background()}
 
-			handler := func(srv interface{}, stream grpc.ServerStream) error {
+			handler := func(srv any, stream grpc.ServerStream) error {
 				return tc.err
 			}
 
@@ -666,7 +667,7 @@ func TestMetricsUnaryInterceptor_WithSpanInContext(t *testing.T) {
 	ctx, span := tp.Tracer("test").Start(context.Background(), "test")
 	defer span.End()
 
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+	handler := func(ctx context.Context, req any) (any, error) {
 		// Verify span is still in context
 		currentSpan := trace.SpanFromContext(ctx)
 		assert.NotNil(t, currentSpan)
@@ -689,7 +690,7 @@ func TestMetricsUnaryInterceptor_MeasuresDuration(t *testing.T) {
 		FullMethod: "/test.service/DurationMethod",
 	}
 
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+	handler := func(ctx context.Context, req any) (any, error) {
 		return "success", nil
 	}
 
@@ -714,7 +715,7 @@ func TestMetricsStreamInterceptor_MeasuresDuration(t *testing.T) {
 
 	ss := &mockServerStreamForMetrics{ctx: context.Background()}
 
-	handler := func(srv interface{}, stream grpc.ServerStream) error {
+	handler := func(srv any, stream grpc.ServerStream) error {
 		return nil
 	}
 

@@ -7,8 +7,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/pure-golang/adapters/storage"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/pure-golang/adapters/storage"
 )
 
 // TestGetPresignedURL_UnsupportedMethod tests GetPresignedURL with unsupported HTTP methods.

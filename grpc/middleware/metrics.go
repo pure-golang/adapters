@@ -62,7 +62,7 @@ func init() {
 }
 
 // getMessageSize возвращает размер protobuf сообщения в байтах
-func getMessageSize(msg interface{}) int64 {
+func getMessageSize(msg any) int64 {
 	if pm, ok := msg.(proto.Message); ok {
 		return int64(proto.Size(pm))
 	}
@@ -71,7 +71,7 @@ func getMessageSize(msg interface{}) int64 {
 
 // MetricsUnaryInterceptor создает интерцептор для метрик gRPC запросов
 func MetricsUnaryInterceptor() grpc.UnaryServerInterceptor {
-	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
+	return func(ctx context.Context, req any, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (any, error) {
 		startTime := time.Now()
 
 		// Измеряем размер запроса
@@ -100,7 +100,9 @@ func MetricsUnaryInterceptor() grpc.UnaryServerInterceptor {
 
 		// Добавляем код статуса
 		statusCode := status.Code(err)
-		statusAttrs := append(metricAttrs, attribute.String("grpc.status", statusCode.String()))
+		statusAttrs := make([]attribute.KeyValue, 0, len(metricAttrs)+1)
+		statusAttrs = append(statusAttrs, metricAttrs...)
+		statusAttrs = append(statusAttrs, attribute.String("grpc.status", statusCode.String()))
 		requestsCount.Add(ctx, 1, metric.WithAttributes(statusAttrs...))
 
 		return resp, err
@@ -109,7 +111,7 @@ func MetricsUnaryInterceptor() grpc.UnaryServerInterceptor {
 
 // MetricsStreamInterceptor создает интерцептор для метрик потоковых gRPC запросов
 func MetricsStreamInterceptor() grpc.StreamServerInterceptor {
-	return func(srv interface{}, ss grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) error {
+	return func(srv any, ss grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) error {
 		startTime := time.Now()
 
 		// Определяем тип потока
@@ -135,7 +137,9 @@ func MetricsStreamInterceptor() grpc.StreamServerInterceptor {
 
 		// Добавляем код статуса
 		statusCode := status.Code(err)
-		statusAttrs := append(metricAttrs, attribute.String("grpc.status", statusCode.String()))
+		statusAttrs := make([]attribute.KeyValue, 0, len(metricAttrs)+1)
+		statusAttrs = append(statusAttrs, metricAttrs...)
+		statusAttrs = append(statusAttrs, attribute.String("grpc.status", statusCode.String()))
 		requestsCount.Add(ss.Context(), 1, metric.WithAttributes(statusAttrs...))
 
 		return err

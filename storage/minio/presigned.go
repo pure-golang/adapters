@@ -5,11 +5,12 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/pure-golang/adapters/storage"
 	"github.com/pkg/errors"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/trace"
+
+	"github.com/pure-golang/adapters/storage"
 )
 
 // GetPresignedURL generates a presigned URL for S3 object access.

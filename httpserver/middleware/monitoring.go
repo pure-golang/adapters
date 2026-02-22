@@ -9,15 +9,15 @@ import (
 	"strings"
 	"time"
 
-	"github.com/pure-golang/adapters/logger"
-	"go.opentelemetry.io/otel/metric"
-
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
+	"go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/propagation"
 	semconv "go.opentelemetry.io/otel/semconv/v1.12.0"
 	"go.opentelemetry.io/otel/trace"
+
+	"github.com/pure-golang/adapters/logger"
 )
 
 var (

@@ -19,7 +19,7 @@ func (s *Store) Get(ctx context.Context, key string) (string, error) {
 }
 
 // Set не выполняет операций
-func (s *Store) Set(ctx context.Context, key string, value interface{}, expiration time.Duration) error {
+func (s *Store) Set(ctx context.Context, key string, value any, expiration time.Duration) error {
 	return nil
 }
 
@@ -59,7 +59,7 @@ func (s *Store) HGet(ctx context.Context, key, field string) (string, error) {
 }
 
 // HSet не выполняет операций
-func (s *Store) HSet(ctx context.Context, key, field string, value interface{}) error {
+func (s *Store) HSet(ctx context.Context, key, field string, value any) error {
 	return nil
 }
 
@@ -74,12 +74,12 @@ func (s *Store) HDel(ctx context.Context, key string, fields ...string) error {
 }
 
 // LPush не выполняет операций
-func (s *Store) LPush(ctx context.Context, key string, values ...interface{}) error {
+func (s *Store) LPush(ctx context.Context, key string, values ...any) error {
 	return nil
 }
 
 // RPush не выполняет операций
-func (s *Store) RPush(ctx context.Context, key string, values ...interface{}) error {
+func (s *Store) RPush(ctx context.Context, key string, values ...any) error {
 	return nil
 }
 
@@ -99,7 +99,7 @@ func (s *Store) LLen(ctx context.Context, key string) (int64, error) {
 }
 
 // SAdd не выполняет операций
-func (s *Store) SAdd(ctx context.Context, key string, members ...interface{}) error {
+func (s *Store) SAdd(ctx context.Context, key string, members ...any) error {
 	return nil
 }
 
@@ -109,12 +109,12 @@ func (s *Store) SMembers(ctx context.Context, key string) ([]string, error) {
 }
 
 // SIsMember возвращает false без выполнения операций
-func (s *Store) SIsMember(ctx context.Context, key string, member interface{}) (bool, error) {
+func (s *Store) SIsMember(ctx context.Context, key string, member any) (bool, error) {
 	return false, nil
 }
 
 // SRem не выполняет операций
-func (s *Store) SRem(ctx context.Context, key string, members ...interface{}) error {
+func (s *Store) SRem(ctx context.Context, key string, members ...any) error {
 	return nil
 }
 

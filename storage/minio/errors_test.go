@@ -4,9 +4,10 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/pure-golang/adapters/storage"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/pure-golang/adapters/storage"
 )
 
 // TestToStorageError_NotFound tests toStorageError with various NotFound scenarios.

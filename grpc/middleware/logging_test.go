@@ -27,11 +27,11 @@ func init() {
 
 // mockHandler is a simple handler that returns a response and error
 type mockHandler struct {
-	resp interface{}
+	resp any
 	err  error
 }
 
-func (m *mockHandler) handle(ctx context.Context, req interface{}) (interface{}, error) {
+func (m *mockHandler) handle(ctx context.Context, req any) (any, error) {
 	return m.resp, m.err
 }
 
@@ -49,7 +49,7 @@ func TestLoggingInterceptor_Success(t *testing.T) {
 		FullMethod: "/test.service/TestMethod",
 	}
 
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+	handler := func(ctx context.Context, req any) (any, error) {
 		handlerCalled = true
 		return "success", nil
 	}
@@ -77,7 +77,7 @@ func TestLoggingInterceptor_WithError(t *testing.T) {
 	}
 
 	expectedErr := status.Error(codes.NotFound, "resource not found")
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+	handler := func(ctx context.Context, req any) (any, error) {
 		return nil, expectedErr
 	}
 
@@ -115,7 +115,7 @@ func TestLoggingInterceptor_WithPanic(t *testing.T) {
 	}
 
 	panicMsg := "test panic"
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+	handler := func(ctx context.Context, req any) (any, error) {
 		panic(panicMsg)
 	}
 
@@ -133,7 +133,7 @@ func TestLoggingInterceptor_WithPanic(t *testing.T) {
 
 	// Then test combined with logging
 	t.Run("Recovery followed by Logging", func(t *testing.T) {
-		comboHandler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		comboHandler := func(ctx context.Context, req any) (any, error) {
 			// Recovery interceptor returns error, logging logs it
 			return recovery(ctx, "request", info, handler)
 		}
@@ -198,7 +198,7 @@ func TestLoggingInterceptor_DifferentErrorCodes(t *testing.T) {
 				FullMethod: "/test.service/TestMethod",
 			}
 
-			handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+			handler := func(ctx context.Context, req any) (any, error) {
 				return nil, tc.err
 			}
 
@@ -224,7 +224,7 @@ func TestRecoveryInterceptor_CatchesPanic(t *testing.T) {
 
 	// Test with string panic
 	t.Run("string panic", func(t *testing.T) {
-		handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		handler := func(ctx context.Context, req any) (any, error) {
 			panic("panic string")
 		}
 
@@ -240,7 +240,7 @@ func TestRecoveryInterceptor_CatchesPanic(t *testing.T) {
 
 	// Test with error panic
 	t.Run("error panic", func(t *testing.T) {
-		handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		handler := func(ctx context.Context, req any) (any, error) {
 			panic(errors.New("panic error"))
 		}
 
@@ -253,7 +253,7 @@ func TestRecoveryInterceptor_CatchesPanic(t *testing.T) {
 
 	// Test with int panic
 	t.Run("int panic", func(t *testing.T) {
-		handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		handler := func(ctx context.Context, req any) (any, error) {
 			panic(42)
 		}
 
@@ -266,7 +266,7 @@ func TestRecoveryInterceptor_CatchesPanic(t *testing.T) {
 
 	// Test no panic
 	t.Run("no panic", func(t *testing.T) {
-		handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		handler := func(ctx context.Context, req any) (any, error) {
 			return "success", nil
 		}
 
@@ -304,7 +304,7 @@ func TestLoggingStreamInterceptor_Success(t *testing.T) {
 	ss := &mockServerStream{ctx: context.Background()}
 
 	handlerCalled := false
-	handler := func(srv interface{}, stream grpc.ServerStream) error {
+	handler := func(srv any, stream grpc.ServerStream) error {
 		handlerCalled = true
 		return nil
 	}
@@ -333,7 +333,7 @@ func TestLoggingStreamInterceptor_WithError(t *testing.T) {
 	ss := &mockServerStream{ctx: context.Background()}
 
 	expectedErr := status.Error(codes.Aborted, "stream aborted")
-	handler := func(srv interface{}, stream grpc.ServerStream) error {
+	handler := func(srv any, stream grpc.ServerStream) error {
 		return expectedErr
 	}
 
@@ -389,7 +389,7 @@ func TestLoggingStreamInterceptor_StreamTypes(t *testing.T) {
 
 			ss := &mockServerStream{ctx: context.Background()}
 
-			handler := func(srv interface{}, stream grpc.ServerStream) error {
+			handler := func(srv any, stream grpc.ServerStream) error {
 				return nil
 			}
 
@@ -414,7 +414,7 @@ func TestRecoveryStreamInterceptor_CatchesPanic(t *testing.T) {
 
 	// Test with string panic
 	t.Run("string panic", func(t *testing.T) {
-		handler := func(srv interface{}, stream grpc.ServerStream) error {
+		handler := func(srv any, stream grpc.ServerStream) error {
 			panic("stream panic")
 		}
 
@@ -427,7 +427,7 @@ func TestRecoveryStreamInterceptor_CatchesPanic(t *testing.T) {
 
 	// Test with error panic
 	t.Run("error panic", func(t *testing.T) {
-		handler := func(srv interface{}, stream grpc.ServerStream) error {
+		handler := func(srv any, stream grpc.ServerStream) error {
 			panic(errors.New("stream error panic"))
 		}
 
@@ -439,7 +439,7 @@ func TestRecoveryStreamInterceptor_CatchesPanic(t *testing.T) {
 
 	// Test no panic
 	t.Run("no panic", func(t *testing.T) {
-		handler := func(srv interface{}, stream grpc.ServerStream) error {
+		handler := func(srv any, stream grpc.ServerStream) error {
 			return nil
 		}
 
@@ -459,18 +459,19 @@ func TestLoggingInterceptor_Context(t *testing.T) {
 		FullMethod: "/test.service/TestMethod",
 	}
 
-	ctxWithValue := context.WithValue(context.Background(), "test_key", "test_value")
+	type loggingCtxKey string
+	ctxWithValue := context.WithValue(context.Background(), loggingCtxKey("test_key"), "test_value")
 	var capturedCtx context.Context
 
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+	handler := func(ctx context.Context, req any) (any, error) {
 		capturedCtx = ctx
 		return "success", nil
 	}
 
-	interceptor(ctxWithValue, "request", info, handler)
+	_, _ = interceptor(ctxWithValue, "request", info, handler)
 
 	// Verify context was passed through
-	assert.Equal(t, "test_value", capturedCtx.Value("test_key"))
+	assert.Equal(t, "test_value", capturedCtx.Value(loggingCtxKey("test_key")))
 }
 
 // TestLoggingStreamInterceptor_Context tests that context is properly passed through streams
@@ -483,20 +484,21 @@ func TestLoggingStreamInterceptor_Context(t *testing.T) {
 		FullMethod: "/test.service/TestStream",
 	}
 
-	ctxWithValue := context.WithValue(context.Background(), "stream_key", "stream_value")
+	type loggingStreamCtxKey string
+	ctxWithValue := context.WithValue(context.Background(), loggingStreamCtxKey("stream_key"), "stream_value")
 	ss := &mockServerStream{ctx: ctxWithValue}
 
 	var capturedCtx context.Context
 
-	handler := func(srv interface{}, stream grpc.ServerStream) error {
+	handler := func(srv any, stream grpc.ServerStream) error {
 		capturedCtx = stream.Context()
 		return nil
 	}
 
-	interceptor(nil, ss, info, handler)
+	_ = interceptor(nil, ss, info, handler)
 
 	// Verify context was passed through
-	assert.Equal(t, "stream_value", capturedCtx.Value("stream_key"))
+	assert.Equal(t, "stream_value", capturedCtx.Value(loggingStreamCtxKey("stream_key")))
 }
 
 // TestLoggingInterceptor_WithTextLogger tests that interceptor works with text logger
@@ -512,7 +514,7 @@ func TestLoggingInterceptor_WithTextLogger(t *testing.T) {
 		FullMethod: "/test.service/TestMethod",
 	}
 
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+	handler := func(ctx context.Context, req any) (any, error) {
 		return "success", nil
 	}
 
@@ -538,7 +540,7 @@ type attrHandler struct {
 	attrs *[]slog.Attr
 }
 
-func (h *attrHandler) Handle(ctx context.Context, r slog.Record) error {
+func (h *attrHandler) Handle(ctx context.Context, r slog.Record) error { //nolint:gocritic
 	r.Attrs(func(a slog.Attr) bool {
 		*h.attrs = append(*h.attrs, a)
 		return true
@@ -571,7 +573,7 @@ func TestLoggingInterceptor_WithBufConn(t *testing.T) {
 		FullMethod: "/test.service/BufConnTest",
 	}
 
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+	handler := func(ctx context.Context, req any) (any, error) {
 		return "bufconn_success", nil
 	}
 

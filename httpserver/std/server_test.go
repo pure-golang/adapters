@@ -8,9 +8,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/pure-golang/adapters/logger"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/pure-golang/adapters/logger"
 )
 
 func init() {
@@ -164,7 +165,7 @@ func TestServer_Close_TimeoutExceeded(t *testing.T) {
 
 	serverErrChan := make(chan error, 1)
 	go func() {
-		serverErrChan <- http.Serve(listener, handler)
+		serverErrChan <- http.Serve(listener, handler) //nolint:gosec
 	}()
 
 	// Give server time to start
@@ -173,7 +174,10 @@ func TestServer_Close_TimeoutExceeded(t *testing.T) {
 	// Make a request that will block
 	client := &http.Client{Timeout: 5 * time.Second}
 	go func() {
-		_, _ = client.Get("http://" + addr + "/")
+		resp, err := client.Get("http://" + addr + "/")
+		if err == nil {
+			resp.Body.Close()
+		}
 	}()
 
 	// Wait for handler to be called
@@ -323,7 +327,7 @@ func TestServer_Start_ListenAndServe(t *testing.T) {
 	t.Parallel()
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("OK"))
+		_, _ = w.Write([]byte("OK"))
 	})
 
 	config := Config{

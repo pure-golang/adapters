@@ -37,7 +37,7 @@ func TestMonitoring_MiddlewareCreatesSpan(t *testing.T) {
 
 		// Verify trace_id is added to logger
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("OK"))
+		_, _ = w.Write([]byte("OK"))
 	})
 
 	handler := Monitoring(nextHandler)
@@ -104,7 +104,7 @@ func TestMonitoring_MiddlewareWithResponseBody(t *testing.T) {
 	responseBody := `{"result": "success"}`
 	nextHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(responseBody))
+		_, _ = w.Write([]byte(responseBody))
 	})
 
 	handler := Monitoring(nextHandler)
@@ -239,7 +239,7 @@ func TestMonitoring_StatefulRespWriterBodyCapture(t *testing.T) {
 	srw := newStatefulRespWriter(underlying)
 
 	writeData := []byte("response body data")
-	srw.Write(writeData)
+	_, _ = srw.Write(writeData)
 
 	assert.Equal(t, writeData, srw.body)
 }
@@ -249,8 +249,8 @@ func TestMonitoring_StatefulRespWriterMultipleWrites(t *testing.T) {
 	underlying := httptest.NewRecorder()
 	srw := newStatefulRespWriter(underlying)
 
-	srw.Write([]byte("first"))
-	srw.Write([]byte("second"))
+	_, _ = srw.Write([]byte("first"))
+	_, _ = srw.Write([]byte("second"))
 
 	// body should only contain the last write
 	assert.Equal(t, []byte("second"), srw.body)
@@ -358,7 +358,7 @@ func TestMonitoring_MiddlewareChain(t *testing.T) {
 
 	nextHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("OK"))
+		_, _ = w.Write([]byte("OK"))
 	})
 
 	// Chain: middleware1 -> monitoring -> handler
@@ -506,7 +506,7 @@ func TestMonitoring_LargeResponseBody(t *testing.T) {
 
 	nextHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		w.Write(largeBody)
+		_, _ = w.Write(largeBody)
 	})
 
 	handler := Monitoring(nextHandler)

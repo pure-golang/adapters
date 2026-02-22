@@ -18,7 +18,7 @@ func TestTx_Query_Unit(t *testing.T) {
 		t.Parallel()
 		// Verify Query method exists on Tx
 		var _ interface {
-			Query(ctx context.Context, query string, args ...interface{}) (*sqlx.Rows, error)
+			Query(ctx context.Context, query string, args ...any) (*sqlx.Rows, error)
 		} = &Tx{}
 	})
 
@@ -55,7 +55,7 @@ func TestTx_Query_Unit(t *testing.T) {
 		assert.Error(t, err)
 		assert.Nil(t, rows)
 
-		mockTx.Rollback()
+		_ = mockTx.Rollback()
 	})
 
 	t.Run("Query with various query types", func(t *testing.T) {
@@ -85,7 +85,7 @@ func TestTx_QueryRow_Unit(t *testing.T) {
 		t.Parallel()
 		// Verify QueryRow method exists on Tx
 		var _ interface {
-			QueryRow(ctx context.Context, query string, args ...interface{}) *sqlx.Row
+			QueryRow(ctx context.Context, query string, args ...any) *sqlx.Row
 		} = &Tx{}
 	})
 
@@ -120,7 +120,7 @@ func TestTx_QueryRow_Unit(t *testing.T) {
 		row := tx.QueryRow(ctx, "SELECT 1")
 		assert.NotNil(t, row)
 
-		mockTx.Rollback()
+		_ = mockTx.Rollback()
 	})
 
 	t.Run("QueryRow with various queries", func(t *testing.T) {
@@ -244,7 +244,7 @@ func TestTx_QueryErrorPaths_Unit(t *testing.T) {
 		assert.Error(t, err)
 		assert.Nil(t, rows)
 
-		mockTx.Rollback()
+		_ = mockTx.Rollback()
 	})
 
 	t.Run("Query with context already done", func(t *testing.T) {
@@ -270,7 +270,7 @@ func TestTx_QueryErrorPaths_Unit(t *testing.T) {
 		assert.Error(t, err)
 		assert.Nil(t, rows)
 
-		mockTx.Rollback()
+		_ = mockTx.Rollback()
 	})
 }
 
@@ -302,7 +302,7 @@ func TestTx_QueryRowErrorPaths_Unit(t *testing.T) {
 		err = row.Scan(&result)
 		assert.Error(t, err)
 
-		mockTx.Rollback()
+		_ = mockTx.Rollback()
 	})
 }
 

@@ -25,7 +25,7 @@ func TestConstantInterval_TryNum(t *testing.T) {
 		policy := NewConstantInterval(interval)
 
 		// Test multiple try numbers - all should return the same duration
-		for i := 0; i < 10; i++ {
+		for i := range 10 {
 			duration, stop := policy.TryNum(i)
 			assert.Equal(t, interval, duration, "TryNum(%d) should return constant interval", i)
 			assert.False(t, stop, "TryNum(%d) should never stop", i)

@@ -119,9 +119,8 @@ func (d *Dialer) handleReconnect(ch chan *amqp.Error) {
 		if stop {
 			d.options.Logger.With("error", err.Error()).Error("Cannot to connect to rabbitmq. Time is out")
 			return
-		} else {
-			d.options.Logger.With("error", err.Error()).Error("Failed to connect")
 		}
+		d.options.Logger.With("error", err.Error()).Error("Failed to connect")
 
 		time.Sleep(sleepDuration)
 	}

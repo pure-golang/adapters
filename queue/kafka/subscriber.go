@@ -9,12 +9,13 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
-	"github.com/pure-golang/adapters/queue"
 	"github.com/segmentio/kafka-go"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/trace"
+
+	"github.com/pure-golang/adapters/queue"
 )
 
 const (
@@ -160,7 +161,7 @@ func (s *Subscriber) listen(handler queue.Handler) (bool, error) {
 }
 
 // handleMessageWithRetry обрабатывает одно сообщение с retry в рамках одной сессии
-func (s *Subscriber) handleMessageWithRetry(msg kafka.Message, handler queue.Handler) error {
+func (s *Subscriber) handleMessageWithRetry(msg kafka.Message, handler queue.Handler) error { //nolint:gocritic
 	var lastErr error
 	maxAttempts := s.cfg.MaxTryNum
 

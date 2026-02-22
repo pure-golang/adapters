@@ -253,7 +253,7 @@ func TestSetupMonitoring_InterceptorsAreFunctional(t *testing.T) {
 		chain := func(handler grpc.UnaryHandler) grpc.UnaryHandler {
 			for i := len(unaryInterceptors) - 1; i >= 0; i-- {
 				handler = func(currentHandler grpc.UnaryHandler, currentInterceptor grpc.UnaryServerInterceptor) grpc.UnaryHandler {
-					return func(ctx context.Context, req interface{}) (interface{}, error) {
+					return func(ctx context.Context, req any) (any, error) {
 						return currentInterceptor(ctx, req, &grpc.UnaryServerInfo{
 							FullMethod: "/test/Method",
 						}, currentHandler)
@@ -264,7 +264,7 @@ func TestSetupMonitoring_InterceptorsAreFunctional(t *testing.T) {
 		}
 
 		// Create a final handler
-		finalHandler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		finalHandler := func(ctx context.Context, req any) (any, error) {
 			return "success", nil
 		}
 

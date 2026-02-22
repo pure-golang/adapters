@@ -217,7 +217,7 @@ func TestMetrics_Close(t *testing.T) {
 		}
 
 		m := New(config)
-		m.Start()
+		_ = m.Start()
 
 		var closer io.Closer = m
 		err := closer.Close()
@@ -242,24 +242,20 @@ func TestMetrics_Concurrent(t *testing.T) {
 		var wg sync.WaitGroup
 		errors := make(chan error, 2)
 
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
+		wg.Go(func() {
 			if err := m.Start(); err != nil {
 				errors <- err
 			}
-		}()
+		})
 
 		// Give start time to complete
 		time.Sleep(50 * time.Millisecond)
 
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
+		wg.Go(func() {
 			if err := m.Close(); err != nil {
 				errors <- err
 			}
-		}()
+		})
 
 		wg.Wait()
 		close(errors)
@@ -326,6 +322,6 @@ func TestInitDefault(t *testing.T) {
 
 		assert.NotNil(t, m)
 		assert.NotNil(t, m.server)
-		assert.IsType(t, &http.Server{}, m.server)
+		assert.IsType(t, &http.Server{}, m.server) //nolint:gosec
 	})
 }

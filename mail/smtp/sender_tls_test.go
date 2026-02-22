@@ -10,9 +10,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/pure-golang/adapters/mail"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/pure-golang/adapters/mail"
 )
 
 // tlsSMTPServer is a minimal SMTP server with STARTTLS support for testing
@@ -64,9 +65,15 @@ func (s *tlsSMTPServer) handleConnections(t *testing.T) {
 func (s *tlsSMTPServer) handleSMTP(t *testing.T, conn net.Conn) {
 	reader := bufio.NewReader(conn)
 	writer := bufio.NewWriter(conn)
+	var tlsConn *tls.Conn
+	defer func() {
+		if tlsConn != nil {
+			tlsConn.Close()
+		}
+	}()
 
 	// Send greeting
-	writer.WriteString("220 localhost ESMTP Test Server\r\n")
+	_, _ = writer.WriteString("220 localhost ESMTP Test Server\r\n")
 	writer.Flush()
 
 	for {
@@ -81,44 +88,43 @@ func (s *tlsSMTPServer) handleSMTP(t *testing.T, conn net.Conn) {
 		case strings.HasPrefix(line, "EHLO") || strings.HasPrefix(line, "HELO"):
 			// Advertise STARTTLS support
 			if s.useTLS && strings.HasPrefix(line, "EHLO") {
-				writer.WriteString("250-localhost\r\n250-STARTTLS\r\n250 HELP\r\n")
+				_, _ = writer.WriteString("250-localhost\r\n250-STARTTLS\r\n250 HELP\r\n")
 			} else {
-				writer.WriteString("250 localhost\r\n")
+				_, _ = writer.WriteString("250 localhost\r\n")
 			}
 			writer.Flush()
 		case strings.HasPrefix(line, "STARTTLS"):
-			writer.WriteString("220 Ready to start TLS\r\n")
+			_, _ = writer.WriteString("220 Ready to start TLS\r\n")
 			writer.Flush()
 
 			// Upgrade to TLS
-			if s.cert != nil {
-				tlsConfig := &tls.Config{
-					Certificates: []tls.Certificate{*s.cert},
-					ServerName:   "localhost",
-				}
-				tlsConn := tls.Server(conn, tlsConfig)
-				defer tlsConn.Close()
-				err := tlsConn.Handshake()
-				if err != nil {
-					t.Logf("TLS handshake failed: %v", err)
-					return
-				}
-
-				// Continue with TLS connection
-				reader = bufio.NewReader(tlsConn)
-				writer = bufio.NewWriter(tlsConn)
-				conn = tlsConn
-			} else {
+			if s.cert == nil {
 				return
 			}
+			tlsConfig := &tls.Config{
+				Certificates: []tls.Certificate{*s.cert},
+				ServerName:   "localhost",
+				MinVersion:   tls.VersionTLS12,
+			}
+			tlsConn = tls.Server(conn, tlsConfig)
+			err := tlsConn.Handshake()
+			if err != nil {
+				t.Logf("TLS handshake failed: %v", err)
+				return
+			}
+
+			// Continue with TLS connection
+			reader = bufio.NewReader(tlsConn)
+			writer = bufio.NewWriter(tlsConn)
+			conn = tlsConn
 		case strings.HasPrefix(line, "MAIL FROM:"):
-			writer.WriteString("250 OK\r\n")
+			_, _ = writer.WriteString("250 OK\r\n")
 			writer.Flush()
 		case strings.HasPrefix(line, "RCPT TO:"):
-			writer.WriteString("250 OK\r\n")
+			_, _ = writer.WriteString("250 OK\r\n")
 			writer.Flush()
 		case line == "DATA":
-			writer.WriteString("354 End data with <CR><LF>.<CR><LF>\r\n")
+			_, _ = writer.WriteString("354 End data with <CR><LF>.<CR><LF>\r\n")
 			writer.Flush()
 
 			// Read the message until "."
@@ -129,23 +135,23 @@ func (s *tlsSMTPServer) handleSMTP(t *testing.T, conn net.Conn) {
 				}
 			}
 
-			writer.WriteString("250 OK\r\n")
+			_, _ = writer.WriteString("250 OK\r\n")
 			writer.Flush()
 		case line == "QUIT":
-			writer.WriteString("221 localhost closing connection\r\n")
+			_, _ = writer.WriteString("221 localhost closing connection\r\n")
 			writer.Flush()
 			return
 		case line == "NOOP":
-			writer.WriteString("250 OK\r\n")
+			_, _ = writer.WriteString("250 OK\r\n")
 			writer.Flush()
 		default:
 			// Unknown command - might be AUTH
 			if strings.HasPrefix(line, "AUTH") {
 				// Accept AUTH but don't require it
-				writer.WriteString("235 OK\r\n")
+				_, _ = writer.WriteString("235 OK\r\n")
 				writer.Flush()
 			} else {
-				writer.WriteString("500 Syntax error\r\n")
+				_, _ = writer.WriteString("500 Syntax error\r\n")
 				writer.Flush()
 			}
 		}

@@ -6,10 +6,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/pure-golang/adapters/kv/noop"
-	"github.com/pure-golang/adapters/kv/redis"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/pure-golang/adapters/kv/noop"
+	"github.com/pure-golang/adapters/kv/redis"
 )
 
 func TestNewDefault_NoopProvider(t *testing.T) {

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"os/exec"
+	"strings"
 	"testing"
 	"time"
 
@@ -412,14 +413,14 @@ func TestExecutor_ConcurrentExecution(t *testing.T) {
 	numGoroutines := 10
 	results := make(chan error, numGoroutines)
 
-	for i := 0; i < numGoroutines; i++ {
+	for range numGoroutines {
 		go func() {
 			results <- executor.Execute(ctx, "test")
 		}()
 	}
 
 	// Проверяем, что все команды выполнились успешно
-	for i := 0; i < numGoroutines; i++ {
+	for range numGoroutines {
 		err := <-results
 		require.NoError(t, err)
 	}
@@ -447,14 +448,14 @@ func TestExecutor_ConcurrentExecutionWithDifferentArgs(t *testing.T) {
 	numGoroutines := 5
 	results := make(chan error, numGoroutines)
 
-	for i := 0; i < numGoroutines; i++ {
+	for i := range numGoroutines {
 		go func(idx int) {
 			results <- executor.Execute(ctx, "test", "arg"+string(rune('0'+idx)))
 		}(i)
 	}
 
 	// Проверяем, что все команды выполнились успешно
-	for i := 0; i < numGoroutines; i++ {
+	for range numGoroutines {
 		err := <-results
 		require.NoError(t, err)
 	}
@@ -482,7 +483,7 @@ func TestExecutor_RaceCondition(t *testing.T) {
 	numGoroutines := 100
 	done := make(chan struct{}, numGoroutines)
 
-	for i := 0; i < numGoroutines; i++ {
+	for range numGoroutines {
 		go func() {
 			_ = executor.Execute(ctx, "test")
 			done <- struct{}{}
@@ -490,7 +491,7 @@ func TestExecutor_RaceCondition(t *testing.T) {
 	}
 
 	// Ждём завершения всех горутин
-	for i := 0; i < numGoroutines; i++ {
+	for range numGoroutines {
 		<-done
 	}
 }
@@ -524,7 +525,7 @@ func TestExecutor_ConcurrentExecutionDifferentCommands(t *testing.T) {
 	}()
 
 	// Проверяем, что обе команды выполнились успешно
-	for i := 0; i < 2; i++ {
+	for range 2 {
 		err := <-errChan
 		require.NoError(t, err)
 	}
@@ -696,12 +697,12 @@ func TestExecutor_ExecuteWithVeryLongArgs(t *testing.T) {
 	t.Cleanup(cancel)
 
 	// Создаём очень длинную строку
-	longStr := ""
-	for i := 0; i < 1000; i++ {
-		longStr += "x"
+	var longStr strings.Builder
+	for range 1000 {
+		longStr.WriteString("x")
 	}
 
-	err := executor.Execute(ctx, longStr)
+	err := executor.Execute(ctx, longStr.String())
 	require.NoError(t, err)
 }
 

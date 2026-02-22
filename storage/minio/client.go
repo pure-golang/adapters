@@ -34,7 +34,7 @@ type ClientOptions struct {
 }
 
 // NewClient creates a new S3-compatible storage client.
-func NewClient(cfg Config, options *ClientOptions) (*Client, error) {
+func NewClient(cfg Config, options *ClientOptions) (*Client, error) { //nolint:gocritic
 	if options == nil {
 		options = &ClientOptions{}
 	}
@@ -89,7 +89,7 @@ func NewClient(cfg Config, options *ClientOptions) (*Client, error) {
 }
 
 // NewDefaultClient creates a client with default options.
-func NewDefaultClient(cfg Config) (*Client, error) {
+func NewDefaultClient(cfg Config) (*Client, error) { //nolint:gocritic
 	return NewClient(cfg, nil)
 }
 

@@ -320,7 +320,7 @@ func TestClient_ValueVariations(t *testing.T) {
 	t.Parallel()
 	values := []struct {
 		name  string
-		value interface{}
+		value any
 	}{
 		{"string", "string"},
 		{"int", 123},
@@ -344,7 +344,7 @@ func TestClient_ValueVariations(t *testing.T) {
 	t.Run("value_type_nil", func(t *testing.T) {
 		t.Parallel()
 		// nil is a valid value in Redis
-		var nilVal interface{} = nil
+		var nilVal any = nil
 		assert.Nil(t, nilVal)
 	})
 }

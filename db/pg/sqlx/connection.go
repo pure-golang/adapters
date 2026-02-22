@@ -17,7 +17,7 @@ type Connection struct {
 }
 
 // Connect создает новое соединение с базой данных PostgreSQL
-func Connect(ctx context.Context, cfg Config) (*Connection, error) {
+func Connect(ctx context.Context, cfg Config) (*Connection, error) { //nolint:gocritic
 	ctx, span := tracer.Start(ctx, "sqlx.Connect")
 	defer span.End()
 

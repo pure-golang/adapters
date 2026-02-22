@@ -8,14 +8,15 @@ import (
 	"sync"
 	"time"
 
-	adaptergrpc "github.com/pure-golang/adapters/grpc"
-	"github.com/pure-golang/adapters/grpc/middleware"
-	"github.com/pure-golang/adapters/logger"
 	"github.com/pkg/errors"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/keepalive"
 	"google.golang.org/grpc/reflection"
+
+	adaptergrpc "github.com/pure-golang/adapters/grpc"
+	"github.com/pure-golang/adapters/grpc/middleware"
+	"github.com/pure-golang/adapters/logger"
 )
 
 const ShutdownTimeout = 15 * time.Second
@@ -103,7 +104,9 @@ func New(c Config, registrationFunc func(*grpc.Server), opts ...ServerOption) *S
 	streamInterceptors = append(streamInterceptors, s.streamInterceptors...)
 
 	// Настройки сервера
-	serverOpts := append(monitoringOpts, s.serverOpts...)
+	serverOpts := make([]grpc.ServerOption, 0, len(monitoringOpts)+len(s.serverOpts))
+	serverOpts = append(serverOpts, monitoringOpts...)
+	serverOpts = append(serverOpts, s.serverOpts...)
 	serverOpts = append(serverOpts,
 		grpc.ChainUnaryInterceptor(unaryInterceptors...),
 		grpc.ChainStreamInterceptor(streamInterceptors...),

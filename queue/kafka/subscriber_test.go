@@ -95,7 +95,7 @@ func (s *KafkaSuite) TestSubscriber_Listen() {
 	// Проверяем что publisher может фактически записать в новую тему
 	// Это заставит publisher обновить метаданные и убедится, что тема готова
 	s.T().Logf("Pinging topic to verify publisher metadata is ready...")
-	for i := 0; i < 20; i++ {
+	for i := range 20 {
 		err = pub.Publish(ctx, queue.Message{Topic: uniqueTopic, Body: "ping"})
 		if err == nil {
 			s.T().Logf("Publisher successfully pinged topic after %d attempts", i+1)

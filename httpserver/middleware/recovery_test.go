@@ -95,7 +95,7 @@ func TestRecovery_WithoutPanic(t *testing.T) {
 	// Create a normal handler
 	successHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("success"))
+		_, _ = w.Write([]byte("success"))
 	})
 
 	handler := Recovery(successHandler)
@@ -255,7 +255,7 @@ func TestRecovery_WithVariousPanicTypes(t *testing.T) {
 	t.Parallel()
 	tests := []struct {
 		name  string
-		panic interface{}
+		panic any
 	}{
 		{name: "string panic", panic: "string panic"},
 		{name: "error panic", panic: assert.AnError},

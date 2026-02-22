@@ -13,17 +13,17 @@ import (
 
 // Querier определяет интерфейс для выполнения запросов к базе данных
 type Querier interface {
-	Get(ctx context.Context, dst interface{}, query string, args ...interface{}) error
-	Select(ctx context.Context, dst interface{}, query string, args ...interface{}) error
-	Exec(ctx context.Context, query string, args ...interface{}) (sql.Result, error)
-	Query(ctx context.Context, query string, args ...interface{}) (*sqlx.Rows, error)
-	QueryRow(ctx context.Context, query string, args ...interface{}) *sqlx.Row
-	NamedExec(ctx context.Context, query string, arg interface{}) (sql.Result, error)
-	NamedQuery(ctx context.Context, query string, arg interface{}) (*sqlx.Rows, error)
+	Get(ctx context.Context, dst any, query string, args ...any) error
+	Select(ctx context.Context, dst any, query string, args ...any) error
+	Exec(ctx context.Context, query string, args ...any) (sql.Result, error)
+	Query(ctx context.Context, query string, args ...any) (*sqlx.Rows, error)
+	QueryRow(ctx context.Context, query string, args ...any) *sqlx.Row
+	NamedExec(ctx context.Context, query string, arg any) (sql.Result, error)
+	NamedQuery(ctx context.Context, query string, arg any) (*sqlx.Rows, error)
 }
 
 // Get выполняет запрос и заполняет одну запись
-func (c *Connection) Get(ctx context.Context, dst interface{}, query string, args ...interface{}) error {
+func (c *Connection) Get(ctx context.Context, dst any, query string, args ...any) error {
 	ctx, cancel := WithTimeout(ctx, c.cfg.QueryTimeout)
 	defer cancel()
 
@@ -42,7 +42,7 @@ func (c *Connection) Get(ctx context.Context, dst interface{}, query string, arg
 }
 
 // Select выполняет запрос и заполняет срез записей
-func (c *Connection) Select(ctx context.Context, dst interface{}, query string, args ...interface{}) error {
+func (c *Connection) Select(ctx context.Context, dst any, query string, args ...any) error {
 	ctx, cancel := WithTimeout(ctx, c.cfg.QueryTimeout)
 	defer cancel()
 
@@ -58,7 +58,7 @@ func (c *Connection) Select(ctx context.Context, dst interface{}, query string, 
 }
 
 // Exec выполняет запрос и возвращает результат
-func (c *Connection) Exec(ctx context.Context, query string, args ...interface{}) (sql.Result, error) {
+func (c *Connection) Exec(ctx context.Context, query string, args ...any) (sql.Result, error) {
 	ctx, cancel := WithTimeout(ctx, c.cfg.QueryTimeout)
 	defer cancel()
 
@@ -74,14 +74,14 @@ func (c *Connection) Exec(ctx context.Context, query string, args ...interface{}
 }
 
 // Query выполняет запрос и возвращает строки результата
-func (c *Connection) Query(ctx context.Context, query string, args ...interface{}) (*sqlx.Rows, error) {
+func (c *Connection) Query(ctx context.Context, query string, args ...any) (*sqlx.Rows, error) {
 	ctx, cancel := WithTimeout(ctx, c.cfg.QueryTimeout)
 	defer cancel()
 
 	ctx, span := c.WithTracing(ctx, "Query", query)
 	defer span.End()
 
-	rows, err := c.DB.QueryxContext(ctx, query, args...)
+	rows, err := c.QueryxContext(ctx, query, args...)
 	if err != nil {
 		span.RecordError(err)
 		return nil, errors.Wrap(err, "failed to execute query")
@@ -90,25 +90,25 @@ func (c *Connection) Query(ctx context.Context, query string, args ...interface{
 }
 
 // QueryRow выполняет запрос и возвращает одну строку результата
-func (c *Connection) QueryRow(ctx context.Context, query string, args ...interface{}) *sqlx.Row {
+func (c *Connection) QueryRow(ctx context.Context, query string, args ...any) *sqlx.Row {
 	ctx, span := c.WithTracing(ctx, "QueryRow", query)
 	defer span.End()
 
 	// Note: We don't apply QueryTimeout here because sqlx.Row is lazy-evaluated.
 	// The query is executed when Scan() is called, so canceling the context here
 	// would cause "context canceled" errors. The caller should manage context lifetime.
-	return c.DB.QueryRowxContext(ctx, query, args...)
+	return c.QueryRowxContext(ctx, query, args...)
 }
 
 // NamedExec выполняет именованный запрос
-func (c *Connection) NamedExec(ctx context.Context, query string, arg interface{}) (sql.Result, error) {
+func (c *Connection) NamedExec(ctx context.Context, query string, arg any) (sql.Result, error) {
 	ctx, cancel := WithTimeout(ctx, c.cfg.QueryTimeout)
 	defer cancel()
 
 	ctx, span := c.WithTracing(ctx, "NamedExec", query)
 	defer span.End()
 
-	result, err := c.DB.NamedExecContext(ctx, query, arg)
+	result, err := c.NamedExecContext(ctx, query, arg)
 	if err != nil {
 		span.RecordError(err)
 		return nil, errors.Wrap(err, "failed to execute named query")
@@ -117,14 +117,14 @@ func (c *Connection) NamedExec(ctx context.Context, query string, arg interface{
 }
 
 // NamedQuery выполняет именованный запрос и возвращает строки результата
-func (c *Connection) NamedQuery(ctx context.Context, query string, arg interface{}) (*sqlx.Rows, error) {
+func (c *Connection) NamedQuery(ctx context.Context, query string, arg any) (*sqlx.Rows, error) {
 	// Не отменяем контекст пока rows не будут закрыты
 	// Вызывающий должен закрыть rows через defer rows.Close()
 	ctx, cancel := WithTimeout(ctx, c.cfg.QueryTimeout)
 
 	ctx, span := c.WithTracing(ctx, "NamedQuery", query)
 
-	rows, err := c.DB.NamedQueryContext(ctx, query, arg)
+	rows, err := c.NamedQueryContext(ctx, query, arg)
 	if err != nil {
 		cancel()
 		span.RecordError(err)

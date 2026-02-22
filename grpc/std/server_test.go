@@ -9,19 +9,20 @@ import (
 	"testing"
 	"time"
 
-	"github.com/pure-golang/adapters/grpc/middleware"
-	"github.com/pure-golang/adapters/logger"
-	"github.com/pure-golang/adapters/logger/noop"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
+
+	"github.com/pure-golang/adapters/grpc/middleware"
+	"github.com/pure-golang/adapters/logger"
+	"github.com/pure-golang/adapters/logger/noop"
 )
 
 // mockServiceDesc is a mock service descriptor for testing
 var mockServiceDesc = grpc.ServiceDesc{
 	ServiceName: "test.MockService",
-	HandlerType: (*interface{})(nil),
+	HandlerType: (*any)(nil),
 	Methods:     []grpc.MethodDesc{},
 	Streams:     []grpc.StreamDesc{},
 	Metadata:    "test.proto",
@@ -132,7 +133,7 @@ func TestNew_WithUnaryInterceptor(t *testing.T) {
 		Port: 9093,
 	}
 
-	mockInterceptor := func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
+	mockInterceptor := func(ctx context.Context, req any, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (any, error) {
 		return handler(ctx, req)
 	}
 
@@ -148,7 +149,7 @@ func TestNew_WithStreamInterceptor(t *testing.T) {
 		Port: 9094,
 	}
 
-	mockInterceptor := func(srv interface{}, ss grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) error {
+	mockInterceptor := func(srv any, ss grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) error {
 		return handler(srv, ss)
 	}
 
@@ -236,11 +237,11 @@ func TestNew_ServerOptionChaining(t *testing.T) {
 		Port: 9099,
 	}
 
-	mockUnary := func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
+	mockUnary := func(ctx context.Context, req any, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (any, error) {
 		return handler(ctx, req)
 	}
 
-	mockStream := func(srv interface{}, ss grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) error {
+	mockStream := func(srv any, ss grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) error {
 		return handler(srv, ss)
 	}
 
@@ -276,16 +277,16 @@ func TestNew_MultipleInterceptors(t *testing.T) {
 
 	s := New(c,
 		func(s *grpc.Server) {},
-		WithUnaryInterceptor(func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
+		WithUnaryInterceptor(func(ctx context.Context, req any, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (any, error) {
 			return handler(ctx, req)
 		}),
-		WithUnaryInterceptor(func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
+		WithUnaryInterceptor(func(ctx context.Context, req any, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (any, error) {
 			return handler(ctx, req)
 		}),
-		WithStreamInterceptor(func(srv interface{}, ss grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) error {
+		WithStreamInterceptor(func(srv any, ss grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) error {
 			return handler(srv, ss)
 		}),
-		WithStreamInterceptor(func(srv interface{}, ss grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) error {
+		WithStreamInterceptor(func(srv any, ss grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) error {
 			return handler(srv, ss)
 		}),
 	)
@@ -407,7 +408,7 @@ func TestServer_Run_StartsInGoroutine(t *testing.T) {
 func TestServer_ImplementsRunableProvider(t *testing.T) {
 	t.Parallel()
 	// Verify Server implements the RunableProvider interface
-	var _ interface{} = (*Server)(nil)
+	var _ any = (*Server)(nil)
 }
 
 func TestShutdownTimeout_Constant(t *testing.T) {
@@ -437,7 +438,7 @@ func TestServer_Start_ListenOnAvailablePort(t *testing.T) {
 	// Start server in a goroutine to avoid blocking
 	startDone := make(chan struct{})
 	go func() {
-		s.Start()
+		_ = s.Start()
 		close(startDone)
 	}()
 
@@ -479,7 +480,7 @@ func TestServer_Close_WithListener(t *testing.T) {
 	// Start the server in a goroutine
 	startDone := make(chan struct{})
 	go func() {
-		s.Start()
+		_ = s.Start()
 		close(startDone)
 	}()
 
@@ -611,7 +612,7 @@ func TestServer_Close_Timeout(t *testing.T) {
 	// Start server in goroutine
 	startDone := make(chan struct{})
 	go func() {
-		s.Start()
+		_ = s.Start()
 		close(startDone)
 	}()
 
@@ -660,7 +661,7 @@ func TestReflection_Disabled(t *testing.T) {
 func TestWithUnaryInterceptor_ReturnsOption(t *testing.T) {
 	t.Parallel()
 	// Test that WithUnaryInterceptor returns a valid ServerOption
-	mockInterceptor := func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
+	mockInterceptor := func(ctx context.Context, req any, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (any, error) {
 		return handler(ctx, req)
 	}
 
@@ -678,7 +679,7 @@ func TestWithUnaryInterceptor_ReturnsOption(t *testing.T) {
 func TestWithStreamInterceptor_ReturnsOption(t *testing.T) {
 	t.Parallel()
 	// Test that WithStreamInterceptor returns a valid ServerOption
-	mockInterceptor := func(srv interface{}, ss grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) error {
+	mockInterceptor := func(srv any, ss grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) error {
 		return handler(srv, ss)
 	}
 
@@ -769,7 +770,7 @@ func TestServer_Start_NetworkErrClosed(t *testing.T) {
 	// Start the server in a goroutine
 	startDone := make(chan struct{})
 	go func() {
-		s.Start()
+		_ = s.Start()
 		close(startDone)
 	}()
 
@@ -968,11 +969,11 @@ func BenchmarkNew_WithOptions(b *testing.B) {
 		Port: 9199,
 	}
 
-	mockUnary := func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
+	mockUnary := func(ctx context.Context, req any, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (any, error) {
 		return handler(ctx, req)
 	}
 
-	mockStream := func(srv interface{}, ss grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) error {
+	mockStream := func(srv any, ss grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) error {
 		return handler(srv, ss)
 	}
 
