@@ -115,7 +115,7 @@ func (s *RabbitMQSuite) TestDefinitions_Apply() {
 	require.NoError(t, err)
 	t.Cleanup(func() { assert.NoError(t, ch.Close()) })
 
-	require.NoError(t, defs.Apply(ch))
+	require.NoError(t, defs.applyDefinitions(ch))
 
 	// Verify queues are accessible by passively declaring them
 	for _, name := range []string{qMain, qDLQ, qRetry} {

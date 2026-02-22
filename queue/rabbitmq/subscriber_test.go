@@ -158,7 +158,7 @@ func (s *RabbitMQSuite) TestSubscriber_Listen_DLQ() {
 
 	ch, err := dialer.Channel()
 	require.NoError(t, err)
-	require.NoError(t, defs.Apply(ch))
+	require.NoError(t, defs.applyDefinitions(ch))
 
 	// Publish a message with x-death count already at MaxRetries so subscriber nacks it to DLQ immediately.
 	maxRetries := 3

@@ -630,7 +630,7 @@ for _, obj := range result.Objects {
 
 `Definitions` mirrors the RabbitMQ management API JSON format:
 - `.JSON()` → `rabbitmq_definitions.json` for docker-compose `load_definitions` / `rabbitmqctl import_definitions`
-- `.Apply(ch *amqp.Channel)` → declare directly via AMQP (integration tests, no Management API needed)
+- `.applyDefinitions(ch *amqp.Channel)` → declare directly via AMQP; test-only helper (defined in `topology_helpers_test.go`)
 
 See `queue/rabbitmq/README.md` for full DLX topology example.
 

@@ -196,7 +196,7 @@ if err != nil {
 }
 defer ch.Close()
 
-if err := defs.Apply(ch); err != nil {
+if err := defs.applyDefinitions(ch); err != nil {
     t.Fatal(err)
 }
 ```
