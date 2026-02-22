@@ -77,7 +77,7 @@
 				
 				<option value="file10">github.com/pure-golang/adapters/env/env.go (100.0%)</option>
 				
-				<option value="file11">github.com/pure-golang/adapters/executor/cli/cli.go (90.7%)</option>
+				<option value="file11">github.com/pure-golang/adapters/executor/cli/cli.go (92.1%)</option>
 				
 				<option value="file12">github.com/pure-golang/adapters/executor/cli/config.go (0.0%)</option>
 				
@@ -89,13 +89,13 @@
 				
 				<option value="file16">github.com/pure-golang/adapters/grpc/middleware/logging.go (100.0%)</option>
 				
-				<option value="file17">github.com/pure-golang/adapters/grpc/middleware/metrics.go (91.1%)</option>
+				<option value="file17">github.com/pure-golang/adapters/grpc/middleware/metrics.go (91.8%)</option>
 				
 				<option value="file18">github.com/pure-golang/adapters/grpc/middleware/monitoring.go (100.0%)</option>
 				
 				<option value="file19">github.com/pure-golang/adapters/grpc/middleware/tracing.go (100.0%)</option>
 				
-				<option value="file20">github.com/pure-golang/adapters/grpc/std/server.go (92.8%)</option>
+				<option value="file20">github.com/pure-golang/adapters/grpc/std/server.go (93.0%)</option>
 				
 				<option value="file21">github.com/pure-golang/adapters/httpserver/middleware/monitoring.go (98.0%)</option>
 				
@@ -127,7 +127,7 @@
 				
 				<option value="file35">github.com/pure-golang/adapters/mail/noop/noop.go (100.0%)</option>
 				
-				<option value="file36">github.com/pure-golang/adapters/mail/smtp/sender.go (73.7%)</option>
+				<option value="file36">github.com/pure-golang/adapters/mail/smtp/sender.go (74.4%)</option>
 				
 				<option value="file37">github.com/pure-golang/adapters/metrics/metrics.go (80.0%)</option>
 				
@@ -139,7 +139,7 @@
 				
 				<option value="file41">github.com/pure-golang/adapters/queue/kafka/dialer.go (100.0%)</option>
 				
-				<option value="file42">github.com/pure-golang/adapters/queue/kafka/publisher.go (89.7%)</option>
+				<option value="file42">github.com/pure-golang/adapters/queue/kafka/publisher.go (89.5%)</option>
 				
 				<option value="file43">github.com/pure-golang/adapters/queue/kafka/subscriber.go (89.7%)</option>
 				
@@ -171,7 +171,7 @@
 				
 				<option value="file57">github.com/pure-golang/adapters/storage/minio/presigned.go (69.7%)</option>
 				
-				<option value="file58">github.com/pure-golang/adapters/storage/minio/storage.go (50.0%)</option>
+				<option value="file58">github.com/pure-golang/adapters/storage/minio/storage.go (49.0%)</option>
 				
 				<option value="file59">github.com/pure-golang/adapters/tracing/jaeger/jaeger.go (72.2%)</option>
 				
@@ -298,8 +298,9 @@ import (
         "log/slog"
         "time"
 
-        "github.com/pure-golang/adapters/logger"
         "github.com/jackc/pgx/v5/tracelog"
+
+        "github.com/pure-golang/adapters/logger"
 )
 
 type Logger struct {
@@ -310,7 +311,7 @@ func NewLogger() *Logger <span class="cov7" title="17">{
         return &amp;Logger{}
 }</span>
 
-func (l *Logger) Log(ctx context.Context, level tracelog.LogLevel, msg string, data map[string]interface{}) <span class="cov8" title="27">{
+func (l *Logger) Log(ctx context.Context, level tracelog.LogLevel, msg string, data map[string]any) <span class="cov8" title="27">{
         if level &lt; l.minLevel </span><span class="cov0" title="0">{
                 return
         }</span>
@@ -375,7 +376,7 @@ type Options struct {
         Tracers []pgx.QueryTracer
 }
 
-func New(cfg Config, options *Options) (*DB, error) <span class="cov10" title="18">{
+func New(cfg Config, options *Options) (*DB, error) <span class="cov10" title="18">{ //nolint:gocritic
         dsn := cfg.URL().String()
         poolCfg, err := pgxpool.ParseConfig(dsn)
         if err != nil </span><span class="cov1" title="1">{
@@ -409,7 +410,7 @@ func New(cfg Config, options *Options) (*DB, error) <span class="cov10" title="1
         <span class="cov0" title="0">return &amp;DB{Pool: pool}, nil</span>
 }
 
-func NewDefault(c Config) (*DB, error) <span class="cov9" title="14">{
+func NewDefault(c Config) (*DB, error) <span class="cov9" title="14">{ //nolint:gocritic
         return New(c, &amp;Options{
                 Tracers: []pgx.QueryTracer{
                         otelpgx.NewTracer(),
@@ -462,7 +463,7 @@ type Connection struct {
 }
 
 // Connect создает новое соединение с базой данных PostgreSQL
-func Connect(ctx context.Context, cfg Config) (*Connection, error) <span class="cov10" title="3">{
+func Connect(ctx context.Context, cfg Config) (*Connection, error) <span class="cov10" title="3">{ //nolint:gocritic
         ctx, span := tracer.Start(ctx, "sqlx.Connect")
         defer span.End()
 
@@ -621,24 +622,24 @@ import (
 
 // Querier определяет интерфейс для выполнения запросов к базе данных
 type Querier interface {
-        Get(ctx context.Context, dst interface{}, query string, args ...interface{}) error
-        Select(ctx context.Context, dst interface{}, query string, args ...interface{}) error
-        Exec(ctx context.Context, query string, args ...interface{}) (sql.Result, error)
-        Query(ctx context.Context, query string, args ...interface{}) (*sqlx.Rows, error)
-        QueryRow(ctx context.Context, query string, args ...interface{}) *sqlx.Row
-        NamedExec(ctx context.Context, query string, arg interface{}) (sql.Result, error)
-        NamedQuery(ctx context.Context, query string, arg interface{}) (*sqlx.Rows, error)
+        Get(ctx context.Context, dst any, query string, args ...any) error
+        Select(ctx context.Context, dst any, query string, args ...any) error
+        Exec(ctx context.Context, query string, args ...any) (sql.Result, error)
+        Query(ctx context.Context, query string, args ...any) (*sqlx.Rows, error)
+        QueryRow(ctx context.Context, query string, args ...any) *sqlx.Row
+        NamedExec(ctx context.Context, query string, arg any) (sql.Result, error)
+        NamedQuery(ctx context.Context, query string, arg any) (*sqlx.Rows, error)
 }
 
 // Get выполняет запрос и заполняет одну запись
-func (c *Connection) Get(ctx context.Context, dst interface{}, query string, args ...interface{}) error <span class="cov4" title="11">{
+func (c *Connection) Get(ctx context.Context, dst any, query string, args ...any) error <span class="cov4" title="11">{
         ctx, cancel := WithTimeout(ctx, c.cfg.QueryTimeout)
         defer cancel()
 
         ctx, span := c.WithTracing(ctx, "Get", query)
         defer span.End()
 
-        err := c.DB.GetContext(ctx, dst, query, args...)
+        err := c.GetContext(ctx, dst, query, args...)
         if err != nil </span><span class="cov2" title="2">{
                 span.RecordError(err)
                 if err == sql.ErrNoRows </span><span class="cov1" title="1">{
@@ -650,14 +651,14 @@ func (c *Connection) Get(ctx context.Context, dst interface{}, query string, arg
 }
 
 // Select выполняет запрос и заполняет срез записей
-func (c *Connection) Select(ctx context.Context, dst interface{}, query string, args ...interface{}) error <span class="cov2" title="2">{
+func (c *Connection) Select(ctx context.Context, dst any, query string, args ...any) error <span class="cov2" title="2">{
         ctx, cancel := WithTimeout(ctx, c.cfg.QueryTimeout)
         defer cancel()
 
         ctx, span := c.WithTracing(ctx, "Select", query)
         defer span.End()
 
-        err := c.DB.SelectContext(ctx, dst, query, args...)
+        err := c.SelectContext(ctx, dst, query, args...)
         if err != nil </span><span class="cov0" title="0">{
                 span.RecordError(err)
                 return errors.Wrap(err, "failed to execute select query")
@@ -666,14 +667,14 @@ func (c *Connection) Select(ctx context.Context, dst interface{}, query string, 
 }
 
 // Exec выполняет запрос и возвращает результат
-func (c *Connection) Exec(ctx context.Context, query string, args ...interface{}) (sql.Result, error) <span class="cov6" title="42">{
+func (c *Connection) Exec(ctx context.Context, query string, args ...any) (sql.Result, error) <span class="cov6" title="42">{
         ctx, cancel := WithTimeout(ctx, c.cfg.QueryTimeout)
         defer cancel()
 
         ctx, span := c.WithTracing(ctx, "Exec", query)
         defer span.End()
 
-        result, err := c.DB.ExecContext(ctx, query, args...)
+        result, err := c.ExecContext(ctx, query, args...)
         if err != nil </span><span class="cov4" title="9">{
                 span.RecordError(err)
                 return nil, errors.Wrap(err, "failed to execute query")
@@ -682,14 +683,14 @@ func (c *Connection) Exec(ctx context.Context, query string, args ...interface{}
 }
 
 // Query выполняет запрос и возвращает строки результата
-func (c *Connection) Query(ctx context.Context, query string, args ...interface{}) (*sqlx.Rows, error) <span class="cov2" title="3">{
+func (c *Connection) Query(ctx context.Context, query string, args ...any) (*sqlx.Rows, error) <span class="cov2" title="3">{
         ctx, cancel := WithTimeout(ctx, c.cfg.QueryTimeout)
         defer cancel()
 
         ctx, span := c.WithTracing(ctx, "Query", query)
         defer span.End()
 
-        rows, err := c.DB.QueryxContext(ctx, query, args...)
+        rows, err := c.QueryxContext(ctx, query, args...)
         if err != nil </span><span class="cov2" title="2">{
                 span.RecordError(err)
                 return nil, errors.Wrap(err, "failed to execute query")
@@ -698,25 +699,25 @@ func (c *Connection) Query(ctx context.Context, query string, args ...interface{
 }
 
 // QueryRow выполняет запрос и возвращает одну строку результата
-func (c *Connection) QueryRow(ctx context.Context, query string, args ...interface{}) *sqlx.Row <span class="cov2" title="3">{
+func (c *Connection) QueryRow(ctx context.Context, query string, args ...any) *sqlx.Row <span class="cov2" title="3">{
         ctx, span := c.WithTracing(ctx, "QueryRow", query)
         defer span.End()
 
         // Note: We don't apply QueryTimeout here because sqlx.Row is lazy-evaluated.
         // The query is executed when Scan() is called, so canceling the context here
         // would cause "context canceled" errors. The caller should manage context lifetime.
-        return c.DB.QueryRowxContext(ctx, query, args...)
+        return c.QueryRowxContext(ctx, query, args...)
 }</span>
 
 // NamedExec выполняет именованный запрос
-func (c *Connection) NamedExec(ctx context.Context, query string, arg interface{}) (sql.Result, error) <span class="cov1" title="1">{
+func (c *Connection) NamedExec(ctx context.Context, query string, arg any) (sql.Result, error) <span class="cov1" title="1">{
         ctx, cancel := WithTimeout(ctx, c.cfg.QueryTimeout)
         defer cancel()
 
         ctx, span := c.WithTracing(ctx, "NamedExec", query)
         defer span.End()
 
-        result, err := c.DB.NamedExecContext(ctx, query, arg)
+        result, err := c.NamedExecContext(ctx, query, arg)
         if err != nil </span><span class="cov0" title="0">{
                 span.RecordError(err)
                 return nil, errors.Wrap(err, "failed to execute named query")
@@ -725,14 +726,14 @@ func (c *Connection) NamedExec(ctx context.Context, query string, arg interface{
 }
 
 // NamedQuery выполняет именованный запрос и возвращает строки результата
-func (c *Connection) NamedQuery(ctx context.Context, query string, arg interface{}) (*sqlx.Rows, error) <span class="cov2" title="2">{
+func (c *Connection) NamedQuery(ctx context.Context, query string, arg any) (*sqlx.Rows, error) <span class="cov2" title="2">{
         // Не отменяем контекст пока rows не будут закрыты
         // Вызывающий должен закрыть rows через defer rows.Close()
         ctx, cancel := WithTimeout(ctx, c.cfg.QueryTimeout)
 
         ctx, span := c.WithTracing(ctx, "NamedQuery", query)
 
-        rows, err := c.DB.NamedQueryContext(ctx, query, arg)
+        rows, err := c.NamedQueryContext(ctx, query, arg)
         if err != nil </span><span class="cov0" title="0">{
                 cancel()
                 span.RecordError(err)
@@ -892,7 +893,7 @@ func (c *Connection) BeginTx(ctx context.Context, opts *TxOptions) (*Tx, error) 
                 }
         }</span>
 
-        <span class="cov10" title="113">tx, err := c.DB.BeginTxx(ctx, txOpts)
+        <span class="cov10" title="113">tx, err := c.BeginTxx(ctx, txOpts)
         if err != nil </span><span class="cov0" title="0">{
                 return nil, errors.Wrap(err, "failed to begin transaction")
         }</span>
@@ -967,7 +968,7 @@ func (tx *Tx) Rollback() error <span class="cov3" title="4">{
 }
 
 // Get выполняет запрос в транзакции и заполняет одну запись
-func (tx *Tx) Get(ctx context.Context, dst interface{}, query string, args ...interface{}) error <span class="cov9" title="106">{
+func (tx *Tx) Get(ctx context.Context, dst any, query string, args ...any) error <span class="cov9" title="106">{
         ctx, cancel := WithTimeout(ctx, tx.cfg.QueryTimeout)
         defer cancel()
 
@@ -986,7 +987,7 @@ func (tx *Tx) Get(ctx context.Context, dst interface{}, query string, args ...in
 }
 
 // Select выполняет запрос в транзакции и заполняет срез записей
-func (tx *Tx) Select(ctx context.Context, dst interface{}, query string, args ...interface{}) error <span class="cov1" title="1">{
+func (tx *Tx) Select(ctx context.Context, dst any, query string, args ...any) error <span class="cov1" title="1">{
         ctx, cancel := WithTimeout(ctx, tx.cfg.QueryTimeout)
         defer cancel()
 
@@ -1002,7 +1003,7 @@ func (tx *Tx) Select(ctx context.Context, dst interface{}, query string, args ..
 }
 
 // Exec выполняет запрос в транзакции и возвращает результат
-func (tx *Tx) Exec(ctx context.Context, query string, args ...interface{}) (sql.Result, error) <span class="cov9" title="110">{
+func (tx *Tx) Exec(ctx context.Context, query string, args ...any) (sql.Result, error) <span class="cov9" title="110">{
         ctx, cancel := WithTimeout(ctx, tx.cfg.QueryTimeout)
         defer cancel()
 
@@ -1018,7 +1019,7 @@ func (tx *Tx) Exec(ctx context.Context, query string, args ...interface{}) (sql.
 }
 
 // Query выполняет запрос в транзакции и возвращает строки результата
-func (tx *Tx) Query(ctx context.Context, query string, args ...interface{}) (*sqlx.Rows, error) <span class="cov0" title="0">{
+func (tx *Tx) Query(ctx context.Context, query string, args ...any) (*sqlx.Rows, error) <span class="cov0" title="0">{
         ctx, cancel := WithTimeout(ctx, tx.cfg.QueryTimeout)
         defer cancel()
 
@@ -1037,7 +1038,7 @@ func (tx *Tx) Query(ctx context.Context, query string, args ...interface{}) (*sq
 // Note: This method returns a lazy *sqlx.Row. The query is executed when Scan() is called.
 // The context timeout is applied per the original context, as we cannot defer cleanup
 // before Scan() is called by the caller.
-func (tx *Tx) QueryRow(ctx context.Context, query string, args ...interface{}) *sqlx.Row <span class="cov1" title="1">{
+func (tx *Tx) QueryRow(ctx context.Context, query string, args ...any) *sqlx.Row <span class="cov1" title="1">{
         ctx, span := tx.WithTracing(ctx, "QueryRow", query)
         // End the span after the row is created (the actual query happens during Scan)
         // This is a limitation of the lazy evaluation pattern in sqlx.Row
@@ -1105,7 +1106,7 @@ type Executor struct {
 }
 
 // New создаёт новый CLI executor
-func New(cfg Config, stdout, stderr io.Writer) *Executor <span class="cov7" title="33">{
+func New(cfg Config, stdout, stderr io.Writer) *Executor <span class="cov7" title="33">{ //nolint:gocritic
         var tmpStdout io.Writer
         if stdout == nil </span><span class="cov7" title="32">{
                 tmpStdout = os.Stdout
@@ -1170,17 +1171,16 @@ func (e *Executor) Execute(ctx context.Context, args ...string) error <span clas
                 return errors.New("executor is closed")
         }</span>
         // Создание команды
-        <span class="cov9" title="133">var cmd *exec.Cmd
+        <span class="cov9" title="133">var tmpCmd string
+        var tmpArgs []string
         if e.ssh.Host != "" </span><span class="cov0" title="0">{
-                sshCmd, sshArgs := e.buildSSHCommand(args...)
-                //nolint:gosec // G204: Subprocess launched with a potential tainted input or cmd arguments - validated in Start()
-                cmd = exec.CommandContext(ctx, sshCmd, sshArgs...)
+                tmpCmd, tmpArgs = e.buildSSHCommand(args...)
         }</span> else<span class="cov9" title="133"> {
-                //nolint:gosec // G204: Subprocess launched with a potential tainted input or cmd arguments - e.cmd is validated in Start(), args are user-controlled but not shell-expanded
-                cmd = exec.CommandContext(ctx, e.cmd, args...)
+                tmpCmd, tmpArgs = e.cmd, args
         }</span>
-        <span class="cov9" title="133">cmd.Stdout = e.stdout
-        cmd.Stderr = e.stderr
+        <span class="cov9" title="133">execCmd := exec.CommandContext(ctx, tmpCmd, tmpArgs...)
+        execCmd.Stdout = e.stdout
+        execCmd.Stderr = e.stderr
         e.mx.Unlock()
 
         e.logger.Info("executing command", "command", e.cmd, "args", args)
@@ -1189,7 +1189,7 @@ func (e *Executor) Execute(ctx context.Context, args ...string) error <span clas
         defer span.End()
 
         startTime := time.Now()
-        err := cmd.Run()
+        err := execCmd.Run()
         duration := time.Since(startTime).Seconds()
 
         if err != nil </span><span class="cov3" title="3">{
@@ -1398,7 +1398,7 @@ import (
 
 // LoggingInterceptor создает интерцептор для логирования gRPC запросов
 func LoggingInterceptor(logger *slog.Logger) grpc.UnaryServerInterceptor <span class="cov10" title="60">{
-        return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) </span><span class="cov6" title="12">{
+        return func(ctx context.Context, req any, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (any, error) </span><span class="cov6" title="12">{
                 start := time.Now()
                 resp, err := handler(ctx, req)
                 duration := time.Since(start)
@@ -1427,7 +1427,7 @@ func LoggingInterceptor(logger *slog.Logger) grpc.UnaryServerInterceptor <span c
 
 // RecoveryInterceptor создает интерцептор для восстановления после паники
 func RecoveryInterceptor(logger *slog.Logger) grpc.UnaryServerInterceptor <span class="cov9" title="51">{
-        return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp interface{}, err error) </span><span class="cov5" title="7">{
+        return func(ctx context.Context, req any, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp any, err error) </span><span class="cov5" title="7">{
                 defer func() </span><span class="cov5" title="7">{
                         if r := recover(); r != nil </span><span class="cov4" title="5">{
                                 logger.ErrorContext(ctx, "Recovered from panic in gRPC handler",
@@ -1443,7 +1443,7 @@ func RecoveryInterceptor(logger *slog.Logger) grpc.UnaryServerInterceptor <span 
 
 // LoggingStreamInterceptor создает интерцептор для логирования потоковых gRPC запросов
 func LoggingStreamInterceptor(logger *slog.Logger) grpc.StreamServerInterceptor <span class="cov9" title="53">{
-        return func(srv interface{}, ss grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) error </span><span class="cov4" title="6">{
+        return func(srv any, ss grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) error </span><span class="cov4" title="6">{
                 start := time.Now()
                 err := handler(srv, ss)
                 duration := time.Since(start)
@@ -1473,7 +1473,7 @@ func LoggingStreamInterceptor(logger *slog.Logger) grpc.StreamServerInterceptor 
 
 // RecoveryStreamInterceptor создает интерцептор для восстановления в потоковых запросах
 func RecoveryStreamInterceptor(logger *slog.Logger) grpc.StreamServerInterceptor <span class="cov9" title="50">{
-        return func(srv interface{}, ss grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) (err error) </span><span class="cov3" title="3">{
+        return func(srv any, ss grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) (err error) </span><span class="cov3" title="3">{
                 defer func() </span><span class="cov3" title="3">{
                         if r := recover(); r != nil </span><span class="cov2" title="2">{
                                 logger.ErrorContext(ss.Context(), "Recovered from panic in gRPC stream handler",
@@ -1552,7 +1552,7 @@ func init() <span class="cov2" title="2">{
 }
 
 // getMessageSize возвращает размер protobuf сообщения в байтах
-func getMessageSize(msg interface{}) int64 <span class="cov10" title="71">{
+func getMessageSize(msg any) int64 <span class="cov10" title="71">{
         if pm, ok := msg.(proto.Message); ok </span><span class="cov8" title="37">{
                 return int64(proto.Size(pm))
         }</span>
@@ -1561,7 +1561,7 @@ func getMessageSize(msg interface{}) int64 <span class="cov10" title="71">{
 
 // MetricsUnaryInterceptor создает интерцептор для метрик gRPC запросов
 func MetricsUnaryInterceptor() grpc.UnaryServerInterceptor <span class="cov9" title="59">{
-        return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) </span><span class="cov8" title="29">{
+        return func(ctx context.Context, req any, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (any, error) </span><span class="cov8" title="29">{
                 startTime := time.Now()
 
                 // Измеряем размер запроса
@@ -1590,7 +1590,9 @@ func MetricsUnaryInterceptor() grpc.UnaryServerInterceptor <span class="cov9" ti
 
                 // Добавляем код статуса
                 statusCode := status.Code(err)
-                statusAttrs := append(metricAttrs, attribute.String("grpc.status", statusCode.String()))
+                statusAttrs := make([]attribute.KeyValue, 0, len(metricAttrs)+1)
+                statusAttrs = append(statusAttrs, metricAttrs...)
+                statusAttrs = append(statusAttrs, attribute.String("grpc.status", statusCode.String()))
                 requestsCount.Add(ctx, 1, metric.WithAttributes(statusAttrs...))
 
                 return resp, err
@@ -1599,7 +1601,7 @@ func MetricsUnaryInterceptor() grpc.UnaryServerInterceptor <span class="cov9" ti
 
 // MetricsStreamInterceptor создает интерцептор для метрик потоковых gRPC запросов
 func MetricsStreamInterceptor() grpc.StreamServerInterceptor <span class="cov9" title="55">{
-        return func(srv interface{}, ss grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) error </span><span class="cov6" title="13">{
+        return func(srv any, ss grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) error </span><span class="cov6" title="13">{
                 startTime := time.Now()
 
                 // Определяем тип потока
@@ -1625,7 +1627,9 @@ func MetricsStreamInterceptor() grpc.StreamServerInterceptor <span class="cov9" 
 
                 // Добавляем код статуса
                 statusCode := status.Code(err)
-                statusAttrs := append(metricAttrs, attribute.String("grpc.status", statusCode.String()))
+                statusAttrs := make([]attribute.KeyValue, 0, len(metricAttrs)+1)
+                statusAttrs = append(statusAttrs, metricAttrs...)
+                statusAttrs = append(statusAttrs, attribute.String("grpc.status", statusCode.String()))
                 requestsCount.Add(ss.Context(), 1, metric.WithAttributes(statusAttrs...))
 
                 return err</span>
@@ -1758,7 +1762,7 @@ func (s metadataSupplier) Keys() []string <span class="cov3" title="3">{
 
 // TracingUnaryInterceptor создает интерцептор для трассировки унарных RPC
 func TracingUnaryInterceptor() grpc.UnaryServerInterceptor <span class="cov9" title="55">{
-        return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) </span><span class="cov7" title="19">{
+        return func(ctx context.Context, req any, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (any, error) </span><span class="cov7" title="19">{
                 // Извлекаем метаданные
                 md, ok := metadata.FromIncomingContext(ctx)
                 if !ok </span><span class="cov7" title="18">{
@@ -1824,7 +1828,7 @@ func TracingUnaryInterceptor() grpc.UnaryServerInterceptor <span class="cov9" ti
 
 // TracingStreamInterceptor создает интерцептор для трассировки потоковых RPC
 func TracingStreamInterceptor() grpc.StreamServerInterceptor <span class="cov9" title="54">{
-        return func(srv interface{}, ss grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) error </span><span class="cov5" title="7">{
+        return func(srv any, ss grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) error </span><span class="cov5" title="7">{
                 // Извлекаем метаданные
                 ctx := ss.Context()
                 md, ok := metadata.FromIncomingContext(ctx)
@@ -1943,14 +1947,15 @@ import (
         "sync"
         "time"
 
-        adaptergrpc "github.com/pure-golang/adapters/grpc"
-        "github.com/pure-golang/adapters/grpc/middleware"
-        "github.com/pure-golang/adapters/logger"
         "github.com/pkg/errors"
         "google.golang.org/grpc"
         "google.golang.org/grpc/credentials"
         "google.golang.org/grpc/keepalive"
         "google.golang.org/grpc/reflection"
+
+        adaptergrpc "github.com/pure-golang/adapters/grpc"
+        "github.com/pure-golang/adapters/grpc/middleware"
+        "github.com/pure-golang/adapters/logger"
 )
 
 const ShutdownTimeout = 15 * time.Second
@@ -2038,7 +2043,9 @@ func New(c Config, registrationFunc func(*grpc.Server), opts ...ServerOption) *S
         streamInterceptors = append(streamInterceptors, s.streamInterceptors...)
 
         // Настройки сервера
-        serverOpts := append(monitoringOpts, s.serverOpts...)
+        serverOpts := make([]grpc.ServerOption, 0, len(monitoringOpts)+len(s.serverOpts))
+        serverOpts = append(serverOpts, monitoringOpts...)
+        serverOpts = append(serverOpts, s.serverOpts...)
         serverOpts = append(serverOpts,
                 grpc.ChainUnaryInterceptor(unaryInterceptors...),
                 grpc.ChainStreamInterceptor(streamInterceptors...),
@@ -2156,15 +2163,15 @@ import (
         "strings"
         "time"
 
-        "github.com/pure-golang/adapters/logger"
-        "go.opentelemetry.io/otel/metric"
-
         "go.opentelemetry.io/otel"
         "go.opentelemetry.io/otel/attribute"
         "go.opentelemetry.io/otel/codes"
+        "go.opentelemetry.io/otel/metric"
         "go.opentelemetry.io/otel/propagation"
         semconv "go.opentelemetry.io/otel/semconv/v1.12.0"
         "go.opentelemetry.io/otel/trace"
+
+        "github.com/pure-golang/adapters/logger"
 )
 
 var (
@@ -2303,7 +2310,7 @@ func Recovery(next http.Handler) http.Handler <span class="cov5" title="27">{
 
                         <span class="cov5" title="25">rawStack := strings.ReplaceAll(string(debug.Stack()), "\t", "")
                         var stack []string
-                        for _, line := range strings.Split(rawStack, "\n") </span><span class="cov10" title="596">{
+                        for line := range strings.SplitSeq(rawStack, "\n") </span><span class="cov10" title="596">{
                                 if line != "" </span><span class="cov9" title="571">{
                                         stack = append(stack, line)
                                 }</span>
@@ -2332,6 +2339,7 @@ import (
         "time"
 
         "github.com/pkg/errors"
+
         "github.com/pure-golang/adapters/httpserver"
 )
 
@@ -2361,7 +2369,7 @@ func NewDefault(c Config, h http.Handler) *Server <span class="cov1" title="1">{
         return s
 }</span>
 
-func New(c Config, h http.Handler /*ext: option functions*/) *Server <span class="cov10" title="16">{
+func New(c Config, h http.Handler /* ext: option functions */) *Server <span class="cov10" title="16">{
         return &amp;Server{
                 server: &amp;http.Server{
                         Addr:              fmt.Sprintf("%s:%d", c.Host, c.Port),
@@ -2418,10 +2426,11 @@ import (
         "context"
         "time"
 
+        "github.com/pkg/errors"
+
         "github.com/pure-golang/adapters/env"
         "github.com/pure-golang/adapters/kv/noop"
         "github.com/pure-golang/adapters/kv/redis"
-        "github.com/pkg/errors"
 )
 
 // Provider определяет тип key-value хранилища
@@ -2450,7 +2459,7 @@ type Config struct {
 type Store interface {
         // Базовые операции
         Get(ctx context.Context, key string) (string, error)
-        Set(ctx context.Context, key string, value interface{}, expiration time.Duration) error
+        Set(ctx context.Context, key string, value any, expiration time.Duration) error
         Delete(ctx context.Context, keys ...string) error
         Exists(ctx context.Context, keys ...string) (int64, error)
 
@@ -2464,22 +2473,22 @@ type Store interface {
 
         // Hash операции
         HGet(ctx context.Context, key, field string) (string, error)
-        HSet(ctx context.Context, key, field string, value interface{}) error
+        HSet(ctx context.Context, key, field string, value any) error
         HGetAll(ctx context.Context, key string) (map[string]string, error)
         HDel(ctx context.Context, key string, fields ...string) error
 
         // List операции
-        LPush(ctx context.Context, key string, values ...interface{}) error
-        RPush(ctx context.Context, key string, values ...interface{}) error
+        LPush(ctx context.Context, key string, values ...any) error
+        RPush(ctx context.Context, key string, values ...any) error
         LPop(ctx context.Context, key string) (string, error)
         RPop(ctx context.Context, key string) (string, error)
         LLen(ctx context.Context, key string) (int64, error)
 
         // Set операции
-        SAdd(ctx context.Context, key string, members ...interface{}) error
+        SAdd(ctx context.Context, key string, members ...any) error
         SMembers(ctx context.Context, key string) ([]string, error)
-        SIsMember(ctx context.Context, key string, member interface{}) (bool, error)
-        SRem(ctx context.Context, key string, members ...interface{}) error
+        SIsMember(ctx context.Context, key string, member any) (bool, error)
+        SRem(ctx context.Context, key string, members ...any) error
 
         // Подключение
         Ping(ctx context.Context) error
@@ -2540,7 +2549,7 @@ func (s *Store) Get(ctx context.Context, key string) (string, error) <span class
 }</span>
 
 // Set не выполняет операций
-func (s *Store) Set(ctx context.Context, key string, value interface{}, expiration time.Duration) error <span class="cov6" title="3">{
+func (s *Store) Set(ctx context.Context, key string, value any, expiration time.Duration) error <span class="cov6" title="3">{
         return nil
 }</span>
 
@@ -2580,7 +2589,7 @@ func (s *Store) HGet(ctx context.Context, key, field string) (string, error) <sp
 }</span>
 
 // HSet не выполняет операций
-func (s *Store) HSet(ctx context.Context, key, field string, value interface{}) error <span class="cov6" title="3">{
+func (s *Store) HSet(ctx context.Context, key, field string, value any) error <span class="cov6" title="3">{
         return nil
 }</span>
 
@@ -2595,12 +2604,12 @@ func (s *Store) HDel(ctx context.Context, key string, fields ...string) error <s
 }</span>
 
 // LPush не выполняет операций
-func (s *Store) LPush(ctx context.Context, key string, values ...interface{}) error <span class="cov6" title="3">{
+func (s *Store) LPush(ctx context.Context, key string, values ...any) error <span class="cov6" title="3">{
         return nil
 }</span>
 
 // RPush не выполняет операций
-func (s *Store) RPush(ctx context.Context, key string, values ...interface{}) error <span class="cov6" title="3">{
+func (s *Store) RPush(ctx context.Context, key string, values ...any) error <span class="cov6" title="3">{
         return nil
 }</span>
 
@@ -2620,7 +2629,7 @@ func (s *Store) LLen(ctx context.Context, key string) (int64, error) <span class
 }</span>
 
 // SAdd не выполняет операций
-func (s *Store) SAdd(ctx context.Context, key string, members ...interface{}) error <span class="cov6" title="3">{
+func (s *Store) SAdd(ctx context.Context, key string, members ...any) error <span class="cov6" title="3">{
         return nil
 }</span>
 
@@ -2630,12 +2639,12 @@ func (s *Store) SMembers(ctx context.Context, key string) ([]string, error) <spa
 }</span>
 
 // SIsMember возвращает false без выполнения операций
-func (s *Store) SIsMember(ctx context.Context, key string, member interface{}) (bool, error) <span class="cov6" title="3">{
+func (s *Store) SIsMember(ctx context.Context, key string, member any) (bool, error) <span class="cov6" title="3">{
         return false, nil
 }</span>
 
 // SRem не выполняет операций
-func (s *Store) SRem(ctx context.Context, key string, members ...interface{}) error <span class="cov6" title="3">{
+func (s *Store) SRem(ctx context.Context, key string, members ...any) error <span class="cov6" title="3">{
         return nil
 }</span>
 
@@ -2654,9 +2663,8 @@ func (s *Store) Close() error <span class="cov7" title="4">{
 
 import (
         "context"
-        "time"
-
         "log/slog"
+        "time"
 
         "github.com/pkg/errors"
         rclient "github.com/redis/go-redis/v9"
@@ -2671,7 +2679,7 @@ type Client struct {
 }
 
 // Connect создаёт новое подключение к Redis
-func Connect(ctx context.Context, cfg Config) (*Client, error) <span class="cov6" title="17">{
+func Connect(ctx context.Context, cfg Config) (*Client, error) <span class="cov6" title="17">{ //nolint:gocritic
         logger := newLogger(nil)
         logger.Debug("connecting to redis", "addr", cfg.Addr)
 
@@ -2760,7 +2768,7 @@ func (c *Client) Get(ctx context.Context, key string) (string, error) <span clas
 }
 
 // Set устанавливает значение по ключу с опциональным TTL
-func (c *Client) Set(ctx context.Context, key string, value interface{}, expiration time.Duration) error <span class="cov5" title="8">{
+func (c *Client) Set(ctx context.Context, key string, value any, expiration time.Duration) error <span class="cov5" title="8">{
         ctx, span := startSpan(ctx, "Set", key, c.cfg.DB)
         defer span.End()
 
@@ -2889,7 +2897,7 @@ func (c *Client) HGet(ctx context.Context, key, field string) (string, error) <s
 }
 
 // HSet устанавливает значение поля в хеше
-func (c *Client) HSet(ctx context.Context, key, field string, value interface{}) error <span class="cov2" title="2">{
+func (c *Client) HSet(ctx context.Context, key, field string, value any) error <span class="cov2" title="2">{
         ctx, span := startSpan(ctx, "HSet", key, c.cfg.DB)
         defer span.End()
 
@@ -2936,7 +2944,7 @@ func (c *Client) HDel(ctx context.Context, key string, fields ...string) error <
 }
 
 // LPush добавляет значения в начало списка
-func (c *Client) LPush(ctx context.Context, key string, values ...interface{}) error <span class="cov3" title="3">{
+func (c *Client) LPush(ctx context.Context, key string, values ...any) error <span class="cov3" title="3">{
         ctx, span := startSpan(ctx, "LPush", key, c.cfg.DB)
         defer span.End()
 
@@ -2954,7 +2962,7 @@ func (c *Client) LPush(ctx context.Context, key string, values ...interface{}) e
 }
 
 // RPush добавляет значения в конец списка
-func (c *Client) RPush(ctx context.Context, key string, values ...interface{}) error <span class="cov3" title="3">{
+func (c *Client) RPush(ctx context.Context, key string, values ...any) error <span class="cov3" title="3">{
         ctx, span := startSpan(ctx, "RPush", key, c.cfg.DB)
         defer span.End()
 
@@ -3025,7 +3033,7 @@ func (c *Client) LLen(ctx context.Context, key string) (int64, error) <span clas
 }
 
 // SAdd добавляет члены в множество
-func (c *Client) SAdd(ctx context.Context, key string, members ...interface{}) error <span class="cov3" title="3">{
+func (c *Client) SAdd(ctx context.Context, key string, members ...any) error <span class="cov3" title="3">{
         ctx, span := startSpan(ctx, "SAdd", key, c.cfg.DB)
         defer span.End()
 
@@ -3058,7 +3066,7 @@ func (c *Client) SMembers(ctx context.Context, key string) ([]string, error) <sp
 }
 
 // SIsMember проверяет наличие элемента в множестве
-func (c *Client) SIsMember(ctx context.Context, key string, member interface{}) (bool, error) <span class="cov2" title="2">{
+func (c *Client) SIsMember(ctx context.Context, key string, member any) (bool, error) <span class="cov2" title="2">{
         ctx, span := startSpan(ctx, "SIsMember", key, c.cfg.DB)
         defer span.End()
 
@@ -3073,7 +3081,7 @@ func (c *Client) SIsMember(ctx context.Context, key string, member interface{}) 
 }
 
 // SRem удаляет члены из множества
-func (c *Client) SRem(ctx context.Context, key string, members ...interface{}) error <span class="cov3" title="3">{
+func (c *Client) SRem(ctx context.Context, key string, members ...any) error <span class="cov3" title="3">{
         ctx, span := startSpan(ctx, "SRem", key, c.cfg.DB)
         defer span.End()
 
@@ -3113,7 +3121,7 @@ type Config struct {
 }
 
 // NewDefault создаёт Config с значениями по умолчанию
-func NewDefault(cfg Config) (*Client, error) <span class="cov10" title="3">{
+func NewDefault(cfg Config) (*Client, error) <span class="cov10" title="3">{ //nolint:gocritic
         if cfg.Addr == "" </span><span class="cov0" title="0">{
                 cfg.Addr = "localhost:6379"
         }</span>
@@ -3256,11 +3264,12 @@ import (
         "context"
         "log/slog"
 
+        "github.com/pkg/errors"
+        "go.opentelemetry.io/otel"
+
         "github.com/pure-golang/adapters/logger/devslog"
         "github.com/pure-golang/adapters/logger/noop"
         "github.com/pure-golang/adapters/logger/stdjson"
-        "github.com/pkg/errors"
-        "go.opentelemetry.io/otel"
 )
 
 type Level string
@@ -3462,12 +3471,12 @@ import (
         "sync"
         "time"
 
-        "github.com/pure-golang/adapters/mail"
-
         "github.com/pkg/errors"
         "go.opentelemetry.io/otel/attribute"
         "go.opentelemetry.io/otel/codes"
         "go.opentelemetry.io/otel/trace"
+
+        "github.com/pure-golang/adapters/mail"
 )
 
 var _ mail.Sender = (*Sender)(nil)
@@ -3485,7 +3494,7 @@ type SenderOptions struct {
 }
 
 // NewSender creates a new SMTP Sender.
-func NewSender(cfg Config, options *SenderOptions) *Sender <span class="cov9" title="75">{
+func NewSender(cfg Config, options *SenderOptions) *Sender <span class="cov9" title="75">{ //nolint:gocritic
         return &amp;Sender{
                 cfg:    cfg,
                 closed: false,
@@ -3503,7 +3512,7 @@ func (s *Sender) Send(ctx context.Context, emails ...mail.Email) error <span cla
 }
 
 // send sends a single email.
-func (s *Sender) send(ctx context.Context, email mail.Email) error <span class="cov7" title="35">{
+func (s *Sender) send(ctx context.Context, email mail.Email) error <span class="cov7" title="35">{ //nolint:gocritic
         ctx, span := tracer.Start(ctx, "SMTP.Send", trace.WithSpanKind(trace.SpanKindClient))
         defer span.End()
 
@@ -3555,7 +3564,9 @@ func (s *Sender) send(ctx context.Context, email mail.Email) error <span class="
                 auth = smtp.PlainAuth("", s.cfg.Username, s.cfg.Password, s.cfg.Host)
         }</span>
 
-        <span class="cov7" title="31">allTo := append(toAddresses, ccAddresses...)
+        <span class="cov7" title="31">allTo := make([]string, 0, len(toAddresses)+len(ccAddresses))
+        allTo = append(allTo, toAddresses...)
+        allTo = append(allTo, ccAddresses...)
 
         maxRetries := s.cfg.MaxRetries
         if maxRetries &lt;= 0 </span><span class="cov7" title="31">{
@@ -3660,7 +3671,9 @@ func (s *Sender) sendMail(ctx context.Context, addr string, auth smtp.Auth, from
         }</span>
 
         // Set recipients
-        <span class="cov5" title="10">allRecipients := append(to, bcc...)
+        <span class="cov5" title="10">allRecipients := make([]string, 0, len(to)+len(bcc))
+        allRecipients = append(allRecipients, to...)
+        allRecipients = append(allRecipients, bcc...)
         for _, addr := range allRecipients </span><span class="cov5" title="13">{
                 if err := client.Rcpt(addr); err != nil </span><span class="cov0" title="0">{
                         span.RecordError(err)
@@ -3772,7 +3785,9 @@ func (s *Sender) sendMailWithTLS(ctx context.Context, addr string, auth smtp.Aut
         }</span>
 
         // Set recipients
-        <span class="cov4" title="7">allRecipients := append(to, bcc...)
+        <span class="cov4" title="7">allRecipients := make([]string, 0, len(to)+len(bcc))
+        allRecipients = append(allRecipients, to...)
+        allRecipients = append(allRecipients, bcc...)
         for _, addr := range allRecipients </span><span class="cov5" title="10">{
                 if err := client.Rcpt(addr); err != nil </span><span class="cov0" title="0">{
                         span.RecordError(err)
@@ -3806,7 +3821,7 @@ func (s *Sender) sendMailWithTLS(ctx context.Context, addr string, auth smtp.Aut
 }
 
 // buildMessage builds the raw email message.
-func (s *Sender) buildMessage(email mail.Email) []byte <span class="cov8" title="46">{
+func (s *Sender) buildMessage(email mail.Email) []byte <span class="cov8" title="46">{ //nolint:gocritic
         var msg strings.Builder
 
         // Headers
@@ -4127,10 +4142,9 @@ func (d *Dialer) GetBrokers() []string <span class="cov3" title="3">{
 
 import (
         "context"
+        "maps"
         "sync"
 
-        "github.com/pure-golang/adapters/queue"
-        "github.com/pure-golang/adapters/queue/encoders"
         "github.com/google/uuid"
         "github.com/pkg/errors"
         "github.com/segmentio/kafka-go"
@@ -4138,6 +4152,9 @@ import (
         "go.opentelemetry.io/otel/attribute"
         "go.opentelemetry.io/otel/codes"
         "go.opentelemetry.io/otel/trace"
+
+        "github.com/pure-golang/adapters/queue"
+        "github.com/pure-golang/adapters/queue/encoders"
 )
 
 var _ queue.Publisher = (*Publisher)(nil)
@@ -4220,12 +4237,10 @@ func (p *Publisher) publish(ctx context.Context, msg queue.Message) error <span 
 
         // Копируем заголовки и добавляем трейсинг
         headers := make(map[string]string)
-        for k, v := range msg.Headers </span><span class="cov3" title="2">{
-                headers[k] = v
-        }</span>
+        maps.Copy(headers, msg.Headers)
 
         // Внедряем трейсинг в заголовки
-        <span class="cov8" title="10">prop.Inject(ctx, headersCarrier(headers))
+        prop.Inject(ctx, headersCarrier(headers))
         for k, v := range headers </span><span class="cov3" title="2">{
                 kafkaMsg.Headers = append(kafkaMsg.Headers, kafka.Header{Key: k, Value: []byte(v)})
         }</span>
@@ -4311,7 +4326,6 @@ import (
         "sync"
         "time"
 
-        "github.com/pure-golang/adapters/queue"
         "github.com/google/uuid"
         "github.com/pkg/errors"
         "github.com/segmentio/kafka-go"
@@ -4319,6 +4333,8 @@ import (
         "go.opentelemetry.io/otel/attribute"
         "go.opentelemetry.io/otel/codes"
         "go.opentelemetry.io/otel/trace"
+
+        "github.com/pure-golang/adapters/queue"
 )
 
 const (
@@ -4464,7 +4480,7 @@ func (s *Subscriber) listen(handler queue.Handler) (bool, error) <span class="co
 }
 
 // handleMessageWithRetry обрабатывает одно сообщение с retry в рамках одной сессии
-func (s *Subscriber) handleMessageWithRetry(msg kafka.Message, handler queue.Handler) error <span class="cov8" title="11">{
+func (s *Subscriber) handleMessageWithRetry(msg kafka.Message, handler queue.Handler) error <span class="cov8" title="11">{ //nolint:gocritic
         var lastErr error
         maxAttempts := s.cfg.MaxTryNum
 
@@ -4490,7 +4506,7 @@ func (s *Subscriber) handleMessageWithRetry(msg kafka.Message, handler queue.Han
 
                 <span class="cov8" title="12">span.SetAttributes(
                         attribute.String("topic", msg.Topic),
-                        attribute.Int("partition", int(msg.Partition)),
+                        attribute.Int("partition", msg.Partition),
                         attribute.Int64("offset", msg.Offset),
                         attribute.Int("body_size", len(msg.Value)),
                         attribute.Int("headers_count", len(msg.Headers)),
@@ -4823,11 +4839,10 @@ func (d *Dialer) handleReconnect(ch chan *amqp.Error) <span class="cov8" title="
                 if stop </span><span class="cov0" title="0">{
                         d.options.Logger.With("error", err.Error()).Error("Cannot to connect to rabbitmq. Time is out")
                         return
-                }</span> else<span class="cov7" title="18"> {
-                        d.options.Logger.With("error", err.Error()).Error("Failed to connect")
                 }</span>
+                <span class="cov7" title="18">d.options.Logger.With("error", err.Error()).Error("Failed to connect")
 
-                <span class="cov7" title="18">time.Sleep(sleepDuration)</span>
+                time.Sleep(sleepDuration)</span>
         }
 }
 </pre>
@@ -4904,14 +4919,15 @@ import (
         "sync"
         "time"
 
-        "github.com/pure-golang/adapters/queue"
-        "github.com/pure-golang/adapters/queue/encoders"
         "github.com/google/uuid"
         amqp "github.com/rabbitmq/amqp091-go"
         "go.opentelemetry.io/otel"
         "go.opentelemetry.io/otel/attribute"
         "go.opentelemetry.io/otel/codes"
         "go.opentelemetry.io/otel/trace"
+
+        "github.com/pure-golang/adapters/queue"
+        "github.com/pure-golang/adapters/queue/encoders"
 )
 
 var _ queue.Publisher = (*Publisher)(nil)
@@ -5051,15 +5067,14 @@ import (
         "time"
 
         "github.com/google/uuid"
-
-        "github.com/pure-golang/adapters/queue"
         "github.com/pkg/errors"
+        amqp "github.com/rabbitmq/amqp091-go"
         "go.opentelemetry.io/otel"
         "go.opentelemetry.io/otel/attribute"
         "go.opentelemetry.io/otel/codes"
         "go.opentelemetry.io/otel/trace"
 
-        amqp "github.com/rabbitmq/amqp091-go"
+        "github.com/pure-golang/adapters/queue"
 )
 
 const (
@@ -5170,9 +5185,9 @@ func (s *Subscriber) listen(handler queue.Handler) (bool, error) <span class="co
                 return true, errors.Wrapf(err, "failed to start consuming from %q", s.queueName)
         }</span>
 
-        <span class="cov1" title="2">for </span><span class="cov10" title="65715">{
+        <span class="cov1" title="2">for </span><span class="cov10" title="75307">{
                 select </span>{
-                case &lt;-s.close:<span class="cov9" title="65713">
+                case &lt;-s.close:<span class="cov9" title="75305">
                         if err := channel.Cancel(s.name, false); err != nil </span><span class="cov1" title="2">{
                                 return true, errors.Wrapf(err, "cancel consumer %q", s.name)
                         }</span>
@@ -5223,7 +5238,7 @@ func (s *Subscriber) Close() error <span class="cov2" title="4">{
         return nil
 }</span>
 
-func (s *Subscriber) handleDelivery(channel *amqp.Channel, delivery amqp.Delivery, handler queue.Handler) error <span class="cov1" title="2">{
+func (s *Subscriber) handleDelivery(channel *amqp.Channel, delivery amqp.Delivery, handler queue.Handler) error <span class="cov1" title="2">{ //nolint:gocritic
         s.logger.Debug("handleDelivery")
         s.lastMessageTime = time.Now()
         ctx := otel.GetTextMapPropagator().Extract(context.Background(), tableCarrier(delivery.Headers))
@@ -5231,8 +5246,8 @@ func (s *Subscriber) handleDelivery(channel *amqp.Channel, delivery amqp.Deliver
         defer span.End()
 
         // TODO
-        //s.logger.With("trace_id", span.SpanContext().TraceID())
-        //ctx = log.NewContext(ctx, logger) // pass ctx into  handler
+        // s.logger.With("trace_id", span.SpanContext().TraceID())
+        // ctx = log.NewContext(ctx, logger) // pass ctx into  handler
 
         span.SetAttributes(
                 attribute.String("id", delivery.MessageId),
@@ -5303,7 +5318,7 @@ func (s *Subscriber) handleDelivery(channel *amqp.Channel, delivery amqp.Deliver
         <span class="cov0" title="0">return nil</span>
 }
 
-func newDelivery(msg amqp.Delivery) queue.Delivery <span class="cov2" title="4">{
+func newDelivery(msg amqp.Delivery) queue.Delivery <span class="cov2" title="4">{ //nolint:gocritic
         headers := make(map[string]string, len(msg.Headers))
         for k, v := range msg.Headers </span><span class="cov1" title="3">{
                 headers[k] = fmt.Sprintf("%v", v)
@@ -5318,11 +5333,10 @@ func newDelivery(msg amqp.Delivery) queue.Delivery <span class="cov2" title="4">
 		<pre class="file" id="file51" style="display: none">package rabbitmq
 
 import (
-        amqp "github.com/rabbitmq/amqp091-go"
-
-        "go.opentelemetry.io/otel"
-
         "fmt"
+
+        amqp "github.com/rabbitmq/amqp091-go"
+        "go.opentelemetry.io/otel"
 )
 
 var tracer = otel.Tracer("github.com/pure-golang/adapters/queue/rabbitmq")
@@ -5455,7 +5469,7 @@ type ClientOptions struct {
 }
 
 // NewClient creates a new S3-compatible storage client.
-func NewClient(cfg Config, options *ClientOptions) (*Client, error) <span class="cov9" title="22">{
+func NewClient(cfg Config, options *ClientOptions) (*Client, error) <span class="cov9" title="22">{ //nolint:gocritic
         if options == nil </span><span class="cov8" title="17">{
                 options = &amp;ClientOptions{}
         }</span>
@@ -5510,7 +5524,7 @@ func NewClient(cfg Config, options *ClientOptions) (*Client, error) <span class=
 }
 
 // NewDefaultClient creates a client with default options.
-func NewDefaultClient(cfg Config) (*Client, error) <span class="cov5" title="5">{
+func NewDefaultClient(cfg Config) (*Client, error) <span class="cov5" title="5">{ //nolint:gocritic
         return NewClient(cfg, nil)
 }</span>
 
@@ -5668,12 +5682,13 @@ import (
         "io"
         "time"
 
-        "github.com/pure-golang/adapters/storage"
         "github.com/minio/minio-go/v7"
         "github.com/pkg/errors"
         "go.opentelemetry.io/otel/attribute"
         "go.opentelemetry.io/otel/codes"
         "go.opentelemetry.io/otel/trace"
+
+        "github.com/pure-golang/adapters/storage"
 )
 
 // core returns the minio.Core client for low-level operations.
@@ -5997,11 +6012,12 @@ import (
         "net/url"
         "time"
 
-        "github.com/pure-golang/adapters/storage"
         "github.com/pkg/errors"
         "go.opentelemetry.io/otel/attribute"
         "go.opentelemetry.io/otel/codes"
         "go.opentelemetry.io/otel/trace"
+
+        "github.com/pure-golang/adapters/storage"
 )
 
 // GetPresignedURL generates a presigned URL for S3 object access.
@@ -6128,7 +6144,7 @@ func NewStorage(client *Client, opts *StorageOptions) *Storage <span class="cov7
 }
 
 // NewDefault creates a Storage with a new client.
-func NewDefault(cfg Config) (*Storage, error) <span class="cov1" title="2">{
+func NewDefault(cfg Config) (*Storage, error) <span class="cov1" title="2">{ //nolint:gocritic
         client, err := NewDefaultClient(cfg)
         if err != nil </span><span class="cov1" title="2">{
                 return nil, err
@@ -6429,9 +6445,13 @@ func (s *Storage) GetFileHeader(ctx context.Context, bucket, key string) ([]byte
 
         // Prepare range options to read first 4096 bytes (bytes 0-4095 inclusive)
         <span class="cov0" title="0">opts := minio.GetObjectOptions{}
-        opts.SetRange(0, 4095) // 4096 bytes: 0..4095 in inclusive range
+        if err := opts.SetRange(0, 4095); err != nil </span><span class="cov0" title="0">{ // 4096 bytes: 0..4095 in inclusive range
+                span.RecordError(err)
+                span.SetStatus(codes.Error, err.Error())
+                return nil, err
+        }</span>
 
-        obj, err := client.GetObject(ctx, bucket, key, opts)
+        <span class="cov0" title="0">obj, err := client.GetObject(ctx, bucket, key, opts)
         if err != nil </span><span class="cov0" title="0">{
                 span.RecordError(err)
                 span.SetStatus(codes.Error, err.Error())
@@ -6468,13 +6488,14 @@ import (
         "context"
         "fmt"
 
-        "github.com/pure-golang/adapters/tracing"
         "github.com/pkg/errors"
         "go.opentelemetry.io/otel/exporters/otlp/otlptrace"
         "go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp"
         "go.opentelemetry.io/otel/sdk/resource"
         tracesdk "go.opentelemetry.io/otel/sdk/trace"
         semconv "go.opentelemetry.io/otel/semconv/v1.12.0"
+
+        "github.com/pure-golang/adapters/tracing"
 )
 
 var _ tracing.Provider = (*Provider)(nil)
@@ -6494,13 +6515,13 @@ func (j *Provider) Close() error <span class="cov8" title="4">{
         ctx := context.Background()
         if err := j.ForceFlush(ctx); err != nil </span><span class="cov0" title="0">{
                 // Ensure shutdown is called even if ForceFlush fails
-                shutdownErr := j.TracerProvider.Shutdown(ctx)
+                shutdownErr := j.Shutdown(ctx)
                 if shutdownErr != nil </span><span class="cov0" title="0">{
                         return errors.Wrap(err, "jaeger force flush failed (also shutdown failed)")
                 }</span>
                 <span class="cov0" title="0">return errors.Wrap(err, "jaeger force flush failed")</span>
         }
-        <span class="cov8" title="4">err := j.TracerProvider.Shutdown(ctx)
+        <span class="cov8" title="4">err := j.Shutdown(ctx)
 
         return errors.Wrap(err, "shutdown jaeger")</span>
 }
