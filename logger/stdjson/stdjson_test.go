@@ -84,10 +84,10 @@ func TestNewDefault_HandlerConfiguration(t *testing.T) {
 	assert.NotNil(t, h)
 
 	// Verify levels are enabled correctly
-	assert.True(t, h.Enabled(context.TODO(), slog.LevelDebug))
-	assert.True(t, h.Enabled(context.TODO(), slog.LevelInfo))
-	assert.True(t, h.Enabled(context.TODO(), slog.LevelWarn))
-	assert.True(t, h.Enabled(context.TODO(), slog.LevelError))
+	assert.True(t, h.Enabled(context.Background(), slog.LevelDebug))
+	assert.True(t, h.Enabled(context.Background(), slog.LevelInfo))
+	assert.True(t, h.Enabled(context.Background(), slog.LevelWarn))
+	assert.True(t, h.Enabled(context.Background(), slog.LevelError))
 }
 
 func TestNewDefault_LevelFiltering(t *testing.T) {
@@ -98,10 +98,10 @@ func TestNewDefault_LevelFiltering(t *testing.T) {
 	assert.NotNil(t, h)
 
 	// At Warn level, Debug and Info should not be enabled
-	assert.False(t, h.Enabled(context.TODO(), slog.LevelDebug))
-	assert.False(t, h.Enabled(context.TODO(), slog.LevelInfo))
-	assert.True(t, h.Enabled(context.TODO(), slog.LevelWarn))
-	assert.True(t, h.Enabled(context.TODO(), slog.LevelError))
+	assert.False(t, h.Enabled(context.Background(), slog.LevelDebug))
+	assert.False(t, h.Enabled(context.Background(), slog.LevelInfo))
+	assert.True(t, h.Enabled(context.Background(), slog.LevelWarn))
+	assert.True(t, h.Enabled(context.Background(), slog.LevelError))
 }
 
 func TestNewDefault_JSONOutput(t *testing.T) {
@@ -171,7 +171,7 @@ func TestNewDefault_LogAttrs(t *testing.T) {
 
 	l := slog.New(slog.NewJSONHandler(&buf, &slog.HandlerOptions{Level: slog.LevelInfo}))
 
-	l.LogAttrs(context.TODO(), slog.LevelInfo, "log attrs test",
+	l.LogAttrs(context.Background(), slog.LevelInfo, "log attrs test",
 		slog.String("string_key", "string_value"),
 		slog.Int("int_key", 42),
 		slog.Bool("bool_key", true),
@@ -220,7 +220,7 @@ func TestNewDefault_NilContext(t *testing.T) {
 	t.Parallel()
 	l := NewDefault(slog.LevelInfo)
 
-	l.LogAttrs(context.TODO(), slog.LevelInfo, "nil context test")
+	l.LogAttrs(context.Background(), slog.LevelInfo, "nil context test")
 	// Should not panic
 }
 
@@ -301,7 +301,7 @@ func TestNewDefault_LowerLevel(t *testing.T) {
 
 	assert.NotNil(t, l)
 
-	l.Log(context.TODO(), slog.Level(-50), "very verbose message")
+	l.Log(context.Background(), slog.Level(-50), "very verbose message")
 	// Should not panic
 }
 
@@ -418,9 +418,9 @@ func TestNewDefault_CustomLevels(t *testing.T) {
 	// Warn (4) should be enabled (4 >= 2)
 	// Error (8) should be enabled (8 >= 2)
 	h := l.Handler()
-	assert.False(t, h.Enabled(context.TODO(), slog.LevelInfo))
-	assert.True(t, h.Enabled(context.TODO(), slog.LevelWarn))
-	assert.True(t, h.Enabled(context.TODO(), slog.LevelError))
+	assert.False(t, h.Enabled(context.Background(), slog.LevelInfo))
+	assert.True(t, h.Enabled(context.Background(), slog.LevelWarn))
+	assert.True(t, h.Enabled(context.Background(), slog.LevelError))
 }
 
 func TestNewDefault_Reusable(t *testing.T) {
@@ -476,7 +476,7 @@ func BenchmarkLogging_LogAttrs(b *testing.B) {
 	l := NewDefault(slog.LevelInfo)
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		l.LogAttrs(context.TODO(), slog.LevelInfo, "benchmark",
+		l.LogAttrs(context.Background(), slog.LevelInfo, "benchmark",
 			slog.String("service", "test"),
 			slog.Int("iteration", i),
 		)

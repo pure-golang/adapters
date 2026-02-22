@@ -31,6 +31,12 @@ func TestMain(m *testing.M) {
 		os.Exit(0)
 	}
 
+	os.Exit(runTests(m))
+}
+
+// runTests выполняет setup, запускает тесты и возвращает код завершения.
+// Вынесено в отдельную функцию, чтобы defer корректно выполнился до os.Exit.
+func runTests(m *testing.M) int {
 	ctx := context.Background()
 
 	// Создаем контейнер PostgreSQL
@@ -50,7 +56,8 @@ func TestMain(m *testing.M) {
 		Started:          true,
 	})
 	if err != nil {
-		log.Fatalf("Could not start container: %s", err)
+		log.Printf("Could not start container: %s", err)
+		return 1
 	}
 
 	// Очищаем ресурсы после тестов
@@ -63,17 +70,20 @@ func TestMain(m *testing.M) {
 	// Получаем порт
 	host, err := container.Host(ctx)
 	if err != nil {
-		log.Fatalf("Could not get container host: %s", err) //nolint:gocritic
+		log.Printf("Could not get container host: %s", err)
+		return 1
 	}
 
 	mappedPort, err := container.MappedPort(ctx, "5432")
 	if err != nil {
-		log.Fatalf("Could not get container port: %s", err)
+		log.Printf("Could not get container port: %s", err)
+		return 1
 	}
 
 	port, err := strconv.Atoi(mappedPort.Port())
 	if err != nil {
-		log.Fatalf("Could not parse port: %s", err)
+		log.Printf("Could not parse port: %s", err)
+		return 1
 	}
 
 	// Конфигурация для подключения к тестовой БД
@@ -97,10 +107,13 @@ func TestMain(m *testing.M) {
 		if err == nil {
 			break
 		}
-		if i == maxRetries-1 {
-			log.Fatalf("Could not connect to database after %d retries: %s", maxRetries, err)
+		if i < maxRetries-1 {
+			time.Sleep(retryInterval)
 		}
-		time.Sleep(retryInterval)
+	}
+	if err != nil {
+		log.Printf("Could not connect to database after %d retries: %s", maxRetries, err)
+		return 1
 	}
 
 	// Запускаем тесты после успешного подключения
@@ -113,7 +126,7 @@ func TestMain(m *testing.M) {
 		}
 	}
 
-	os.Exit(code)
+	return code
 }
 
 func TestConnection_Exec(t *testing.T) {
@@ -316,7 +329,7 @@ func TestConnection_QueryTimeout(t *testing.T) {
 	// Сохраняем и восстанавливаем исходный таймаут
 	oldTimeout := testDB.cfg.QueryTimeout
 	testDB.cfg.QueryTimeout = 100 * time.Millisecond
-	defer func() { testDB.cfg.QueryTimeout = oldTimeout }()
+	t.Cleanup(func() { testDB.cfg.QueryTimeout = oldTimeout })
 
 	// Проверяем что запрос прерывается по таймауту
 	_, err = testDB.Exec(ctx, "SELECT test_delay()")
@@ -382,7 +395,7 @@ func TestConnection_NamedQueries(t *testing.T) {
 
 	// Создаем тестовую таблицу
 	createCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-	defer cancel()
+	t.Cleanup(cancel)
 
 	_, err := testDB.Exec(createCtx, `
 		CREATE TABLE IF NOT EXISTS test_orders (
@@ -409,7 +422,7 @@ func TestConnection_NamedQueries(t *testing.T) {
 
 	// Тестируем NamedExec с отдельным контекстом
 	insertCtx, cancel2 := context.WithTimeout(context.Background(), 30*time.Second)
-	defer cancel2()
+	t.Cleanup(cancel2)
 
 	result, err := testDB.NamedExec(insertCtx, `
 		INSERT INTO test_orders (customer_name, total_amount, status)
@@ -433,7 +446,7 @@ func TestConnection_NamedQueries(t *testing.T) {
 
 	// Тестируем NamedQuery с отдельным контекстом
 	queryCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-	defer cancel()
+	t.Cleanup(cancel)
 
 	rows, err := testDB.NamedQuery(queryCtx, `
 		SELECT * FROM test_orders
@@ -602,7 +615,7 @@ func TestConnection_Query(t *testing.T) {
 		t.Skip("integration test")
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-	defer cancel()
+	t.Cleanup(cancel)
 
 	// Создаем тестовую таблицу
 	_, err := testDB.Exec(ctx, `
@@ -640,7 +653,7 @@ func TestConnection_QueryRow(t *testing.T) {
 		t.Skip("integration test")
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-	defer cancel()
+	t.Cleanup(cancel)
 
 	// Создаем тестовую таблицу
 	_, err := testDB.Exec(ctx, `
@@ -856,7 +869,7 @@ func TestTx_QueryRow(t *testing.T) {
 		t.Skip("integration test")
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-	defer cancel()
+	t.Cleanup(cancel)
 
 	// Создаем тестовую таблицу
 	_, err := testDB.Exec(ctx, `

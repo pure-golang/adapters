@@ -388,7 +388,7 @@ func TestSender_BuildMessage_AllContentTypes(t *testing.T) {
 			Subject: "Plain",
 			Body:    "Plain text only",
 		}
-		msg := sender.buildMessage(email)
+		msg := sender.buildMessage(&email)
 		msgStr := string(msg)
 		assert.Contains(t, msgStr, "Content-Type: text/plain")
 		assert.NotContains(t, msgStr, "multipart/alternative")
@@ -401,7 +401,7 @@ func TestSender_BuildMessage_AllContentTypes(t *testing.T) {
 			Subject: "HTML",
 			HTML:    "<p>HTML only</p>",
 		}
-		msg := sender.buildMessage(email)
+		msg := sender.buildMessage(&email)
 		msgStr := string(msg)
 		assert.Contains(t, msgStr, "multipart/alternative")
 		assert.Contains(t, msgStr, "HTML only")
@@ -415,7 +415,7 @@ func TestSender_BuildMessage_AllContentTypes(t *testing.T) {
 			Body:    "Plain text",
 			HTML:    "<p>HTML</p>",
 		}
-		msg := sender.buildMessage(email)
+		msg := sender.buildMessage(&email)
 		msgStr := string(msg)
 		assert.Contains(t, msgStr, "multipart/alternative")
 		assert.Contains(t, msgStr, "Plain text")
@@ -433,7 +433,7 @@ func TestSender_BuildMessage_AllContentTypes(t *testing.T) {
 				"X-Header-2": "Value2",
 			},
 		}
-		msg := sender.buildMessage(email)
+		msg := sender.buildMessage(&email)
 		msgStr := string(msg)
 		assert.Contains(t, msgStr, "X-Header-1: Value1")
 		assert.Contains(t, msgStr, "X-Header-2: Value2")
@@ -448,7 +448,7 @@ func TestSender_BuildMessage_AllContentTypes(t *testing.T) {
 			Subject: "Recipients",
 			Body:    "Body",
 		}
-		msg := sender.buildMessage(email)
+		msg := sender.buildMessage(&email)
 		msgStr := string(msg)
 		assert.Contains(t, msgStr, "To: to@example.com")
 		assert.Contains(t, msgStr, "Cc: cc@example.com")
@@ -473,7 +473,7 @@ func TestSender_BuildMessage_AllContentTypes(t *testing.T) {
 			Subject: "All Recipients",
 			Body:    "Body",
 		}
-		msg := sender.buildMessage(email)
+		msg := sender.buildMessage(&email)
 		msgStr := string(msg)
 		// Check To and Cc are in headers
 		assert.Contains(t, msgStr, "to1@example.com")

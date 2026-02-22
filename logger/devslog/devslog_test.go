@@ -88,7 +88,7 @@ func TestNewDefault_LogAttrs(t *testing.T) {
 	require.NotNil(t, l)
 
 	// Test LogAttrs method
-	l.LogAttrs(context.TODO(), slog.LevelInfo, "test message", slog.String("key", "value"))
+	l.LogAttrs(context.Background(), slog.LevelInfo, "test message", slog.String("key", "value"))
 }
 
 func TestNewDefault_HandlerConfiguration(t *testing.T) {
@@ -102,10 +102,10 @@ func TestNewDefault_HandlerConfiguration(t *testing.T) {
 	assert.NotNil(t, h)
 
 	// Verify enabled levels
-	assert.True(t, h.Enabled(context.TODO(), slog.LevelDebug))
-	assert.True(t, h.Enabled(context.TODO(), slog.LevelInfo))
-	assert.True(t, h.Enabled(context.TODO(), slog.LevelWarn))
-	assert.True(t, h.Enabled(context.TODO(), slog.LevelError))
+	assert.True(t, h.Enabled(context.Background(), slog.LevelDebug))
+	assert.True(t, h.Enabled(context.Background(), slog.LevelInfo))
+	assert.True(t, h.Enabled(context.Background(), slog.LevelWarn))
+	assert.True(t, h.Enabled(context.Background(), slog.LevelError))
 }
 
 func TestNewDefault_HandlerLevelFiltering(t *testing.T) {
@@ -118,10 +118,10 @@ func TestNewDefault_HandlerLevelFiltering(t *testing.T) {
 	assert.NotNil(t, h)
 
 	// Debug and Info should not be enabled at Warn level
-	assert.False(t, h.Enabled(context.TODO(), slog.LevelDebug))
-	assert.False(t, h.Enabled(context.TODO(), slog.LevelInfo))
-	assert.True(t, h.Enabled(context.TODO(), slog.LevelWarn))
-	assert.True(t, h.Enabled(context.TODO(), slog.LevelError))
+	assert.False(t, h.Enabled(context.Background(), slog.LevelDebug))
+	assert.False(t, h.Enabled(context.Background(), slog.LevelInfo))
+	assert.True(t, h.Enabled(context.Background(), slog.LevelWarn))
+	assert.True(t, h.Enabled(context.Background(), slog.LevelError))
 }
 
 func TestNewDefault_HandlerWithOptions(t *testing.T) {
@@ -184,7 +184,7 @@ func TestNewDefault_IntegrationScenarios(t *testing.T) {
 			l := NewDefault(sc.level)
 
 			// Simulate typical usage patterns
-			l.LogAttrs(context.TODO(), sc.level, "test log",
+			l.LogAttrs(context.Background(), sc.level, "test log",
 				slog.String("scenario", sc.name),
 				slog.Int("value", 42),
 			)
@@ -217,7 +217,7 @@ func TestNewDefault_LogLevels(t *testing.T) {
 			assert.NotNil(t, l)
 
 			// Verify logger doesn't panic at any level
-			l.Log(context.TODO(), level, "test message")
+			l.Log(context.Background(), level, "test message")
 		})
 	}
 }

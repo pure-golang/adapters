@@ -33,7 +33,7 @@ type SenderOptions struct {
 }
 
 // NewSender creates a new SMTP Sender.
-func NewSender(cfg Config, options *SenderOptions) *Sender { //nolint:gocritic
+func NewSender(cfg Config, options *SenderOptions) *Sender {
 	return &Sender{
 		cfg:    cfg,
 		closed: false,
@@ -43,7 +43,7 @@ func NewSender(cfg Config, options *SenderOptions) *Sender { //nolint:gocritic
 // Send sends one or more emails.
 func (s *Sender) Send(ctx context.Context, emails ...mail.Email) error {
 	for _, email := range emails {
-		if err := s.send(ctx, email); err != nil {
+		if err := s.send(ctx, &email); err != nil {
 			return err
 		}
 	}
@@ -51,7 +51,7 @@ func (s *Sender) Send(ctx context.Context, emails ...mail.Email) error {
 }
 
 // send sends a single email.
-func (s *Sender) send(ctx context.Context, email mail.Email) error { //nolint:gocritic
+func (s *Sender) send(ctx context.Context, email *mail.Email) error {
 	ctx, span := tracer.Start(ctx, "SMTP.Send", trace.WithSpanKind(trace.SpanKindClient))
 	defer span.End()
 
@@ -360,7 +360,7 @@ func (s *Sender) sendMailWithTLS(ctx context.Context, addr string, auth smtp.Aut
 }
 
 // buildMessage builds the raw email message.
-func (s *Sender) buildMessage(email mail.Email) []byte { //nolint:gocritic
+func (s *Sender) buildMessage(email *mail.Email) []byte {
 	var msg strings.Builder
 
 	// Headers

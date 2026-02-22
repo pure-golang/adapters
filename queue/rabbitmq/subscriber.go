@@ -141,7 +141,7 @@ func (s *Subscriber) listen(handler queue.Handler) (bool, error) {
 				// Rest of messages is drained
 				return false, nil
 			}
-			if err := s.handleDelivery(channel, delivery, handler); err != nil {
+			if err := s.handleDelivery(channel, &delivery, handler); err != nil {
 				return true, err
 			}
 		case <-freezeClose:
@@ -179,7 +179,7 @@ func (s *Subscriber) Close() error {
 	return nil
 }
 
-func (s *Subscriber) handleDelivery(channel *amqp.Channel, delivery amqp.Delivery, handler queue.Handler) error { //nolint:gocritic
+func (s *Subscriber) handleDelivery(channel *amqp.Channel, delivery *amqp.Delivery, handler queue.Handler) error {
 	s.logger.Debug("handleDelivery")
 	s.lastMessageTime = time.Now()
 	ctx := otel.GetTextMapPropagator().Extract(context.Background(), tableCarrier(delivery.Headers))
@@ -259,7 +259,7 @@ func (s *Subscriber) handleDelivery(channel *amqp.Channel, delivery amqp.Deliver
 	return nil
 }
 
-func newDelivery(msg amqp.Delivery) queue.Delivery { //nolint:gocritic
+func newDelivery(msg *amqp.Delivery) queue.Delivery {
 	headers := make(map[string]string, len(msg.Headers))
 	for k, v := range msg.Headers {
 		headers[k] = fmt.Sprintf("%v", v)

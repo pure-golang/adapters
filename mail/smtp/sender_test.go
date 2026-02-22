@@ -120,7 +120,7 @@ func TestSender_BuildMessage(t *testing.T) {
 		Headers: map[string]string{"X-Custom": "value"},
 	}
 
-	msg := sender.buildMessage(email)
+	msg := sender.buildMessage(&email)
 
 	msgStr := string(msg)
 	assert.Contains(t, msgStr, "From: Sender <sender@example.com>")
@@ -144,7 +144,7 @@ func TestSender_BuildMessageWithHTML(t *testing.T) {
 		HTML:    "<p>HTML content</p>",
 	}
 
-	msg := sender.buildMessage(email)
+	msg := sender.buildMessage(&email)
 
 	msgStr := string(msg)
 	assert.Contains(t, msgStr, "multipart/alternative")
@@ -165,7 +165,7 @@ func TestSender_BuildMessageWithCcAndBcc(t *testing.T) {
 		Bcc:  []mail.Address{{Address: "bcc@example.com"}},
 	}
 
-	msg := sender.buildMessage(email)
+	msg := sender.buildMessage(&email)
 
 	msgStr := string(msg)
 	assert.Contains(t, msgStr, "To: to@example.com")
@@ -246,7 +246,7 @@ func TestSender_BuildMessage_WithSpecialCharactersInSubject(t *testing.T) {
 		Body:    "Test",
 	}
 
-	msg := sender.buildMessage(email)
+	msg := sender.buildMessage(&email)
 	msgStr := string(msg)
 
 	assert.Contains(t, msgStr, "Subject: Тестовое сообщение")
@@ -408,7 +408,7 @@ func TestSender_BuildMessage_WithOnlyHTML(t *testing.T) {
 		// Note: Body is empty, only HTML
 	}
 
-	msg := sender.buildMessage(email)
+	msg := sender.buildMessage(&email)
 
 	msgStr := string(msg)
 	assert.Contains(t, msgStr, "multipart/alternative")
@@ -436,7 +436,7 @@ func TestSender_BuildMessage_WithMultipleCustomHeaders(t *testing.T) {
 		},
 	}
 
-	msg := sender.buildMessage(email)
+	msg := sender.buildMessage(&email)
 
 	msgStr := string(msg)
 	assert.Contains(t, msgStr, "X-Priority: 1 (Highest)")
@@ -457,7 +457,7 @@ func TestSender_BuildMessage_WithEmptySubject(t *testing.T) {
 		Body:    "Test body",
 	}
 
-	msg := sender.buildMessage(email)
+	msg := sender.buildMessage(&email)
 
 	msgStr := string(msg)
 	assert.Contains(t, msgStr, "Subject: ")
@@ -476,7 +476,7 @@ func TestSender_BuildMessage_VerifyStructure(t *testing.T) {
 		HTML:    "<p>HTML body</p>",
 	}
 
-	msg := sender.buildMessage(email)
+	msg := sender.buildMessage(&email)
 	msgStr := string(msg)
 
 	// Verify order of headers
@@ -681,7 +681,7 @@ func TestSender_BuildMessage_WithAllFields(t *testing.T) {
 		},
 	}
 
-	msg := sender.buildMessage(email)
+	msg := sender.buildMessage(&email)
 	msgStr := string(msg)
 
 	// Verify all fields are present

@@ -38,7 +38,7 @@ func TestNewNoop_AllLogMethods(t *testing.T) {
 	l.Warn("warn message")
 	l.Error("error message")
 
-	l.Log(context.TODO(), slog.LevelInfo, "custom level message")
+	l.Log(context.Background(), slog.LevelInfo, "custom level message")
 }
 
 func TestNewNoop_WithAttributes(t *testing.T) {
@@ -57,7 +57,7 @@ func TestNewNoop_LogAttrs(t *testing.T) {
 	l := NewNoop()
 
 	// Should not panic with various attribute types
-	l.LogAttrs(context.TODO(), slog.LevelInfo, "test",
+	l.LogAttrs(context.Background(), slog.LevelInfo, "test",
 		slog.String("string", "value"),
 		slog.Int("int", 42),
 		slog.Bool("bool", true),
@@ -73,7 +73,7 @@ func TestNewNoop_HandlerEnabled(t *testing.T) {
 
 	// No-op handler should not be enabled for any level
 	// or it may be enabled but not output
-	_ = h.Enabled(context.TODO(), slog.LevelInfo)
+	_ = h.Enabled(context.Background(), slog.LevelInfo)
 	// The result depends on the underlying JSON handler configuration
 	// Just verify it doesn't panic
 	assert.NotNil(t, h)
@@ -86,7 +86,7 @@ func TestNewNoop_HandlerHandle(t *testing.T) {
 
 	// Should not panic when handling records
 	r := slog.NewRecord(time.Time{}, slog.LevelInfo, "test", 0)
-	err := h.Handle(context.TODO(), r)
+	err := h.Handle(context.Background(), r)
 
 	assert.NoError(t, err)
 }
@@ -99,12 +99,12 @@ func TestNewNoop_WithHandlerOptions(t *testing.T) {
 	assert.NotNil(t, l)
 
 	// Should work with all log levels
-	l.Log(context.TODO(), slog.Level(-10), "very low level")
-	l.Log(context.TODO(), slog.LevelDebug, "debug")
-	l.Log(context.TODO(), slog.LevelInfo, "info")
-	l.Log(context.TODO(), slog.LevelWarn, "warn")
-	l.Log(context.TODO(), slog.LevelError, "error")
-	l.Log(context.TODO(), slog.Level(100), "very high level")
+	l.Log(context.Background(), slog.Level(-10), "very low level")
+	l.Log(context.Background(), slog.LevelDebug, "debug")
+	l.Log(context.Background(), slog.LevelInfo, "info")
+	l.Log(context.Background(), slog.LevelWarn, "warn")
+	l.Log(context.Background(), slog.LevelError, "error")
+	l.Log(context.Background(), slog.Level(100), "very high level")
 }
 
 func TestWriter_Write(t *testing.T) {
@@ -188,7 +188,7 @@ func TestNewNoop_NilContext(t *testing.T) {
 	l := NewNoop()
 
 	// Should handle nil context
-	l.LogAttrs(context.TODO(), slog.LevelInfo, "nil context test")
+	l.LogAttrs(context.Background(), slog.LevelInfo, "nil context test")
 
 	// Should handle context with values
 	type noopCtxKey string
@@ -251,7 +251,7 @@ func TestNewNoop_LogLevels(t *testing.T) {
 
 	for _, level := range levels {
 		t.Run(level.String(), func(t *testing.T) {
-			l.Log(context.TODO(), level, "test at level")
+			l.Log(context.Background(), level, "test at level")
 		})
 	}
 }

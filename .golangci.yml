@@ -14,9 +14,9 @@ linters:
   disable:
     - unused # отключение предупреждений о неиспользуемых функциях
   settings:
-    gocritic:
-      enabled-checks:
-        - hugeParam
+    # gocritic:
+    #   enabled-checks:
+    #     - hugeParam
     revive:
       severity: error
       rules:
@@ -66,6 +66,12 @@ linters:
       - common-false-positives
       - legacy
       - std-error-handling
+    rules:
+      # Config-структуры намеренно передаются по значению для изоляции и безопасности nil
+      # - source: "\\bConfig\\b"
+      #   linters:
+      #     - gocritic
+      #   text: "hugeParam"
     paths:
       - .*_mock.go$
       - mocks

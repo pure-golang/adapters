@@ -335,7 +335,7 @@ func (h *testHandler) Enabled(ctx context.Context, level slog.Level) bool {
 	return true
 }
 
-func (h *testHandler) Handle(ctx context.Context, r slog.Record) error { //nolint:gocritic
+func (h *testHandler) Handle(ctx context.Context, r slog.Record) error {
 	*h.records = append(*h.records, r)
 	return nil
 }

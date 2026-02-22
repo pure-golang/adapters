@@ -273,7 +273,7 @@ func TestNewDelivery(t *testing.T) {
 			Body: []byte("test body"),
 		}
 
-		qd := newDelivery(delivery)
+		qd := newDelivery(&delivery)
 
 		assert.NotNil(t, qd)
 		assert.Len(t, qd.Headers, 3)
@@ -288,7 +288,7 @@ func TestNewDelivery(t *testing.T) {
 			Body: []byte("test body"),
 		}
 
-		qd := newDelivery(delivery)
+		qd := newDelivery(&delivery)
 
 		assert.NotNil(t, qd)
 		assert.Empty(t, qd.Headers)

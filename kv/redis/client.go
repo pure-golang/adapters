@@ -18,7 +18,7 @@ type Client struct {
 }
 
 // Connect создаёт новое подключение к Redis
-func Connect(ctx context.Context, cfg Config) (*Client, error) { //nolint:gocritic
+func Connect(ctx context.Context, cfg Config) (*Client, error) {
 	logger := newLogger(nil)
 	logger.Debug("connecting to redis", "addr", cfg.Addr)
 

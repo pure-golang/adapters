@@ -20,7 +20,7 @@ type Config struct {
 }
 
 // NewDefault создаёт Config с значениями по умолчанию
-func NewDefault(cfg Config) (*Client, error) { //nolint:gocritic
+func NewDefault(cfg Config) (*Client, error) {
 	if cfg.Addr == "" {
 		cfg.Addr = "localhost:6379"
 	}

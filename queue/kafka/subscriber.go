@@ -152,7 +152,7 @@ func (s *Subscriber) listen(handler queue.Handler) (bool, error) {
 			s.lastMessageTime = time.Now()
 
 			// Обрабатываем сообщение с retry внутри этой сессии
-			if err := s.handleMessageWithRetry(msg, handler); err != nil {
+			if err := s.handleMessageWithRetry(&msg, handler); err != nil {
 				// При ошибке в retry возвращаем true для перезапуска
 				return true, err
 			}
@@ -161,7 +161,7 @@ func (s *Subscriber) listen(handler queue.Handler) (bool, error) {
 }
 
 // handleMessageWithRetry обрабатывает одно сообщение с retry в рамках одной сессии
-func (s *Subscriber) handleMessageWithRetry(msg kafka.Message, handler queue.Handler) error { //nolint:gocritic
+func (s *Subscriber) handleMessageWithRetry(msg *kafka.Message, handler queue.Handler) error {
 	var lastErr error
 	maxAttempts := s.cfg.MaxTryNum
 

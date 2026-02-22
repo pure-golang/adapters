@@ -540,7 +540,7 @@ type attrHandler struct {
 	attrs *[]slog.Attr
 }
 
-func (h *attrHandler) Handle(ctx context.Context, r slog.Record) error { //nolint:gocritic
+func (h *attrHandler) Handle(ctx context.Context, r slog.Record) error {
 	r.Attrs(func(a slog.Attr) bool {
 		*h.attrs = append(*h.attrs, a)
 		return true

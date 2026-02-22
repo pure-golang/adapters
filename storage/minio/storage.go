@@ -50,7 +50,7 @@ func NewStorage(client *Client, opts *StorageOptions) *Storage {
 }
 
 // NewDefault creates a Storage with a new client.
-func NewDefault(cfg Config) (*Storage, error) { //nolint:gocritic
+func NewDefault(cfg Config) (*Storage, error) {
 	client, err := NewDefaultClient(cfg)
 	if err != nil {
 		return nil, err
