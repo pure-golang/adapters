@@ -66,4 +66,3 @@ type BindingDef struct {
 func (d *Definitions) JSON() ([]byte, error) {
 	return json.MarshalIndent(d, "", "  ")
 }
-
