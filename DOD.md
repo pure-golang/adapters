@@ -8,14 +8,8 @@
 
 - [ ] Код соответствует конвенциям проекта (см. `AGENTS.md`)
 - [ ] Структура `Config` с тегами `envconfig` для конфигурации через переменные окружения
-- [ ] Реализация интерфейса `Provider` (или `RunableProvider` для долгоиграющих сервисов):
-  ```go
-  type Provider interface {
-      Start() error
-      io.Closer
-  }
-  ```
-- [ ] Обработка ошибок с заворачиванием в контекст через `errors.Wrap()`
+- [ ] Реализация интерфейса `Provider` (или `RunableProvider` для долгоиграющих сервисов) — см. `AGENTS.md`, раздел Interface Patterns
+- [ ] Обработка ошибок с заворачиванием в контекст через `errors.Wrap()` — см. `AGENTS.md`, раздел Error Handling
 - [ ] Использование `context.Context` первым аргументом во всех операциях, которые могут блокироваться
 - [ ] Реализация `defer` для корректной очистки ресурсов
 
@@ -35,16 +29,12 @@
 
 #### Интеграционные тесты (обязательно)
 
-Интеграционные тесты **должны** использовать библиотеку `github.com/testcontainers/testcontainers-go` вместо `github.com/ory/dockertest`.
+Интеграционные тесты **должны** использовать `github.com/testcontainers/testcontainers-go`.
+Паттерн тест-сюиты — см. `AGENTS.md`, раздел Integration Tests.
 
-Требования к интеграционным тестам:
+Требования:
 
-- [ ] Поддержка флага `-short` для пропуска Docker-тестов:
-  ```go
-    if testing.Short() {
-        t.Skip("integration test")
-    }
-  ```
+- [ ] Поддержка флага `-short`: `t.Skip("integration test")`
 - [ ] Автоматический запуск и остановка контейнеров через testcontainers
 - [ ] Ожидание готовности сервиса перед выполнением тестов
 - [ ] Корректная очистка ресурсов после завершения тестов
@@ -60,65 +50,6 @@
 - [ ] Тест уровней изоляции транзакций — если применимо
 - [ ] Тест обработки таймаутов и отмены контекста
 - [ ] Тест конкурентных операций
-
-#### Пример структуры интеграционного теста с testcontainers-go
-
-```go
-package sqlx_test
-
-import (
-    "context"
-    "testing"
-    "time"
-
-    "github.com/testcontainers/testcontainers-go"
-    "github.com/testcontainers/testcontainers-go/wait"
-)
-
-func setupPostgres(t *testing.T) (string, func()) {
-    ctx := context.Background()
-
-    req := testcontainers.ContainerRequest{
-        Image:        "postgres:15-alpine",
-        ExposedPorts: []string{"5432/tcp"},
-        Env: map[string]string{
-            "POSTGRES_USER":     "postgres",
-            "POSTGRES_PASSWORD": "secret",
-            "POSTGRES_DB":       "testdb",
-        },
-        WaitingFor: wait.ForLog("database system is ready to accept connections").
-            WithOccurrence(2).
-            WithStartupTimeout(10 * time.Second),
-    }
-
-    container, err := testcontainers.GenericContainer(ctx, testcontainers.GenericContainerRequest{
-        ContainerRequest: req,
-        Started:          true,
-    })
-    if err != nil {
-        t.Fatalf("failed to start container: %v", err)
-    }
-
-    host, err := container.Host(ctx)
-    if err != nil {
-        t.Fatalf("failed to get container host: %v", err)
-    }
-
-    port, err := container.MappedPort(ctx, "5432")
-    if err != nil {
-        t.Fatalf("failed to get container port: %v", err)
-    }
-
-    cleanup := func() {
-        if err := container.Terminate(ctx); err != nil {
-            t.Logf("failed to terminate container: %v", err)
-        }
-    }
-
-    return fmt.Sprintf("postgres://postgres:secret@%s:%s/testdb?sslmode=disable",
-        host, port.Port()), cleanup
-}
-```
 
 ### 4. Требования к наблюдаемости (Observability)
 

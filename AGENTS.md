@@ -47,7 +47,7 @@ go get -u ./...
 ```
 
 ### Docker for Integration Tests
-Integration tests use `dockertest` to spin up PostgreSQL and RabbitMQ containers:
+Integration tests use `github.com/testcontainers/testcontainers-go` to spin up containers:
 - PostgreSQL: `postgres:15`
 - RabbitMQ: `rabbitmq:management-alpine`
 
@@ -63,7 +63,7 @@ adapters/
 │       ├── sqlx/          # PostgreSQL adapter using sqlx library
 │       └── pgx/           # PostgreSQL adapter using pgx v5 library
 ├── queue/
-│   ├── rabbitmq/          # RabbitMQ adapter
+│   ├── rabbitmq/          # RabbitMQ: Dialer, Publisher, Subscriber, MultiQueueSubscriber, Definitions
 │   │   └── encoders/      # Message encoders (JSON, text)
 │   └── kafka/             # Kafka adapter
 │       └── encoders/      # Message encoders (JSON, text)
@@ -246,28 +246,63 @@ type RunableProvider interface {
 
 ### Test Organization
 - Unit tests: Standard `*_test.go` files
-- Integration tests: Use `dockertest` for spinning up real services
+- Integration tests: Use `github.com/testcontainers/testcontainers-go` for spinning up real services
 - Test suites: Use `testify/suite` for complex test setups
 
-### Integration Tests with Docker
-Integration tests use `github.com/ory/dockertest` to:
+### Integration Tests with testcontainers-go
+
+Integration tests use `github.com/testcontainers/testcontainers-go`:
 1. Start PostgreSQL or RabbitMQ containers
-2. Wait for services to be ready
+2. Wait for service readiness via `wait.ForListeningPort` / `wait.ForLog`
 3. Run tests against real services
-4. Clean up containers on completion
+4. Terminate containers in `TearDownSuite`
 
 **Key pattern**: Use `testing.Short()` flag to skip integration tests:
 ```go
 if testing.Short() {
     t.Skip("integration test")
 }
+```
 
-func TestMain(m *testing.M) {
+**testcontainers-go suite pattern**:
+```go
+type MySuite struct {
+    suite.Suite
+    container testcontainers.Container
+    dsn       string
+}
+
+func TestMySuite(t *testing.T) {
     if testing.Short() {
-        fmt.Println("Skipping integration tests in short mode")
-        os.Exit(0)
+        t.Skip("integration test")
     }
-    // Setup Docker containers...
+    suite.Run(t, new(MySuite))
+}
+
+func (s *MySuite) SetupSuite() {
+    ctx := context.Background()
+    container, err := testcontainers.GenericContainer(ctx, testcontainers.GenericContainerRequest{
+        ContainerRequest: testcontainers.ContainerRequest{
+            Image:        "postgres:15-alpine",
+            ExposedPorts: []string{"5432/tcp"},
+            Env: map[string]string{
+                "POSTGRES_USER": "postgres", "POSTGRES_PASSWORD": "secret", "POSTGRES_DB": "testdb",
+            },
+            WaitingFor: wait.ForLog("database system is ready to accept connections").WithOccurrence(2),
+        },
+        Started: true,
+    })
+    s.Require().NoError(err)
+    s.container = container
+    host, _ := container.Host(ctx)
+    port, _ := container.MappedPort(ctx, "5432")
+    s.dsn = fmt.Sprintf("postgres://postgres:secret@%s:%s/testdb?sslmode=disable", host, port.Port())
+}
+
+func (s *MySuite) TearDownSuite() {
+    if s.container != nil {
+        s.Require().NoError(s.container.Terminate(context.Background()))
+    }
 }
 ```
 
@@ -388,7 +423,7 @@ For gRPC/HTTP servers, middleware order matters:
 
 ### Testing
 - `github.com/stretchr/testify`: Assertions and test suites
-- `github.com/ory/dockertest/v3`: Docker integration testing
+- `github.com/testcontainers/testcontainers-go`: Docker integration testing
 - `github.com/lib/pq`: PostgreSQL driver (for sqlx adapter)
 
 ### Configuration
@@ -457,7 +492,7 @@ When adding a new adapter:
 5. Add error wrapping with context
 6. Create a `README.md` with usage examples (in Russian)
 7. Add unit tests for core functionality
-8. Add integration tests with `dockertest` (if external service)
+8. Add integration tests with `testcontainers-go` (if external service)
 9. Add to this AGENTS.md if new patterns introduced
 
 ## Storage Patterns (S3/MinIO)
@@ -588,6 +623,35 @@ for _, obj := range result.Objects {
 - Verify access key and secret key are correct
 - Check bucket exists and you have permissions
 - Check firewall rules for the S3 port (default: 9000 for MinIO, 443 for AWS S3/Yandex Cloud)
+
+## Queue Patterns (RabbitMQ)
+
+### Topology (Definitions)
+
+`Definitions` mirrors the RabbitMQ management API JSON format:
+- `.JSON()` → `rabbitmq_definitions.json` for docker-compose `load_definitions` / `rabbitmqctl import_definitions`
+- `.Apply(ch *amqp.Channel)` → declare directly via AMQP (integration tests, no Management API needed)
+
+See `queue/rabbitmq/README.md` for full DLX topology example.
+
+### Publisher
+
+`NewPublisher(dialer, PublisherConfig{Exchange, RoutingKey, Encoder, DeliveryMode, MessageTTL})`.
+
+### Subscriber (single queue)
+
+Retry via `x-death` (standard RabbitMQ header, survives process restarts):
+- error + `x-death < MaxRetries` → publish to `RetryQueueName` + Ack
+- error + `x-death >= MaxRetries` → `Nack(requeue=false)` → DLQ via `x-dead-letter-*` on the main queue
+- publish-to-retry failure → fallback `Nack(requeue=true)`
+- `bool` return from handler is **ignored** — retry is always DLX-based via x-death header
+
+### MultiQueueSubscriber (multiple queues, single channel)
+
+Single channel, `Qos(N, global=true)` — prefetch limit across all consumers on the channel.
+Single handler goroutine (fan-in). Suitable for CPU/IO-heavy workloads where parallelism is undesirable.
+
+See `queue/rabbitmq/README.md` for usage examples.
 
 ## Queue Patterns (Kafka)
 ```go

@@ -15,283 +15,314 @@ import (
 	"github.com/pure-golang/adapters/queue/encoders"
 )
 
-func (s *RabbitMQSuite) TestSubscriber_NewDefaultSubscriber() {
-	if testing.Short() {
-		s.T().Skip("integration test")
-	}
+// --- unit tests (no docker) ---
 
-	t := s.T()
-	queueName := uuid.NewString()
-
-	dialer := NewDialer(s.RabbitURI, nil)
-	require.NoError(t, dialer.Connect())
-
-	t.Cleanup(func() {
-		assert.NoError(t, dialer.Close())
-	})
-
-	// Create subscriber with defaults
-	sub := NewDefaultSubscriber(dialer, queueName)
-
-	assert.NotNil(t, sub)
-	assert.Equal(t, queueName, sub.queueName)
-	assert.Equal(t, dialer, sub.dialer)
-	assert.NotNil(t, sub.logger)
-	assert.NotNil(t, sub.close)
-	assert.Equal(t, DefaultLastMessageTimeout, sub.lastMessageTimeout)
+func TestDeathCount_NoHeader(t *testing.T) {
+	t.Parallel()
+	d := &amqp.Delivery{}
+	assert.Equal(t, 0, deathCount(d))
 }
 
-func (s *RabbitMQSuite) TestSubscriber_NewSubscriber() {
-	if testing.Short() {
-		s.T().Skip("integration test")
+func TestDeathCount_WithHeader(t *testing.T) {
+	t.Parallel()
+	d := &amqp.Delivery{
+		Headers: amqp.Table{
+			"x-death": []any{
+				amqp.Table{"count": int64(2), "queue": "media.preview"},
+				amqp.Table{"count": int64(1), "queue": "media.preview.retry"},
+			},
+		},
 	}
-
-	t := s.T()
-	queueName := uuid.NewString()
-	dialer := NewDialer(s.RabbitURI, nil)
-	require.NoError(t, dialer.Connect())
-
-	t.Cleanup(func() {
-		assert.NoError(t, dialer.Close())
-	})
-
-	t.Run("with default options", func(t *testing.T) {
-		sub := NewSubscriber(dialer, queueName, SubscriberOptions{})
-
-		assert.NotNil(t, sub)
-		assert.NotEmpty(t, sub.name)
-		assert.Equal(t, queueName, sub.queueName)
-		assert.Equal(t, 0, sub.cfg.PrefetchCount)
-		assert.Equal(t, 0, sub.cfg.MaxTryNum)
-		assert.Equal(t, 5*time.Second, sub.cfg.Backoff)
-		assert.Equal(t, DefaultLastMessageTimeout, sub.lastMessageTimeout)
-	})
-
-	t.Run("with custom options", func(t *testing.T) {
-		customBackoff := 10 * time.Second
-
-		sub := NewSubscriber(dialer, queueName, SubscriberOptions{
-			PrefetchCount: 10,
-			MaxTryNum:     5,
-			Backoff:       customBackoff,
-		})
-
-		assert.NotNil(t, sub)
-		assert.NotEmpty(t, sub.name) // Name is generated via UUID since cfg.Name is empty
-		assert.Equal(t, 10, sub.cfg.PrefetchCount)
-		assert.Equal(t, 5, sub.cfg.MaxTryNum)
-		assert.Equal(t, customBackoff, sub.cfg.Backoff)
-	})
-
-	t.Run("with zero MaxTryNum gets set to zero", func(t *testing.T) {
-		sub := NewSubscriber(dialer, queueName, SubscriberOptions{
-			MaxTryNum: -1, // Should be set to 0 (infinite retries indicator)
-		})
-		assert.Equal(t, 0, sub.cfg.MaxTryNum, "MaxTryNum <= 0 is set to 0")
-	})
-
-	t.Run("with zero Backoff gets default", func(t *testing.T) {
-		sub := NewSubscriber(dialer, queueName, SubscriberOptions{
-			Backoff: 0,
-		})
-		assert.Equal(t, 5*time.Second, sub.cfg.Backoff)
-	})
+	assert.Equal(t, 3, deathCount(d))
 }
 
-func (s *RabbitMQSuite) TestSubscriber_Close() {
-	if testing.Short() {
-		s.T().Skip("integration test")
+func TestDeathCount_WrongType(t *testing.T) {
+	t.Parallel()
+	d := &amqp.Delivery{
+		Headers: amqp.Table{"x-death": "not a slice"},
 	}
-
-	t := s.T()
-	queueName := uuid.NewString()
-
-	dialer := NewDialer(s.RabbitURI, nil)
-	require.NoError(t, dialer.Connect())
-
-	sub := NewSubscriber(dialer, queueName, SubscriberOptions{})
-
-	// Close without calling Listen should be safe
-	err := sub.Close()
-	assert.NoError(t, err)
+	assert.Equal(t, 0, deathCount(d))
 }
 
-func (s *RabbitMQSuite) TestSubscriber_AckHandling() {
+func TestNewSubscriber_Defaults(t *testing.T) {
+	t.Parallel()
+	dialer := NewDefaultDialer("amqp://guest:guest@localhost:5672/")
+	sub := NewSubscriber(dialer, "test.queue", SubscriberOptions{MaxRetries: 3})
+
+	assert.NotEmpty(t, sub.name)
+	assert.Equal(t, "test.queue", sub.queueName)
+	assert.Equal(t, 1, sub.cfg.PrefetchCount)
+	assert.Equal(t, 3, sub.cfg.MaxRetries)
+	assert.Equal(t, "test.queue.retry", sub.cfg.RetryQueueName)
+}
+
+func TestNewSubscriber_CustomRetryQueue(t *testing.T) {
+	t.Parallel()
+	dialer := NewDefaultDialer("amqp://guest:guest@localhost:5672/")
+	sub := NewSubscriber(dialer, "test.queue", SubscriberOptions{
+		MaxRetries:     5,
+		RetryQueueName: "custom.retry",
+	})
+	assert.Equal(t, "custom.retry", sub.cfg.RetryQueueName)
+}
+
+func TestNewDelivery_Headers(t *testing.T) {
+	t.Parallel()
+	d := &amqp.Delivery{
+		Headers: amqp.Table{
+			"key1": "value1",
+			"key2": 123,
+			"key3": true,
+		},
+		Body: []byte("body"),
+	}
+	got := newDelivery(d)
+	assert.Equal(t, "value1", got.Headers["key1"])
+	assert.Equal(t, "123", got.Headers["key2"])
+	assert.Equal(t, "true", got.Headers["key3"])
+	assert.Equal(t, []byte("body"), got.Body)
+}
+
+// --- integration tests ---
+
+func (s *RabbitMQSuite) TestSubscriber_Listen_Ack() {
 	if testing.Short() {
 		s.T().Skip("integration test")
 	}
-
 	t := s.T()
-	queueName := uuid.NewString()
+	qName := uuid.NewString()
 
 	dialer := NewDialer(s.RabbitURI, nil)
 	require.NoError(t, dialer.Connect())
+	t.Cleanup(func() { assert.NoError(t, dialer.Close()) })
 
-	channel, err := dialer.Channel()
+	ch, err := dialer.Channel()
 	require.NoError(t, err)
-	_, err = channel.QueueDeclare(queueName, false, false, false, false, nil)
+	_, err = ch.QueueDeclare(qName, false, false, false, false, nil)
 	require.NoError(t, err)
 
-	pub := NewPublisher(dialer, PublisherConfig{
-		RoutingKey: queueName,
-		Encoder:    encoders.Text{},
-	})
+	pub := NewPublisher(dialer, PublisherConfig{RoutingKey: qName, Encoder: encoders.Text{}})
 
-	// Handler that succeeds - should result in ack
-	messageReceived := make(chan struct{}, 1)
-	handler := func(ctx context.Context, msg queue.Delivery) (bool, error) {
-		messageReceived <- struct{}{}
+	received := make(chan struct{}, 1)
+	handler := func(_ context.Context, _ queue.Delivery) (bool, error) {
+		received <- struct{}{}
 		return false, nil
 	}
 
-	sub := NewSubscriber(dialer, queueName, SubscriberOptions{})
-	go sub.Listen(handler)
-	time.Sleep(200 * time.Millisecond) // Give subscriber time to start
+	ctx, cancel := context.WithCancel(context.Background())
+	sub := NewSubscriber(dialer, qName, SubscriberOptions{MaxRetries: 3})
+	go sub.Listen(ctx, handler)
+	time.Sleep(100 * time.Millisecond)
 
-	// Publish message
-	err = pub.Publish(context.Background(), queue.Message{Body: "test-ack"})
-	require.NoError(t, err)
+	require.NoError(t, pub.Publish(context.Background(), queue.Message{Body: "hello"}))
 
-	// Wait for message to be received
 	select {
-	case <-messageReceived:
-		t.Log("Message acknowledged successfully")
+	case <-received:
 	case <-time.After(3 * time.Second):
-		t.Log("Timeout waiting for message - may be OK in slow environments")
+		t.Fatal("timeout waiting for message")
 	}
-
-	// Close subscriber with timeout
-	done := make(chan struct{})
-	go func() {
-		assert.NoError(t, sub.Close())
-		close(done)
-	}()
-
-	select {
-	case <-done:
-		// Closed successfully
-	case <-time.After(5 * time.Second):
-		t.Log("Close took longer than expected")
-	}
+	cancel()
 }
 
-func (s *RabbitMQSuite) TestSubscriber_NackHandling() {
+func (s *RabbitMQSuite) TestSubscriber_Listen_DLQ() {
 	if testing.Short() {
 		s.T().Skip("integration test")
 	}
-
 	t := s.T()
-	queueName := uuid.NewString()
+	prefix := uuid.NewString()[:8]
+	qName := prefix + ".main"
+	qRetry := prefix + ".retry"
+	dlxName := prefix + ".dlx"
+	qDLQ := prefix + ".dlq"
+
+	defs := &Definitions{
+		Exchanges: []ExchangeDef{
+			{Name: dlxName, Vhost: "/", Type: "direct", Durable: false, Arguments: map[string]any{}},
+		},
+		Queues: []QueueDef{
+			{Name: qName, Vhost: "/", Durable: false, Arguments: map[string]any{
+				"x-dead-letter-exchange":    dlxName,
+				"x-dead-letter-routing-key": qDLQ,
+			}},
+			{Name: qRetry, Vhost: "/", Durable: false, Arguments: map[string]any{}},
+			{Name: qDLQ, Vhost: "/", Durable: false, Arguments: map[string]any{}},
+		},
+		Bindings: []BindingDef{
+			{Source: dlxName, Vhost: "/", Destination: qDLQ, DestinationType: "queue", RoutingKey: qDLQ, Arguments: map[string]any{}},
+		},
+	}
 
 	dialer := NewDialer(s.RabbitURI, nil)
 	require.NoError(t, dialer.Connect())
+	t.Cleanup(func() { assert.NoError(t, dialer.Close()) })
 
-	channel, err := dialer.Channel()
+	ch, err := dialer.Channel()
 	require.NoError(t, err)
-	_, err = channel.QueueDeclare(queueName, false, false, false, false, nil)
-	require.NoError(t, err)
+	require.NoError(t, defs.Apply(ch))
 
-	pub := NewPublisher(dialer, PublisherConfig{
-		RoutingKey: queueName,
-		Encoder:    encoders.Text{},
-	})
-
-	// Handler that returns non-retryable error - should reject (nack)
-	handlerCalled := make(chan struct{}, 10)
-	handlerError := errors.New("processing failed")
-
-	handler := func(ctx context.Context, msg queue.Delivery) (bool, error) {
-		handlerCalled <- struct{}{}
-		return false, handlerError // Non-retryable error
-	}
-
-	sub := NewSubscriber(dialer, queueName, SubscriberOptions{})
-	go sub.Listen(handler)
-	time.Sleep(200 * time.Millisecond)
-
-	// Publish message
-	err = pub.Publish(context.Background(), queue.Message{Body: "test-nack"})
-	require.NoError(t, err)
-
-	// Wait for handler to be called at least once
-	select {
-	case <-handlerCalled:
-		t.Log("Handler was called, message was rejected")
-	case <-time.After(3 * time.Second):
-		t.Log("Handler was not called - may be OK in slow environments")
-	}
-
-	// Close subscriber
-	done := make(chan struct{})
-	go func() {
-		assert.NoError(t, sub.Close())
-		close(done)
-	}()
-
-	select {
-	case <-done:
-	case <-time.After(5 * time.Second):
-		t.Log("Close took longer than expected")
-	}
-}
-
-func (s *RabbitMQSuite) TestSubscriber_InfiniteRetries() {
-	if testing.Short() {
-		s.T().Skip("integration test")
-	}
-
-	t := s.T()
-
-	// Test InfiniteRetriesIndicator constant
-	assert.Equal(t, -1, InfiniteRetriesIndicator)
-
-	// Basic test that infinite retries value is set correctly
-	// When MaxTryNum <= 0, it gets set to 0 (which represents infinite retries)
-	queueName := uuid.NewString()
-	dialer := NewDialer(s.RabbitURI, nil)
-	require.NoError(t, dialer.Connect())
-
-	sub := NewSubscriber(dialer, queueName, SubscriberOptions{
-		MaxTryNum: InfiniteRetriesIndicator,
-		Backoff:   50 * time.Millisecond,
-	})
-
-	assert.Equal(t, 0, sub.cfg.MaxTryNum, "InfiniteRetriesIndicator (-1) is normalized to 0")
-
-	// Close subscriber
-	assert.NoError(t, sub.Close())
-}
-
-func TestNewDelivery(t *testing.T) {
-	t.Run("with headers", func(t *testing.T) {
-		delivery := amqp.Delivery{
-			Headers: amqp.Table{
-				"key1": "value1",
-				"key2": 123,
-				"key3": true,
+	// Publish a message with x-death count already at MaxRetries so subscriber nacks it to DLQ immediately.
+	maxRetries := 3
+	err = ch.Publish("", qName, false, false, amqp.Publishing{
+		Body:         []byte("dead"),
+		DeliveryMode: amqp.Persistent,
+		Headers: amqp.Table{
+			"x-death": []any{
+				amqp.Table{"count": int64(maxRetries), "queue": qName},
 			},
-			Body: []byte("test body"),
-		}
-
-		qd := newDelivery(&delivery)
-
-		assert.NotNil(t, qd)
-		assert.Len(t, qd.Headers, 3)
-		assert.Equal(t, "test body", string(qd.Body))
-		assert.Equal(t, "value1", qd.Headers["key1"])
-		assert.Equal(t, "123", qd.Headers["key2"])  // Converted to string
-		assert.Equal(t, "true", qd.Headers["key3"]) // Converted to string
+		},
 	})
+	require.NoError(t, err)
 
-	t.Run("without headers", func(t *testing.T) {
-		delivery := amqp.Delivery{
-			Body: []byte("test body"),
-		}
+	handler := func(_ context.Context, _ queue.Delivery) (bool, error) {
+		return true, errors.New("always fails")
+	}
 
-		qd := newDelivery(&delivery)
-
-		assert.NotNil(t, qd)
-		assert.Empty(t, qd.Headers)
-		assert.Equal(t, "test body", string(qd.Body))
+	ctx, cancel := context.WithCancel(context.Background())
+	sub := NewSubscriber(dialer, qName, SubscriberOptions{
+		MaxRetries:     maxRetries,
+		RetryQueueName: qRetry,
 	})
+	go sub.Listen(ctx, handler)
+
+	dlqDeliveries, err := ch.Consume(qDLQ, "", false, false, false, false, nil)
+	require.NoError(t, err)
+
+	select {
+	case <-dlqDeliveries:
+		t.Log("message reached DLQ as expected")
+	case <-time.After(5 * time.Second):
+		t.Fatal("timeout: message did not reach DLQ")
+	}
+	cancel()
+}
+
+func (s *RabbitMQSuite) TestSubscriber_Listen_RetryQueue() {
+	if testing.Short() {
+		s.T().Skip("integration test")
+	}
+	t := s.T()
+	prefix := uuid.NewString()[:8]
+	qName := prefix + ".main"
+	qRetry := prefix + ".retry"
+
+	dialer := NewDialer(s.RabbitURI, nil)
+	require.NoError(t, dialer.Connect())
+	t.Cleanup(func() { assert.NoError(t, dialer.Close()) })
+
+	ch, err := dialer.Channel()
+	require.NoError(t, err)
+	_, err = ch.QueueDeclare(qName, false, false, false, false, nil)
+	require.NoError(t, err)
+	_, err = ch.QueueDeclare(qRetry, false, false, false, false, nil)
+	require.NoError(t, err)
+
+	// x-death count is 0 < MaxRetries=3, so the message should go to retry queue
+	require.NoError(t, ch.Publish("", qName, false, false, amqp.Publishing{
+		Body:         []byte("retry-me"),
+		DeliveryMode: amqp.Persistent,
+	}))
+
+	handler := func(_ context.Context, _ queue.Delivery) (bool, error) {
+		return true, errors.New("transient error")
+	}
+
+	ctx, cancel := context.WithCancel(context.Background())
+	sub := NewSubscriber(dialer, qName, SubscriberOptions{
+		MaxRetries:     3,
+		RetryQueueName: qRetry,
+	})
+	go sub.Listen(ctx, handler)
+
+	retryDeliveries, err := ch.Consume(qRetry, "", false, false, false, false, nil)
+	require.NoError(t, err)
+
+	select {
+	case d := <-retryDeliveries:
+		assert.Equal(t, []byte("retry-me"), d.Body)
+		t.Log("message reached retry queue as expected")
+	case <-time.After(5 * time.Second):
+		t.Fatal("timeout: message did not reach retry queue")
+	}
+	cancel()
+}
+
+func (s *RabbitMQSuite) TestSubscriber_Listen_GracefulShutdown() {
+	if testing.Short() {
+		s.T().Skip("integration test")
+	}
+	t := s.T()
+	qName := uuid.NewString()
+
+	dialer := NewDialer(s.RabbitURI, nil)
+	require.NoError(t, dialer.Connect())
+	t.Cleanup(func() { assert.NoError(t, dialer.Close()) })
+
+	ch, err := dialer.Channel()
+	require.NoError(t, err)
+	_, err = ch.QueueDeclare(qName, false, false, false, false, nil)
+	require.NoError(t, err)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	sub := NewSubscriber(dialer, qName, SubscriberOptions{MaxRetries: 3})
+
+	done := make(chan struct{})
+	go func() {
+		defer close(done)
+		sub.Listen(ctx, func(_ context.Context, _ queue.Delivery) (bool, error) {
+			return false, nil
+		})
+	}()
+	time.Sleep(100 * time.Millisecond)
+
+	cancel()
+
+	select {
+	case <-done:
+	case <-time.After(3 * time.Second):
+		t.Fatal("Listen did not return after context cancellation")
+	}
+}
+
+func (s *RabbitMQSuite) TestSubscriber_MessageTimeout() {
+	if testing.Short() {
+		s.T().Skip("integration test")
+	}
+	t := s.T()
+	qName := uuid.NewString()
+
+	dialer := NewDialer(s.RabbitURI, nil)
+	require.NoError(t, dialer.Connect())
+	t.Cleanup(func() { assert.NoError(t, dialer.Close()) })
+
+	ch, err := dialer.Channel()
+	require.NoError(t, err)
+	_, err = ch.QueueDeclare(qName, false, false, false, false, nil)
+	require.NoError(t, err)
+
+	pub := NewPublisher(dialer, PublisherConfig{RoutingKey: qName, Encoder: encoders.Text{}})
+	require.NoError(t, pub.Publish(context.Background(), queue.Message{Body: "timeout-test"}))
+
+	ctxReceived := make(chan context.Context, 1)
+	handler := func(ctx context.Context, _ queue.Delivery) (bool, error) {
+		ctxReceived <- ctx
+		return false, nil
+	}
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	sub := NewSubscriber(dialer, qName, SubscriberOptions{
+		MaxRetries:     3,
+		MessageTimeout: 10 * time.Second,
+	})
+	go sub.Listen(ctx, handler)
+
+	select {
+	case hCtx := <-ctxReceived:
+		deadline, ok := hCtx.Deadline()
+		assert.True(t, ok, "handler context should have a deadline")
+		assert.False(t, deadline.IsZero())
+	case <-time.After(3 * time.Second):
+		t.Fatal("timeout waiting for message")
+	}
 }

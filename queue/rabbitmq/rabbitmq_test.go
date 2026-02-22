@@ -1,20 +1,19 @@
 package rabbitmq
 
 import (
+	"context"
 	"testing"
 
-	"github.com/ory/dockertest/v3"
-	"github.com/ory/dockertest/v3/docker"
-	amqp "github.com/rabbitmq/amqp091-go"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
+	"github.com/testcontainers/testcontainers-go"
+	"github.com/testcontainers/testcontainers-go/wait"
 )
 
 type RabbitMQSuite struct {
 	suite.Suite
 	RabbitURI string
-	pool      *dockertest.Pool
-	rabbitMQ  *dockertest.Resource
+	container testcontainers.Container
 }
 
 func TestRabbitMQSuite(t *testing.T) {
@@ -25,33 +24,30 @@ func TestRabbitMQSuite(t *testing.T) {
 }
 
 func (s *RabbitMQSuite) SetupSuite() {
-	t := s.T()
+	ctx := context.Background()
 
-	pool, err := dockertest.NewPool("")
-	require.NoError(t, err)
-
-	rabbitMQ, err := pool.RunWithOptions(&dockertest.RunOptions{
-		Repository: "rabbitmq",
-		Tag:        "management-alpine",
-	}, func(config *docker.HostConfig) {
-		// Remove AutoRemove to prevent container from being deleted during tests
-		config.AutoRemove = false
+	container, err := testcontainers.GenericContainer(ctx, testcontainers.GenericContainerRequest{
+		ContainerRequest: testcontainers.ContainerRequest{
+			Image:        "rabbitmq:management-alpine",
+			ExposedPorts: []string{"5672/tcp"},
+			WaitingFor:   wait.ForListeningPort("5672/tcp"),
+		},
+		Started: true,
 	})
-	require.NoError(t, err)
+	require.NoError(s.T(), err)
 
-	// Wait for RabbitMQ to be ready
-	err = pool.Retry(func() error {
-		s.RabbitURI = "amqp://guest:guest@" + rabbitMQ.GetHostPort("5672/tcp")
-		_, err := amqp.Dial(s.RabbitURI)
-		return err
-	})
-	require.NoError(t, err)
+	host, err := container.Host(ctx)
+	require.NoError(s.T(), err)
 
-	s.pool = pool
-	s.rabbitMQ = rabbitMQ
+	port, err := container.MappedPort(ctx, "5672/tcp")
+	require.NoError(s.T(), err)
+
+	s.container = container
+	s.RabbitURI = "amqp://guest:guest@" + host + ":" + port.Port()
 }
 
 func (s *RabbitMQSuite) TearDownSuite() {
-	t := s.T()
-	require.NoError(t, s.pool.Purge(s.rabbitMQ))
+	if s.container != nil {
+		require.NoError(s.T(), s.container.Terminate(context.Background()))
+	}
 }

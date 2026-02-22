@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
-	"sync"
 	"time"
 
 	"github.com/google/uuid"
@@ -18,245 +17,190 @@ import (
 	"github.com/pure-golang/adapters/queue"
 )
 
-const (
-	ConsumeRetryInterval      = 5 * time.Second
-	InfiniteRetriesIndicator  = -1
-	KeyCountRetries           = "x-count-retries"
-	DefaultLastMessageTimeout = time.Hour
-)
+const ConsumeRetryInterval = 5 * time.Second
 
-var _ queue.Subscriber = (*Subscriber)(nil)
-
-// Subscriber implements queue.Subscriber interface
-// Handle one task per time
+// Subscriber читает сообщения из одной очереди RabbitMQ.
+// Повторные попытки реализованы через DLX: при ошибке сообщение публикуется
+// в retry-очередь (с x-message-ttl), откуда RabbitMQ возвращает его в основную
+// очередь по истечении TTL. Счётчик попыток читается из стандартного заголовка
+// x-death, который поддерживается RabbitMQ и сохраняется между перезапусками.
 type Subscriber struct {
-	name               string
-	queueName          string
-	wg                 sync.WaitGroup
-	cfg                SubscriberOptions
-	dialer             *Dialer
-	close              chan struct{}
-	logger             *slog.Logger
-	lastMessageTime    time.Time
-	lastMessageTimeout time.Duration
+	name      string
+	queueName string
+	cfg       SubscriberOptions
+	dialer    *Dialer
+	logger    *slog.Logger
 }
 
 type SubscriberOptions struct {
-	Name                     string
-	PrefetchCount, MaxTryNum int
-	Backoff                  time.Duration
+	// Name — consumer tag для AMQP. Генерируется автоматически, если пустой.
+	Name string
+	// PrefetchCount — значение Qos канала. По умолчанию 1.
+	PrefetchCount int
+	// MaxRetries — максимальное число попыток доставки, после чего сообщение
+	// отправляется в dead-letter queue (Nack requeue=false). Должно быть > 0.
+	MaxRetries int
+	// RetryQueueName — очередь, куда публикуются неуспешные сообщения для
+	// отложенной повторной обработки. По умолчанию queueName + ".retry".
+	RetryQueueName string
+	// MessageTimeout ограничивает время выполнения обработчика для одного сообщения.
+	// 0 означает отсутствие таймаута (осторожно: RabbitMQ consumer timeout по умолчанию 30 мин).
+	MessageTimeout time.Duration
 }
 
-func NewDefaultSubscriber(dialer *Dialer, queueName string) *Subscriber {
-	return NewSubscriber(dialer, queueName, SubscriberOptions{})
-}
-
-func NewSubscriber(dialer *Dialer, queueName string, cfg SubscriberOptions) *Subscriber {
-	var name string
-	if cfg.Name == "" {
-		name = uuid.NewString()
+func NewSubscriber(dialer *Dialer, queueName string, opts SubscriberOptions) *Subscriber {
+	if opts.Name == "" {
+		opts.Name = uuid.NewString()
 	}
-	if cfg.MaxTryNum <= 0 {
-		cfg.MaxTryNum = 0
+	if opts.PrefetchCount <= 0 {
+		opts.PrefetchCount = 1
 	}
-	if cfg.Backoff == 0 {
-		cfg.Backoff = 5 * time.Second
+	if opts.RetryQueueName == "" {
+		opts.RetryQueueName = queueName + ".retry"
 	}
-
 	return &Subscriber{
-		name:               name,
-		queueName:          queueName,
-		dialer:             dialer,
-		logger:             dialer.options.Logger.With("subscriber", name).With("queue", queueName),
-		close:              make(chan struct{}),
-		cfg:                cfg,
-		lastMessageTimeout: DefaultLastMessageTimeout,
+		name:      opts.Name,
+		queueName: queueName,
+		cfg:       opts,
+		dialer:    dialer,
+		logger:    dialer.options.Logger.With("subscriber", opts.Name).With("queue", queueName),
 	}
 }
 
-func (s *Subscriber) Listen(handler queue.Handler) {
-	s.wg.Add(1)
-	defer s.wg.Done()
-
+// Listen запускает чтение сообщений. Блокируется до отмены ctx.
+// При потере соединения автоматически переподключается через ConsumeRetryInterval.
+func (s *Subscriber) Listen(ctx context.Context, handler queue.Handler) {
 	s.logger.Info("listening...")
 	for {
-		s.lastMessageTime = time.Now()
-		needRestart, err := s.listen(handler)
-		if !needRestart {
+		if err := s.listen(ctx, handler); err != nil {
+			s.logger.With("error", err.Error()).Error("connection lost")
+		}
+		if ctx.Err() != nil {
 			return
 		}
-
-		if err != nil {
-			s.logger.With("error", err.Error()).Error("s.listen error")
+		select {
+		case <-ctx.Done():
+			return
+		case <-time.After(ConsumeRetryInterval):
 		}
-
-		time.Sleep(ConsumeRetryInterval)
 	}
 }
 
-func (s *Subscriber) listen(handler queue.Handler) (bool, error) {
-	channel, err := s.dialer.Channel()
+func (s *Subscriber) listen(ctx context.Context, handler queue.Handler) error {
+	ch, err := s.dialer.Channel()
 	if err != nil {
-		return true, errors.Wrap(err, "failed to make channel")
+		return errors.Wrap(err, "open channel")
 	}
-	defer func() {
-		// Channel close error is not critical here as we're about to exit anyway
-		// and RabbitMQ will clean up the channel on the server side
-		_ = channel.Close()
-	}()
-	notifyClose := channel.NotifyClose(make(chan *amqp.Error, 1))
-	closeChannel := make(chan error, 1)
-	defer close(closeChannel)
-	freezeClose := s.freezeClose(closeChannel)
+	defer ch.Close()
 
-	if err := channel.Qos(s.cfg.PrefetchCount, 0, false); err != nil {
-		return true, errors.Wrap(err, "failed to set prefetch count")
+	if err := ch.Qos(s.cfg.PrefetchCount, 0, false); err != nil {
+		return errors.Wrap(err, "set Qos")
 	}
 
-	deliveries, err := channel.Consume(
-		s.queueName,
-		s.cfg.Name,
-		false,
-		false,
-		false,
-		false,
-		nil,
-	)
+	deliveries, err := ch.Consume(s.queueName, s.name, false, false, false, false, nil)
 	if err != nil {
-		return true, errors.Wrapf(err, "failed to start consuming from %q", s.queueName)
+		return errors.Wrapf(err, "consume %q", s.queueName)
 	}
+
+	notifyClose := ch.NotifyClose(make(chan *amqp.Error, 1))
 
 	for {
 		select {
-		case <-s.close:
-			if err := channel.Cancel(s.name, false); err != nil {
-				return true, errors.Wrapf(err, "cancel consumer %q", s.name)
-			}
+		case <-ctx.Done():
+			return nil
 		case amqpErr := <-notifyClose:
-			if amqpErr != nil {
-				return true, errors.Wrap(amqpErr, "channel is closed")
-			}
-		case delivery, ok := <-deliveries:
+			return errors.Wrap(amqpErr, "channel closed")
+		case d, ok := <-deliveries:
 			if !ok {
-				// Rest of messages is drained
-				return false, nil
+				return nil
 			}
-			if err := s.handleDelivery(channel, &delivery, handler); err != nil {
-				return true, err
+			if err := s.handleDelivery(ctx, ch, &d, handler); err != nil {
+				return err
 			}
-		case <-freezeClose:
-			s.logger.Warn("last message received. need resubscribe", "time", s.lastMessageTime.UTC())
-			return true, nil
 		}
 	}
 }
 
-func (s *Subscriber) freezeClose(closeChanel chan error) chan struct{} {
-	c := make(chan struct{}, 1)
-	go func() {
-		for {
-			select {
-			case <-time.After(s.lastMessageTimeout):
-				if time.Since(s.lastMessageTime) > s.lastMessageTimeout {
-					c <- struct{}{}
-					return
-				}
-			case _, ok := <-closeChanel:
-				if !ok {
-					return
-				}
-			}
-		}
-	}()
-
-	return c
-}
-
-func (s *Subscriber) Close() error {
-	s.logger.Info("Closing subscriber...")
-	close(s.close)
-	s.wg.Wait()
-	return nil
-}
-
-func (s *Subscriber) handleDelivery(channel *amqp.Channel, delivery *amqp.Delivery, handler queue.Handler) error {
-	s.logger.Debug("handleDelivery")
-	s.lastMessageTime = time.Now()
-	ctx := otel.GetTextMapPropagator().Extract(context.Background(), tableCarrier(delivery.Headers))
-	ctx, span := tracer.Start(ctx, s.queueName, trace.WithSpanKind(trace.SpanKindConsumer))
+func (s *Subscriber) handleDelivery(ctx context.Context, ch *amqp.Channel, d *amqp.Delivery, handler queue.Handler) error {
+	hCtx := otel.GetTextMapPropagator().Extract(ctx, tableCarrier(d.Headers))
+	hCtx, span := tracer.Start(hCtx, s.queueName, trace.WithSpanKind(trace.SpanKindConsumer))
 	defer span.End()
 
-	// TODO
-	// s.logger.With("trace_id", span.SpanContext().TraceID())
-	// ctx = log.NewContext(ctx, logger) // pass ctx into  handler
-
 	span.SetAttributes(
-		attribute.String("id", delivery.MessageId),
-		attribute.String("body", string(delivery.Body)),
+		attribute.String("id", d.MessageId),
 		attribute.String("consumer_name", s.name),
 	)
 
-	retry, err := handler(ctx, newDelivery(delivery))
+	handlerCtx := hCtx
+	if s.cfg.MessageTimeout > 0 {
+		var cancel context.CancelFunc
+		handlerCtx, cancel = context.WithTimeout(hCtx, s.cfg.MessageTimeout)
+		defer cancel()
+	}
+
+	_, err := handler(handlerCtx, newDelivery(d))
 	if err == nil {
-		if err := channel.Ack(delivery.DeliveryTag, false); err != nil {
-			span.SetStatus(codes.Error, err.Error())
-			return errors.Wrap(err, "failed to ack")
+		if ackErr := ch.Ack(d.DeliveryTag, false); ackErr != nil {
+			span.SetStatus(codes.Error, ackErr.Error())
+			return errors.Wrap(ackErr, "ack")
 		}
 		return nil
 	}
 
-	s.logger.With("error", err.Error()).Error("Handle message")
+	s.logger.With("error", err.Error()).Error("handle message failed")
 	span.RecordError(err)
 	span.SetStatus(codes.Error, err.Error())
 
-	// Reject non-retryable error immediately
-	if !retry {
-		if err := channel.Reject(delivery.DeliveryTag, false); err != nil {
-			span.SetStatus(codes.Error, err.Error())
-			return errors.Wrap(err, "failed to reject")
+	if deathCount(d) >= s.cfg.MaxRetries {
+		// Попытки исчерпаны → dead-letter queue через x-dead-letter-* на основной очереди
+		if nackErr := ch.Nack(d.DeliveryTag, false, false); nackErr != nil {
+			span.SetStatus(codes.Error, nackErr.Error())
+			return errors.Wrap(nackErr, "nack to DLQ")
 		}
 		return nil
 	}
 
-	headers := delivery.Headers
-	if headers == nil {
-		headers = amqp.Table{}
-	}
-	countRetries := headers[KeyCountRetries].(int32) // 0 if not exists
-
-	if s.cfg.MaxTryNum != InfiniteRetriesIndicator {
-		countRetries++
-		if int(countRetries) >= s.cfg.MaxTryNum {
-			if err := channel.Reject(delivery.DeliveryTag, false); err != nil {
-				span.SetStatus(codes.Error, err.Error())
-				return errors.Wrap(err, "failed to reject")
-			}
-			return nil
-		}
-	}
-
-	headers[KeyCountRetries] = countRetries
+	// Публикуем в retry-очередь; RabbitMQ вернёт сообщение в основную очередь по истечении x-message-ttl
 	msg := amqp.Publishing{
-		MessageId:    delivery.MessageId,
-		ContentType:  delivery.ContentType,
-		DeliveryMode: delivery.DeliveryMode,
-		Body:         delivery.Body,
-		Headers:      headers,
+		MessageId:    d.MessageId,
+		ContentType:  d.ContentType,
+		DeliveryMode: d.DeliveryMode,
+		Body:         d.Body,
+		Headers:      d.Headers,
 	}
-	if err := channel.Publish("", s.queueName, false, false, msg); err != nil {
-		span.SetStatus(codes.Error, err.Error())
-		return errors.Wrap(err, "failed to publish")
-	}
-	if err := channel.Ack(delivery.DeliveryTag, false); err != nil {
-		span.SetStatus(codes.Error, err.Error())
-		return errors.Wrap(err, "failed to ack")
+	if pubErr := ch.Publish("", s.cfg.RetryQueueName, false, false, msg); pubErr != nil {
+		span.SetStatus(codes.Error, pubErr.Error())
+		// Запасной вариант: requeue, чтобы сообщение не потерялось
+		if nackErr := ch.Nack(d.DeliveryTag, false, true); nackErr != nil {
+			return errors.Wrap(nackErr, "nack requeue after retry-publish failure")
+		}
+		return nil
 	}
 
-	select {
-	case <-s.close:
-	case <-time.After(s.cfg.Backoff):
+	if ackErr := ch.Ack(d.DeliveryTag, false); ackErr != nil {
+		span.SetStatus(codes.Error, ackErr.Error())
+		return errors.Wrap(ackErr, "ack after retry publish")
 	}
 	return nil
+}
+
+// deathCount возвращает суммарное число доставок из заголовка x-death.
+// RabbitMQ автоматически увеличивает этот счётчик при каждом прохождении
+// сообщения через цикл dead-letter, поэтому значение сохраняется после перезапусков.
+func deathCount(d *amqp.Delivery) int {
+	deaths, ok := d.Headers["x-death"].([]any)
+	if !ok {
+		return 0
+	}
+	var total int
+	for _, entry := range deaths {
+		if table, ok := entry.(amqp.Table); ok {
+			if count, ok := table["count"].(int64); ok {
+				total += int(count)
+			}
+		}
+	}
+	return total
 }
 
 func newDelivery(msg *amqp.Delivery) queue.Delivery {
