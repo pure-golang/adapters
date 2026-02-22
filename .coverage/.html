@@ -153,29 +153,33 @@
 				
 				<option value="file48">github.com/pure-golang/adapters/queue/rabbitmq/interval_retry_policy.go (100.0%)</option>
 				
-				<option value="file49">github.com/pure-golang/adapters/queue/rabbitmq/publisher.go (90.9%)</option>
+				<option value="file49">github.com/pure-golang/adapters/queue/rabbitmq/multi_subscriber.go (70.6%)</option>
 				
-				<option value="file50">github.com/pure-golang/adapters/queue/rabbitmq/subscriber.go (63.8%)</option>
+				<option value="file50">github.com/pure-golang/adapters/queue/rabbitmq/publisher.go (90.9%)</option>
 				
-				<option value="file51">github.com/pure-golang/adapters/queue/rabbitmq/tracing.go (100.0%)</option>
+				<option value="file51">github.com/pure-golang/adapters/queue/rabbitmq/subscriber.go (75.9%)</option>
 				
-				<option value="file52">github.com/pure-golang/adapters/storage/errors.go (100.0%)</option>
+				<option value="file52">github.com/pure-golang/adapters/queue/rabbitmq/topology.go (85.0%)</option>
 				
-				<option value="file53">github.com/pure-golang/adapters/storage/minio/client.go (92.5%)</option>
+				<option value="file53">github.com/pure-golang/adapters/queue/rabbitmq/tracing.go (100.0%)</option>
 				
-				<option value="file54">github.com/pure-golang/adapters/storage/minio/errors.go (100.0%)</option>
+				<option value="file54">github.com/pure-golang/adapters/storage/errors.go (100.0%)</option>
 				
-				<option value="file55">github.com/pure-golang/adapters/storage/minio/minio.go (100.0%)</option>
+				<option value="file55">github.com/pure-golang/adapters/storage/minio/client.go (92.5%)</option>
 				
-				<option value="file56">github.com/pure-golang/adapters/storage/minio/multipart.go (35.4%)</option>
+				<option value="file56">github.com/pure-golang/adapters/storage/minio/errors.go (100.0%)</option>
 				
-				<option value="file57">github.com/pure-golang/adapters/storage/minio/presigned.go (69.7%)</option>
+				<option value="file57">github.com/pure-golang/adapters/storage/minio/minio.go (100.0%)</option>
 				
-				<option value="file58">github.com/pure-golang/adapters/storage/minio/storage.go (49.0%)</option>
+				<option value="file58">github.com/pure-golang/adapters/storage/minio/multipart.go (35.4%)</option>
 				
-				<option value="file59">github.com/pure-golang/adapters/tracing/jaeger/jaeger.go (72.2%)</option>
+				<option value="file59">github.com/pure-golang/adapters/storage/minio/presigned.go (69.7%)</option>
 				
-				<option value="file60">github.com/pure-golang/adapters/tracing/tracing.go (100.0%)</option>
+				<option value="file60">github.com/pure-golang/adapters/storage/minio/storage.go (49.0%)</option>
+				
+				<option value="file61">github.com/pure-golang/adapters/tracing/jaeger/jaeger.go (72.2%)</option>
+				
+				<option value="file62">github.com/pure-golang/adapters/tracing/tracing.go (100.0%)</option>
 				
 				</select>
 			</div>
@@ -4764,48 +4768,48 @@ type DialerOptions struct {
         Logger      *slog.Logger
 }
 
-func NewDefaultDialer(uri string) *Dialer <span class="cov1" title="1">{
+func NewDefaultDialer(uri string) *Dialer <span class="cov4" title="4">{
         return NewDialer(uri, nil)
 }</span>
 
-func NewDialer(uri string, options *DialerOptions) *Dialer <span class="cov9" title="32">{
-        if options == nil </span><span class="cov8" title="27">{
+func NewDialer(uri string, options *DialerOptions) *Dialer <span class="cov9" title="39">{
+        if options == nil </span><span class="cov9" title="34">{
                 options = new(DialerOptions)
         }</span>
-        <span class="cov9" title="32">if options.Logger == nil </span><span class="cov9" title="31">{
+        <span class="cov9" title="39">if options.Logger == nil </span><span class="cov9" title="38">{
                 options.Logger = slog.Default()
         }</span>
-        <span class="cov9" title="32">options.Logger = options.Logger.WithGroup("rabbitmq")
+        <span class="cov9" title="39">options.Logger = options.Logger.WithGroup("rabbitmq")
 
-        if options.RetryPolicy == nil </span><span class="cov9" title="30">{
+        if options.RetryPolicy == nil </span><span class="cov9" title="37">{
                 options.RetryPolicy = NewDefaultMaxInterval()
         }</span>
 
-        <span class="cov9" title="32">return &amp;Dialer{
+        <span class="cov9" title="39">return &amp;Dialer{
                 uri:     uri,
                 options: options,
         }</span>
 }
 
-func (d *Dialer) Connect() (err error) <span class="cov10" title="42">{
+func (d *Dialer) Connect() (err error) <span class="cov9" title="38">{
         d.options.Logger.Debug("Dialing...")
 
         d.mx.Lock()
         defer d.mx.Unlock()
 
         conn, err := amqp.DialConfig(d.uri, amqp.Config{})
-        if err != nil </span><span class="cov7" title="18">{
+        if err != nil </span><span class="cov6" title="10">{
                 return errors.Wrap(err, "failed to dial")
         }</span>
 
-        <span class="cov8" title="24">ch := conn.NotifyClose(make(chan *amqp.Error, 1))
+        <span class="cov8" title="28">ch := conn.NotifyClose(make(chan *amqp.Error, 1))
         d.conn = conn
         d.options.Logger.Debug("Connection is stable")
         go d.handleReconnect(ch)
         return nil</span>
 }
 
-func (d *Dialer) Channel() (*amqp.Channel, error) <span class="cov9" title="29">{
+func (d *Dialer) Channel() (*amqp.Channel, error) <span class="cov10" title="44">{
         d.mx.Lock()
         defer d.mx.Unlock()
 
@@ -4813,49 +4817,49 @@ func (d *Dialer) Channel() (*amqp.Channel, error) <span class="cov9" title="29">
                 return nil, ErrConnectionClosed
         }</span>
 
-        <span class="cov8" title="27">channel, err := d.conn.Channel()
+        <span class="cov9" title="42">channel, err := d.conn.Channel()
         if err != nil </span><span class="cov0" title="0">{
                 return nil, errors.Wrap(err, "failed to open channel")
         }</span>
-        <span class="cov8" title="27">return channel, nil</span>
+        <span class="cov9" title="42">return channel, nil</span>
 }
 
-func (d *Dialer) Close() error <span class="cov8" title="21">{
+func (d *Dialer) Close() error <span class="cov9" title="29">{
         d.mx.Lock()
         defer d.mx.Unlock()
 
         if d.conn == nil </span><span class="cov3" title="3">{
                 return nil
         }</span>
-        <span class="cov7" title="18">if err := d.conn.Close(); err != nil </span><span class="cov0" title="0">{
+        <span class="cov8" title="26">if err := d.conn.Close(); err != nil </span><span class="cov0" title="0">{
                 return errors.Wrap(err, "failed to close RabbitMQ connection")
         }</span>
-        <span class="cov7" title="18">d.conn = nil
+        <span class="cov8" title="26">d.conn = nil
         return nil</span>
 }
 
 // handleReconnect listens AMQP connection failures from go-chan and attempts to reconnect
-func (d *Dialer) handleReconnect(ch chan *amqp.Error) <span class="cov8" title="24">{
+func (d *Dialer) handleReconnect(ch chan *amqp.Error) <span class="cov8" title="28">{
         err, ok := &lt;-ch
-        if !ok </span><span class="cov7" title="18">{
+        if !ok </span><span class="cov8" title="26">{
                 d.options.Logger.Debug("Shutdown")
                 return
         }</span>
 
-        <span class="cov5" title="6">d.options.Logger.With("error", err.Error()).Warn("Disconnected")
+        <span class="cov2" title="2">d.options.Logger.With("error", err.Error()).Warn("Disconnected")
 
-        for i := 0; ; i++ </span><span class="cov7" title="18">{
+        for i := 0; ; i++ </span><span class="cov6" title="10">{
                 err := d.Connect()
                 if err == nil </span><span class="cov0" title="0">{
                         return
                 }</span>
 
-                <span class="cov7" title="18">sleepDuration, stop := d.options.RetryPolicy.TryNum(i)
+                <span class="cov6" title="10">sleepDuration, stop := d.options.RetryPolicy.TryNum(i)
                 if stop </span><span class="cov0" title="0">{
                         d.options.Logger.With("error", err.Error()).Error("Cannot to connect to rabbitmq. Time is out")
                         return
                 }</span>
-                <span class="cov7" title="18">d.options.Logger.With("error", err.Error()).Error("Failed to connect")
+                <span class="cov6" title="10">d.options.Logger.With("error", err.Error()).Error("Failed to connect")
 
                 time.Sleep(sleepDuration)</span>
         }
@@ -4876,7 +4880,7 @@ const (
 )
 
 // NewDefaultMaxInterval returns MaxInterval with default values.
-func NewDefaultMaxInterval() *MaxInterval <span class="cov10" title="30">{
+func NewDefaultMaxInterval() *MaxInterval <span class="cov10" title="37">{
         return &amp;MaxInterval{
                 base:          time.Millisecond * 100,
                 max:           time.Hour * 2,
@@ -4888,7 +4892,7 @@ func NewDefaultMaxInterval() *MaxInterval <span class="cov10" title="30">{
 func NewMaxInterval(
         baseInterval, maxInterval time.Duration,
         intervalMultiplicator int,
-) *MaxInterval <span class="cov6" title="7">{
+) *MaxInterval <span class="cov5" title="7">{
         if baseInterval == 0 </span><span class="cov1" title="1">{
                 panic("interval should not be 0")</span>
         }
@@ -4916,17 +4920,253 @@ type MaxInterval struct {
 }
 
 // TryNum for use in for loop. tryNum int is number of iteration.
-func (interval *MaxInterval) TryNum(tryNum int) (time.Duration, bool) <span class="cov9" title="21">{
+func (interval *MaxInterval) TryNum(tryNum int) (time.Duration, bool) <span class="cov7" title="13">{
         retryInterval := interval.base * time.Duration(tryNum*interval.multiplicator)
         if retryInterval &gt; interval.max </span><span class="cov1" title="1">{
                 return 0, true
         }</span>
 
-        <span class="cov8" title="20">return retryInterval, false</span>
+        <span class="cov7" title="12">return retryInterval, false</span>
 }
 </pre>
 		
 		<pre class="file" id="file49" style="display: none">package rabbitmq
+
+import (
+        "context"
+        "fmt"
+        "log/slog"
+        "sync"
+        "time"
+
+        "github.com/google/uuid"
+        amqp "github.com/rabbitmq/amqp091-go"
+        "go.opentelemetry.io/otel"
+        "go.opentelemetry.io/otel/attribute"
+        "go.opentelemetry.io/otel/codes"
+        "go.opentelemetry.io/otel/trace"
+
+        "github.com/pure-golang/adapters/queue"
+)
+
+// QueueHandler связывает имя очереди с функцией-обработчиком.
+type QueueHandler struct {
+        // QueueName — очередь, из которой читаются сообщения.
+        QueueName string
+        // RetryQueueName — очередь, куда публикуются неуспешные сообщения для отложенной повторной обработки.
+        // По умолчанию QueueName + ".retry".
+        RetryQueueName string
+        // Handler обрабатывает каждое доставленное сообщение.
+        Handler queue.Handler
+}
+
+// MultiQueueOptions настраивает MultiQueueSubscriber.
+type MultiQueueOptions struct {
+        // PrefetchCount — значение Qos prefetch, применяемое глобально ко всем
+        // консьюмерам на общем канале (global=true).
+        // Значение 1 гарантирует не более одного неподтверждённого сообщения одновременно.
+        // По умолчанию 1.
+        PrefetchCount int
+        // MaxRetries — максимальное число попыток доставки, после чего сообщение
+        // отправляется в dead-letter queue. Должно быть &gt; 0.
+        MaxRetries int
+        // MessageTimeout ограничивает время выполнения обработчика для одного сообщения.
+        // 0 означает отсутствие таймаута.
+        MessageTimeout time.Duration
+        // ReconnectDelay — пауза между попытками переподключения при сбое соединения или канала.
+        // По умолчанию 5s.
+        ReconnectDelay time.Duration
+}
+
+// MultiQueueSubscriber читает сообщения из нескольких очередей на одном AMQP-канале.
+// Одна горутина обрабатывает доставки из всех очередей последовательно, что
+// гарантирует не более одного сообщения в обработке одновременно (при PrefetchCount=1).
+// Соответствует модели из RABBIT2.md для CPU-интенсивных задач.
+type MultiQueueSubscriber struct {
+        dialer *Dialer
+        cfg    MultiQueueOptions
+        logger *slog.Logger
+}
+
+func NewMultiQueueSubscriber(dialer *Dialer, opts MultiQueueOptions) *MultiQueueSubscriber <span class="cov6" title="5">{
+        if opts.PrefetchCount &lt;= 0 </span><span class="cov5" title="4">{
+                opts.PrefetchCount = 1
+        }</span>
+        <span class="cov6" title="5">if opts.ReconnectDelay &lt;= 0 </span><span class="cov6" title="5">{
+                opts.ReconnectDelay = 5 * time.Second
+        }</span>
+        <span class="cov6" title="5">return &amp;MultiQueueSubscriber{
+                dialer: dialer,
+                cfg:    opts,
+                logger: dialer.options.Logger.With("component", "multi_subscriber"),
+        }</span>
+}
+
+// Listen запускает чтение из всех указанных очередей. Блокируется до отмены ctx.
+// При потере соединения или канала автоматически переподключается.
+func (s *MultiQueueSubscriber) Listen(ctx context.Context, handlers ...QueueHandler) error <span class="cov5" title="4">{
+        // Нормализуем имена retry-очередей один раз.
+        for i := range handlers </span><span class="cov6" title="6">{
+                if handlers[i].RetryQueueName == "" </span><span class="cov6" title="5">{
+                        handlers[i].RetryQueueName = handlers[i].QueueName + ".retry"
+                }</span>
+        }
+
+        <span class="cov5" title="4">s.logger.Info("listening...")
+        for </span><span class="cov5" title="4">{
+                if err := s.connectAndConsume(ctx, handlers); err != nil </span><span class="cov0" title="0">{
+                        s.logger.With("error", err.Error()).Error("connection lost")
+                }</span>
+                <span class="cov5" title="4">if ctx.Err() != nil </span><span class="cov5" title="4">{
+                        return nil
+                }</span>
+                <span class="cov0" title="0">select </span>{
+                case &lt;-ctx.Done():<span class="cov0" title="0">
+                        return nil</span>
+                case &lt;-time.After(s.cfg.ReconnectDelay):<span class="cov0" title="0"></span>
+                }
+        }
+}
+
+type taggedDelivery struct {
+        d amqp.Delivery
+        h QueueHandler
+}
+
+func (s *MultiQueueSubscriber) connectAndConsume(ctx context.Context, handlers []QueueHandler) error <span class="cov5" title="4">{
+        ch, err := s.dialer.Channel()
+        if err != nil </span><span class="cov0" title="0">{
+                return fmt.Errorf("open channel: %w", err)
+        }</span>
+        <span class="cov5" title="4">defer ch.Close()
+
+        // global=true: лимит prefetch применяется ко всем консьюмерам на этом канале.
+        if err := ch.Qos(s.cfg.PrefetchCount, 0, true); err != nil </span><span class="cov0" title="0">{
+                return fmt.Errorf("set Qos: %w", err)
+        }</span>
+
+        <span class="cov5" title="4">type namedConsumer struct {
+                deliveries &lt;-chan amqp.Delivery
+                handler    QueueHandler
+        }
+
+        consumers := make([]namedConsumer, 0, len(handlers))
+        for _, h := range handlers </span><span class="cov6" title="6">{
+                tag := uuid.NewString()
+                dels, err := ch.Consume(h.QueueName, tag, false, false, false, false, nil)
+                if err != nil </span><span class="cov0" title="0">{
+                        return fmt.Errorf("consume %q: %w", h.QueueName, err)
+                }</span>
+                <span class="cov6" title="6">consumers = append(consumers, namedConsumer{dels, h})</span>
+        }
+
+        <span class="cov5" title="4">notifyClose := ch.NotifyClose(make(chan *amqp.Error, 1))
+
+        // Fan-in: объединяем каналы доставки всех очередей в один.
+        // Каждая очередь получает свою горутину для пересылки в объединённый канал.
+        // Основной цикл остаётся однопоточным (нет конкурентных AMQP-операций).
+        fanCtx, cancelFan := context.WithCancel(ctx)
+        defer cancelFan()
+
+        merged := make(chan taggedDelivery)
+        var wg sync.WaitGroup
+        for _, c := range consumers </span><span class="cov6" title="6">{
+                wg.Add(1)
+                go func(c namedConsumer) </span><span class="cov6" title="6">{
+                        defer wg.Done()
+                        for d := range c.deliveries </span><span class="cov9" title="13">{
+                                select </span>{
+                                case merged &lt;- taggedDelivery{d, c.handler}:<span class="cov9" title="13"></span>
+                                case &lt;-fanCtx.Done():<span class="cov0" title="0">
+                                        return</span>
+                                }
+                        }
+                }(c)
+        }
+        <span class="cov5" title="4">go func() </span><span class="cov5" title="4">{
+                wg.Wait()
+                close(merged)
+        }</span>()
+
+        <span class="cov5" title="4">for </span><span class="cov10" title="17">{
+                select </span>{
+                case &lt;-ctx.Done():<span class="cov5" title="4">
+                        return nil</span>
+                case amqpErr, ok := &lt;-notifyClose:<span class="cov0" title="0">
+                        if !ok || amqpErr == nil </span><span class="cov0" title="0">{
+                                return fmt.Errorf("channel closed")
+                        }</span>
+                        <span class="cov0" title="0">return fmt.Errorf("channel closed: %w", amqpErr)</span>
+                case td, ok := &lt;-merged:<span class="cov9" title="13">
+                        if !ok </span><span class="cov0" title="0">{
+                                return nil
+                        }</span>
+                        <span class="cov9" title="13">s.handleDelivery(ctx, ch, &amp;td.d, td.h)</span>
+                }
+        }
+}
+
+func (s *MultiQueueSubscriber) handleDelivery(ctx context.Context, ch *amqp.Channel, d *amqp.Delivery, h QueueHandler) <span class="cov9" title="13">{
+        hCtx := otel.GetTextMapPropagator().Extract(ctx, tableCarrier(d.Headers))
+        hCtx, span := tracer.Start(hCtx, h.QueueName, trace.WithSpanKind(trace.SpanKindConsumer))
+        defer span.End()
+
+        span.SetAttributes(
+                attribute.String("id", d.MessageId),
+                attribute.String("queue", h.QueueName),
+        )
+
+        handlerCtx := hCtx
+        if s.cfg.MessageTimeout &gt; 0 </span><span class="cov0" title="0">{
+                var cancel context.CancelFunc
+                handlerCtx, cancel = context.WithTimeout(hCtx, s.cfg.MessageTimeout)
+                defer cancel()
+        }</span>
+
+        <span class="cov9" title="13">_, err := h.Handler(handlerCtx, newDelivery(d))
+        if err == nil </span><span class="cov8" title="12">{
+                if ackErr := ch.Ack(d.DeliveryTag, false); ackErr != nil </span><span class="cov0" title="0">{
+                        span.SetStatus(codes.Error, ackErr.Error())
+                        s.logger.With("error", ackErr.Error()).Error("ack failed")
+                }</span>
+                <span class="cov8" title="12">return</span>
+        }
+
+        <span class="cov1" title="1">s.logger.With("error", err.Error(), "queue", h.QueueName).Error("handle message failed")
+        span.RecordError(err)
+        span.SetStatus(codes.Error, err.Error())
+
+        if deathCount(d) &gt;= s.cfg.MaxRetries </span><span class="cov0" title="0">{
+                if nackErr := ch.Nack(d.DeliveryTag, false, false); nackErr != nil </span><span class="cov0" title="0">{
+                        s.logger.With("error", nackErr.Error()).Error("nack to DLQ failed")
+                }</span>
+                <span class="cov0" title="0">return</span>
+        }
+
+        <span class="cov1" title="1">msg := amqp.Publishing{
+                MessageId:    d.MessageId,
+                ContentType:  d.ContentType,
+                DeliveryMode: d.DeliveryMode,
+                Body:         d.Body,
+                Headers:      d.Headers,
+        }
+        if pubErr := ch.Publish("", h.RetryQueueName, false, false, msg); pubErr != nil </span><span class="cov0" title="0">{
+                span.SetStatus(codes.Error, pubErr.Error())
+                // Запасной вариант: requeue, чтобы сообщение не потерялось
+                if nackErr := ch.Nack(d.DeliveryTag, false, true); nackErr != nil </span><span class="cov0" title="0">{
+                        s.logger.With("error", nackErr.Error()).Error("nack requeue after retry-publish failure")
+                }</span>
+                <span class="cov0" title="0">return</span>
+        }
+
+        <span class="cov1" title="1">if ackErr := ch.Ack(d.DeliveryTag, false); ackErr != nil </span><span class="cov0" title="0">{
+                span.SetStatus(codes.Error, ackErr.Error())
+                s.logger.With("error", ackErr.Error()).Error("ack after retry publish failed")
+        }</span>
+}
+</pre>
+		
+		<pre class="file" id="file50" style="display: none">package rabbitmq
 
 import (
         "context"
@@ -5072,13 +5312,12 @@ func (p *Publisher) publish(ctx context.Context, msg queue.Message) error <span 
 }
 </pre>
 		
-		<pre class="file" id="file50" style="display: none">package rabbitmq
+		<pre class="file" id="file51" style="display: none">package rabbitmq
 
 import (
         "context"
         "fmt"
         "log/slog"
-        "sync"
         "time"
 
         "github.com/google/uuid"
@@ -5092,260 +5331,324 @@ import (
         "github.com/pure-golang/adapters/queue"
 )
 
-const (
-        ConsumeRetryInterval      = 5 * time.Second
-        InfiniteRetriesIndicator  = -1
-        KeyCountRetries           = "x-count-retries"
-        DefaultLastMessageTimeout = time.Hour
-)
+const ConsumeRetryInterval = 5 * time.Second
 
-var _ queue.Subscriber = (*Subscriber)(nil)
-
-// Subscriber implements queue.Subscriber interface
-// Handle one task per time
+// Subscriber читает сообщения из одной очереди RabbitMQ.
+// Повторные попытки реализованы через DLX: при ошибке сообщение публикуется
+// в retry-очередь (с x-message-ttl), откуда RabbitMQ возвращает его в основную
+// очередь по истечении TTL. Счётчик попыток читается из стандартного заголовка
+// x-death, который поддерживается RabbitMQ и сохраняется между перезапусками.
 type Subscriber struct {
-        name               string
-        queueName          string
-        wg                 sync.WaitGroup
-        cfg                SubscriberOptions
-        dialer             *Dialer
-        close              chan struct{}
-        logger             *slog.Logger
-        lastMessageTime    time.Time
-        lastMessageTimeout time.Duration
+        name      string
+        queueName string
+        cfg       SubscriberOptions
+        dialer    *Dialer
+        logger    *slog.Logger
 }
 
 type SubscriberOptions struct {
-        Name                     string
-        PrefetchCount, MaxTryNum int
-        Backoff                  time.Duration
+        // Name — consumer tag для AMQP. Генерируется автоматически, если пустой.
+        Name string
+        // PrefetchCount — значение Qos канала. По умолчанию 1.
+        PrefetchCount int
+        // MaxRetries — максимальное число попыток доставки, после чего сообщение
+        // отправляется в dead-letter queue (Nack requeue=false). Должно быть &gt; 0.
+        MaxRetries int
+        // RetryQueueName — очередь, куда публикуются неуспешные сообщения для
+        // отложенной повторной обработки. По умолчанию queueName + ".retry".
+        RetryQueueName string
+        // MessageTimeout ограничивает время выполнения обработчика для одного сообщения.
+        // 0 означает отсутствие таймаута (осторожно: RabbitMQ consumer timeout по умолчанию 30 мин).
+        MessageTimeout time.Duration
 }
 
-func NewDefaultSubscriber(dialer *Dialer, queueName string) *Subscriber <span class="cov1" title="1">{
-        return NewSubscriber(dialer, queueName, SubscriberOptions{})
-}</span>
-
-func NewSubscriber(dialer *Dialer, queueName string, cfg SubscriberOptions) *Subscriber <span class="cov2" title="9">{
-        var name string
-        if cfg.Name == "" </span><span class="cov2" title="9">{
-                name = uuid.NewString()
+func NewSubscriber(dialer *Dialer, queueName string, opts SubscriberOptions) *Subscriber <span class="cov7" title="7">{
+        if opts.Name == "" </span><span class="cov7" title="7">{
+                opts.Name = uuid.NewString()
         }</span>
-        <span class="cov2" title="9">if cfg.MaxTryNum &lt;= 0 </span><span class="cov2" title="8">{
-                cfg.MaxTryNum = 0
+        <span class="cov7" title="7">if opts.PrefetchCount &lt;= 0 </span><span class="cov7" title="7">{
+                opts.PrefetchCount = 1
         }</span>
-        <span class="cov2" title="9">if cfg.Backoff == 0 </span><span class="cov2" title="7">{
-                cfg.Backoff = 5 * time.Second
+        <span class="cov7" title="7">if opts.RetryQueueName == "" </span><span class="cov5" title="4">{
+                opts.RetryQueueName = queueName + ".retry"
         }</span>
-
-        <span class="cov2" title="9">return &amp;Subscriber{
-                name:               name,
-                queueName:          queueName,
-                dialer:             dialer,
-                logger:             dialer.options.Logger.With("subscriber", name).With("queue", queueName),
-                close:              make(chan struct{}),
-                cfg:                cfg,
-                lastMessageTimeout: DefaultLastMessageTimeout,
+        <span class="cov7" title="7">return &amp;Subscriber{
+                name:      opts.Name,
+                queueName: queueName,
+                cfg:       opts,
+                dialer:    dialer,
+                logger:    dialer.options.Logger.With("subscriber", opts.Name).With("queue", queueName),
         }</span>
 }
 
-func (s *Subscriber) Listen(handler queue.Handler) <span class="cov1" title="2">{
-        s.wg.Add(1)
-        defer s.wg.Done()
-
+// Listen запускает чтение сообщений. Блокируется до отмены ctx.
+// При потере соединения автоматически переподключается через ConsumeRetryInterval.
+func (s *Subscriber) Listen(ctx context.Context, handler queue.Handler) <span class="cov6" title="5">{
         s.logger.Info("listening...")
-        for </span><span class="cov1" title="2">{
-                s.lastMessageTime = time.Now()
-                needRestart, err := s.listen(handler)
-                if !needRestart </span><span class="cov0" title="0">{
+        for </span><span class="cov6" title="5">{
+                if err := s.listen(ctx, handler); err != nil </span><span class="cov0" title="0">{
+                        s.logger.With("error", err.Error()).Error("connection lost")
+                }</span>
+                <span class="cov6" title="5">if ctx.Err() != nil </span><span class="cov6" title="5">{
                         return
                 }</span>
-
-                <span class="cov1" title="2">if err != nil </span><span class="cov1" title="2">{
-                        s.logger.With("error", err.Error()).Error("s.listen error")
-                }</span>
-
-                <span class="cov1" title="2">time.Sleep(ConsumeRetryInterval)</span>
+                <span class="cov0" title="0">select </span>{
+                case &lt;-ctx.Done():<span class="cov0" title="0">
+                        return</span>
+                case &lt;-time.After(ConsumeRetryInterval):<span class="cov0" title="0"></span>
+                }
         }
 }
 
-func (s *Subscriber) listen(handler queue.Handler) (bool, error) <span class="cov1" title="2">{
-        channel, err := s.dialer.Channel()
+func (s *Subscriber) listen(ctx context.Context, handler queue.Handler) error <span class="cov6" title="5">{
+        ch, err := s.dialer.Channel()
         if err != nil </span><span class="cov0" title="0">{
-                return true, errors.Wrap(err, "failed to make channel")
+                return errors.Wrap(err, "open channel")
         }</span>
-        <span class="cov1" title="2">defer func() </span><span class="cov1" title="2">{
-                // Channel close error is not critical here as we're about to exit anyway
-                // and RabbitMQ will clean up the channel on the server side
-                _ = channel.Close()
-        }</span>()
-        <span class="cov1" title="2">notifyClose := channel.NotifyClose(make(chan *amqp.Error, 1))
-        closeChannel := make(chan error, 1)
-        defer close(closeChannel)
-        freezeClose := s.freezeClose(closeChannel)
+        <span class="cov6" title="5">defer ch.Close()
 
-        if err := channel.Qos(s.cfg.PrefetchCount, 0, false); err != nil </span><span class="cov0" title="0">{
-                return true, errors.Wrap(err, "failed to set prefetch count")
+        if err := ch.Qos(s.cfg.PrefetchCount, 0, false); err != nil </span><span class="cov0" title="0">{
+                return errors.Wrap(err, "set Qos")
         }</span>
 
-        <span class="cov1" title="2">deliveries, err := channel.Consume(
-                s.queueName,
-                s.cfg.Name,
-                false,
-                false,
-                false,
-                false,
-                nil,
-        )
+        <span class="cov6" title="5">deliveries, err := ch.Consume(s.queueName, s.name, false, false, false, false, nil)
         if err != nil </span><span class="cov0" title="0">{
-                return true, errors.Wrapf(err, "failed to start consuming from %q", s.queueName)
+                return errors.Wrapf(err, "consume %q", s.queueName)
         }</span>
 
-        <span class="cov1" title="2">for </span><span class="cov10" title="66217">{
+        <span class="cov6" title="5">notifyClose := ch.NotifyClose(make(chan *amqp.Error, 1))
+
+        for </span><span class="cov7" title="9">{
                 select </span>{
-                case &lt;-s.close:<span class="cov9" title="66215">
-                        if err := channel.Cancel(s.name, false); err != nil </span><span class="cov1" title="2">{
-                                return true, errors.Wrapf(err, "cancel consumer %q", s.name)
-                        }</span>
+                case &lt;-ctx.Done():<span class="cov6" title="5">
+                        return nil</span>
                 case amqpErr := &lt;-notifyClose:<span class="cov0" title="0">
-                        if amqpErr != nil </span><span class="cov0" title="0">{
-                                return true, errors.Wrap(amqpErr, "channel is closed")
-                        }</span>
-                case delivery, ok := &lt;-deliveries:<span class="cov1" title="2">
+                        return errors.Wrap(amqpErr, "channel closed")</span>
+                case d, ok := &lt;-deliveries:<span class="cov5" title="4">
                         if !ok </span><span class="cov0" title="0">{
-                                // Rest of messages is drained
-                                return false, nil
+                                return nil
                         }</span>
-                        <span class="cov1" title="2">if err := s.handleDelivery(channel, &amp;delivery, handler); err != nil </span><span class="cov0" title="0">{
-                                return true, err
+                        <span class="cov5" title="4">if err := s.handleDelivery(ctx, ch, &amp;d, handler); err != nil </span><span class="cov0" title="0">{
+                                return err
                         }</span>
-                case &lt;-freezeClose:<span class="cov0" title="0">
-                        s.logger.Warn("last message received. need resubscribe", "time", s.lastMessageTime.UTC())
-                        return true, nil</span>
                 }
         }
 }
 
-func (s *Subscriber) freezeClose(closeChanel chan error) chan struct{} <span class="cov1" title="2">{
-        c := make(chan struct{}, 1)
-        go func() </span><span class="cov1" title="2">{
-                for </span><span class="cov1" title="2">{
-                        select </span>{
-                        case &lt;-time.After(s.lastMessageTimeout):<span class="cov0" title="0">
-                                if time.Since(s.lastMessageTime) &gt; s.lastMessageTimeout </span><span class="cov0" title="0">{
-                                        c &lt;- struct{}{}
-                                        return
-                                }</span>
-                        case _, ok := &lt;-closeChanel:<span class="cov1" title="2">
-                                if !ok </span><span class="cov1" title="2">{
-                                        return
-                                }</span>
-                        }
-                }
-        }()
-
-        <span class="cov1" title="2">return c</span>
-}
-
-func (s *Subscriber) Close() error <span class="cov2" title="4">{
-        s.logger.Info("Closing subscriber...")
-        close(s.close)
-        s.wg.Wait()
-        return nil
-}</span>
-
-func (s *Subscriber) handleDelivery(channel *amqp.Channel, delivery *amqp.Delivery, handler queue.Handler) error <span class="cov1" title="2">{
-        s.logger.Debug("handleDelivery")
-        s.lastMessageTime = time.Now()
-        ctx := otel.GetTextMapPropagator().Extract(context.Background(), tableCarrier(delivery.Headers))
-        ctx, span := tracer.Start(ctx, s.queueName, trace.WithSpanKind(trace.SpanKindConsumer))
+func (s *Subscriber) handleDelivery(ctx context.Context, ch *amqp.Channel, d *amqp.Delivery, handler queue.Handler) error <span class="cov5" title="4">{
+        hCtx := otel.GetTextMapPropagator().Extract(ctx, tableCarrier(d.Headers))
+        hCtx, span := tracer.Start(hCtx, s.queueName, trace.WithSpanKind(trace.SpanKindConsumer))
         defer span.End()
 
-        // TODO
-        // s.logger.With("trace_id", span.SpanContext().TraceID())
-        // ctx = log.NewContext(ctx, logger) // pass ctx into  handler
-
         span.SetAttributes(
-                attribute.String("id", delivery.MessageId),
-                attribute.String("body", string(delivery.Body)),
+                attribute.String("id", d.MessageId),
                 attribute.String("consumer_name", s.name),
         )
 
-        retry, err := handler(ctx, newDelivery(delivery))
-        if err == nil </span><span class="cov1" title="1">{
-                if err := channel.Ack(delivery.DeliveryTag, false); err != nil </span><span class="cov0" title="0">{
-                        span.SetStatus(codes.Error, err.Error())
-                        return errors.Wrap(err, "failed to ack")
+        handlerCtx := hCtx
+        if s.cfg.MessageTimeout &gt; 0 </span><span class="cov1" title="1">{
+                var cancel context.CancelFunc
+                handlerCtx, cancel = context.WithTimeout(hCtx, s.cfg.MessageTimeout)
+                defer cancel()
+        }</span>
+
+        <span class="cov5" title="4">_, err := handler(handlerCtx, newDelivery(d))
+        if err == nil </span><span class="cov3" title="2">{
+                if ackErr := ch.Ack(d.DeliveryTag, false); ackErr != nil </span><span class="cov0" title="0">{
+                        span.SetStatus(codes.Error, ackErr.Error())
+                        return errors.Wrap(ackErr, "ack")
                 }</span>
-                <span class="cov1" title="1">return nil</span>
+                <span class="cov3" title="2">return nil</span>
         }
 
-        <span class="cov1" title="1">s.logger.With("error", err.Error()).Error("Handle message")
+        <span class="cov3" title="2">s.logger.With("error", err.Error()).Error("handle message failed")
         span.RecordError(err)
         span.SetStatus(codes.Error, err.Error())
 
-        // Reject non-retryable error immediately
-        if !retry </span><span class="cov1" title="1">{
-                if err := channel.Reject(delivery.DeliveryTag, false); err != nil </span><span class="cov0" title="0">{
-                        span.SetStatus(codes.Error, err.Error())
-                        return errors.Wrap(err, "failed to reject")
+        if deathCount(d) &gt;= s.cfg.MaxRetries </span><span class="cov1" title="1">{
+                // Попытки исчерпаны → dead-letter queue через x-dead-letter-* на основной очереди
+                if nackErr := ch.Nack(d.DeliveryTag, false, false); nackErr != nil </span><span class="cov0" title="0">{
+                        span.SetStatus(codes.Error, nackErr.Error())
+                        return errors.Wrap(nackErr, "nack to DLQ")
                 }</span>
                 <span class="cov1" title="1">return nil</span>
         }
 
-        <span class="cov0" title="0">headers := delivery.Headers
-        if headers == nil </span><span class="cov0" title="0">{
-                headers = amqp.Table{}
-        }</span>
-        <span class="cov0" title="0">countRetries := headers[KeyCountRetries].(int32) // 0 if not exists
-
-        if s.cfg.MaxTryNum != InfiniteRetriesIndicator </span><span class="cov0" title="0">{
-                countRetries++
-                if int(countRetries) &gt;= s.cfg.MaxTryNum </span><span class="cov0" title="0">{
-                        if err := channel.Reject(delivery.DeliveryTag, false); err != nil </span><span class="cov0" title="0">{
-                                span.SetStatus(codes.Error, err.Error())
-                                return errors.Wrap(err, "failed to reject")
-                        }</span>
-                        <span class="cov0" title="0">return nil</span>
-                }
+        // Публикуем в retry-очередь; RabbitMQ вернёт сообщение в основную очередь по истечении x-message-ttl
+        <span class="cov1" title="1">msg := amqp.Publishing{
+                MessageId:    d.MessageId,
+                ContentType:  d.ContentType,
+                DeliveryMode: d.DeliveryMode,
+                Body:         d.Body,
+                Headers:      d.Headers,
+        }
+        if pubErr := ch.Publish("", s.cfg.RetryQueueName, false, false, msg); pubErr != nil </span><span class="cov0" title="0">{
+                span.SetStatus(codes.Error, pubErr.Error())
+                // Запасной вариант: requeue, чтобы сообщение не потерялось
+                if nackErr := ch.Nack(d.DeliveryTag, false, true); nackErr != nil </span><span class="cov0" title="0">{
+                        return errors.Wrap(nackErr, "nack requeue after retry-publish failure")
+                }</span>
+                <span class="cov0" title="0">return nil</span>
         }
 
-        <span class="cov0" title="0">headers[KeyCountRetries] = countRetries
-        msg := amqp.Publishing{
-                MessageId:    delivery.MessageId,
-                ContentType:  delivery.ContentType,
-                DeliveryMode: delivery.DeliveryMode,
-                Body:         delivery.Body,
-                Headers:      headers,
-        }
-        if err := channel.Publish("", s.queueName, false, false, msg); err != nil </span><span class="cov0" title="0">{
-                span.SetStatus(codes.Error, err.Error())
-                return errors.Wrap(err, "failed to publish")
+        <span class="cov1" title="1">if ackErr := ch.Ack(d.DeliveryTag, false); ackErr != nil </span><span class="cov0" title="0">{
+                span.SetStatus(codes.Error, ackErr.Error())
+                return errors.Wrap(ackErr, "ack after retry publish")
         }</span>
-        <span class="cov0" title="0">if err := channel.Ack(delivery.DeliveryTag, false); err != nil </span><span class="cov0" title="0">{
-                span.SetStatus(codes.Error, err.Error())
-                return errors.Wrap(err, "failed to ack")
-        }</span>
-
-        <span class="cov0" title="0">select </span>{
-        case &lt;-s.close:<span class="cov0" title="0"></span>
-        case &lt;-time.After(s.cfg.Backoff):<span class="cov0" title="0"></span>
-        }
-        <span class="cov0" title="0">return nil</span>
+        <span class="cov1" title="1">return nil</span>
 }
 
-func newDelivery(msg *amqp.Delivery) queue.Delivery <span class="cov2" title="4">{
+// deathCount возвращает суммарное число доставок из заголовка x-death.
+// RabbitMQ автоматически увеличивает этот счётчик при каждом прохождении
+// сообщения через цикл dead-letter, поэтому значение сохраняется после перезапусков.
+func deathCount(d *amqp.Delivery) int <span class="cov6" title="6">{
+        deaths, ok := d.Headers["x-death"].([]any)
+        if !ok </span><span class="cov5" title="4">{
+                return 0
+        }</span>
+        <span class="cov3" title="2">var total int
+        for _, entry := range deaths </span><span class="cov4" title="3">{
+                if table, ok := entry.(amqp.Table); ok </span><span class="cov4" title="3">{
+                        if count, ok := table["count"].(int64); ok </span><span class="cov4" title="3">{
+                                total += int(count)
+                        }</span>
+                }
+        }
+        <span class="cov3" title="2">return total</span>
+}
+
+func newDelivery(msg *amqp.Delivery) queue.Delivery <span class="cov10" title="18">{
         headers := make(map[string]string, len(msg.Headers))
-        for k, v := range msg.Headers </span><span class="cov1" title="3">{
+        for k, v := range msg.Headers </span><span class="cov5" title="4">{
                 headers[k] = fmt.Sprintf("%v", v)
         }</span>
-        <span class="cov2" title="4">return queue.Delivery{
+        <span class="cov10" title="18">return queue.Delivery{
                 Headers: headers,
                 Body:    msg.Body,
         }</span>
 }
 </pre>
 		
-		<pre class="file" id="file51" style="display: none">package rabbitmq
+		<pre class="file" id="file52" style="display: none">package rabbitmq
+
+import (
+        "encoding/json"
+        "fmt"
+
+        amqp "github.com/rabbitmq/amqp091-go"
+)
+
+// Definitions отражает формат JSON management API RabbitMQ.
+// Может быть сериализован в JSON для CI/CD (rabbitmqctl import_definitions / load_definitions)
+// или применён напрямую через AMQP для интеграционных тестов.
+type Definitions struct {
+        Vhosts      []VhostDef      `json:"vhosts"`
+        Users       []UserDef       `json:"users,omitempty"`
+        Permissions []PermissionDef `json:"permissions,omitempty"`
+        Exchanges   []ExchangeDef   `json:"exchanges"`
+        Queues      []QueueDef      `json:"queues"`
+        Bindings    []BindingDef    `json:"bindings"`
+}
+
+type VhostDef struct {
+        Name string `json:"name"`
+}
+
+type UserDef struct {
+        Name     string `json:"name"`
+        Password string `json:"password"`
+        Tags     string `json:"tags"`
+}
+
+type PermissionDef struct {
+        User      string `json:"user"`
+        Vhost     string `json:"vhost"`
+        Configure string `json:"configure"`
+        Write     string `json:"write"`
+        Read      string `json:"read"`
+}
+
+type ExchangeDef struct {
+        Name       string         `json:"name"`
+        Vhost      string         `json:"vhost"`
+        Type       string         `json:"type"`
+        Durable    bool           `json:"durable"`
+        AutoDelete bool           `json:"auto_delete"`
+        Internal   bool           `json:"internal"`
+        Arguments  map[string]any `json:"arguments"`
+}
+
+type QueueDef struct {
+        Name       string         `json:"name"`
+        Vhost      string         `json:"vhost"`
+        Durable    bool           `json:"durable"`
+        AutoDelete bool           `json:"auto_delete"`
+        Arguments  map[string]any `json:"arguments"`
+}
+
+type BindingDef struct {
+        Source          string         `json:"source"`
+        Vhost           string         `json:"vhost"`
+        Destination     string         `json:"destination"`
+        DestinationType string         `json:"destination_type"`
+        RoutingKey      string         `json:"routing_key"`
+        Arguments       map[string]any `json:"arguments"`
+}
+
+// JSON сериализует Definitions в форматированный JSON для использования с
+// rabbitmqctl import_definitions или опцией load_definitions management-плагина.
+func (d *Definitions) JSON() ([]byte, error) <span class="cov3" title="2">{
+        return json.MarshalIndent(d, "", "  ")
+}</span>
+
+// Apply объявляет все обменники, очереди и привязки через AMQP.
+// Удобно для настройки топологии в интеграционных тестах без Management API.
+// Порядок применения: Exchanges → Queues → Bindings.
+func (d *Definitions) Apply(ch *amqp.Channel) error <span class="cov3" title="2">{
+        for _, ex := range d.Exchanges </span><span class="cov4" title="3">{
+                args := toTable(ex.Arguments)
+                if err := ch.ExchangeDeclare(
+                        ex.Name, ex.Type, ex.Durable, ex.AutoDelete, ex.Internal, false, args,
+                ); err != nil </span><span class="cov0" title="0">{
+                        return fmt.Errorf("declare exchange %q: %w", ex.Name, err)
+                }</span>
+        }
+
+        <span class="cov3" title="2">for _, q := range d.Queues </span><span class="cov7" title="6">{
+                args := toTable(q.Arguments)
+                if _, err := ch.QueueDeclare(
+                        q.Name, q.Durable, q.AutoDelete, false, false, args,
+                ); err != nil </span><span class="cov0" title="0">{
+                        return fmt.Errorf("declare queue %q: %w", q.Name, err)
+                }</span>
+        }
+
+        <span class="cov3" title="2">for _, b := range d.Bindings </span><span class="cov4" title="3">{
+                args := toTable(b.Arguments)
+                if err := ch.QueueBind(
+                        b.Destination, b.RoutingKey, b.Source, false, args,
+                ); err != nil </span><span class="cov0" title="0">{
+                        return fmt.Errorf("bind queue %q to exchange %q with key %q: %w",
+                                b.Destination, b.Source, b.RoutingKey, err)
+                }</span>
+        }
+
+        <span class="cov3" title="2">return nil</span>
+}
+
+func toTable(m map[string]any) amqp.Table <span class="cov10" title="12">{
+        if len(m) == 0 </span><span class="cov8" title="9">{
+                return amqp.Table{}
+        }</span>
+        <span class="cov4" title="3">t := make(amqp.Table, len(m))
+        for k, v := range m </span><span class="cov8" title="7">{
+                t[k] = v
+        }</span>
+        <span class="cov4" title="3">return t</span>
+}
+</pre>
+		
+		<pre class="file" id="file53" style="display: none">package rabbitmq
 
 import (
         "fmt"
@@ -5376,7 +5679,7 @@ func (c tableCarrier) Keys() []string <span class="cov7" title="5">{
 }
 </pre>
 		
-		<pre class="file" id="file52" style="display: none">package storage
+		<pre class="file" id="file54" style="display: none">package storage
 
 import (
         "errors"
@@ -5448,7 +5751,7 @@ func IsBucketNotFound(err error) bool <span class="cov3" title="6">{
 }
 </pre>
 		
-		<pre class="file" id="file53" style="display: none">package minio
+		<pre class="file" id="file55" style="display: none">package minio
 
 import (
         "context"
@@ -5580,7 +5883,7 @@ func (c *Client) IsClosed() bool <span class="cov10" title="25">{
 }</span>
 </pre>
 		
-		<pre class="file" id="file54" style="display: none">package minio
+		<pre class="file" id="file56" style="display: none">package minio
 
 import (
         "strings"
@@ -5669,7 +5972,7 @@ func isNotFoundError(err error) bool <span class="cov8" title="14">{
 }
 </pre>
 		
-		<pre class="file" id="file55" style="display: none">package minio
+		<pre class="file" id="file57" style="display: none">package minio
 
 const (
         // DefaultYandexEndpoint is the default Yandex Cloud Storage endpoint.
@@ -5699,7 +6002,7 @@ func (c *Config) GetEndpoint() string <span class="cov10" title="28">{
 }
 </pre>
 		
-		<pre class="file" id="file56" style="display: none">package minio
+		<pre class="file" id="file58" style="display: none">package minio
 
 import (
         "bytes"
@@ -6030,7 +6333,7 @@ func (s *Storage) ListMultipartUploads(ctx context.Context, bucket string) ([]st
 }
 </pre>
 		
-		<pre class="file" id="file57" style="display: none">package minio
+		<pre class="file" id="file59" style="display: none">package minio
 
 import (
         "context"
@@ -6117,7 +6420,7 @@ func (s *Storage) GetPresignedURL(ctx context.Context, bucket, key string, opts 
 }
 </pre>
 		
-		<pre class="file" id="file58" style="display: none">package minio
+		<pre class="file" id="file60" style="display: none">package minio
 
 import (
         "context"
@@ -6507,7 +6810,7 @@ func (s *Storage) Close() error <span class="cov3" title="7">{
 }</span>
 </pre>
 		
-		<pre class="file" id="file59" style="display: none">package jaeger
+		<pre class="file" id="file61" style="display: none">package jaeger
 
 import (
         "context"
@@ -6584,7 +6887,7 @@ func NewProviderBuilder(conf Config) func() (tracing.Provider, error) <span clas
 }
 </pre>
 		
-		<pre class="file" id="file60" style="display: none">package tracing
+		<pre class="file" id="file62" style="display: none">package tracing
 
 import (
         "io"
