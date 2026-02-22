@@ -178,7 +178,7 @@ func TestSender_TLS_ConnectionError(t *testing.T) {
 		Password: "testpass",
 	}
 
-	sender := NewSender(cfg, nil)
+	sender := NewSender(cfg)
 	defer sender.Close()
 
 	ctx := context.Background()
@@ -204,7 +204,7 @@ func TestSender_TLS_ContextCanceled(t *testing.T) {
 		TLS:  true,
 	}
 
-	sender := NewSender(cfg, nil)
+	sender := NewSender(cfg)
 	defer sender.Close()
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -229,7 +229,7 @@ func TestSender_TLS_ConnectionTimeout(t *testing.T) {
 		TLS:  true,
 	}
 
-	sender := NewSender(cfg, nil)
+	sender := NewSender(cfg)
 	defer sender.Close()
 
 	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
@@ -255,7 +255,7 @@ func TestSender_TLS_ServerNotRunning(t *testing.T) {
 		Insecure: true,
 	}
 
-	sender := NewSender(cfg, nil)
+	sender := NewSender(cfg)
 	defer sender.Close()
 
 	ctx := context.Background()
@@ -284,7 +284,7 @@ func TestSender_TLS_WithAuthentication(t *testing.T) {
 		Password: "testpass",
 	}
 
-	sender := NewSender(cfg, nil)
+	sender := NewSender(cfg)
 	defer sender.Close()
 
 	ctx := context.Background()
@@ -309,7 +309,7 @@ func TestSender_TLS_InvalidHost(t *testing.T) {
 		Insecure: false, // Will fail cert verification
 	}
 
-	sender := NewSender(cfg, nil)
+	sender := NewSender(cfg)
 	defer sender.Close()
 
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
@@ -335,7 +335,7 @@ func TestSender_TLS_ConnectionRefusedImmediate(t *testing.T) {
 		Insecure: true,
 	}
 
-	sender := NewSender(cfg, nil)
+	sender := NewSender(cfg)
 	defer sender.Close()
 
 	ctx := context.Background()
@@ -360,7 +360,7 @@ func TestSender_TLS_WithDefaultFrom(t *testing.T) {
 		Insecure: true,
 	}
 
-	sender := NewSender(cfg, nil)
+	sender := NewSender(cfg)
 	defer sender.Close()
 
 	ctx := context.Background()
@@ -379,7 +379,7 @@ func TestSender_TLS_WithDefaultFrom(t *testing.T) {
 // TestSender_BuildMessage_AllContentTypes tests all content type variations
 func TestSender_BuildMessage_AllContentTypes(t *testing.T) {
 	cfg := Config{Host: "localhost"}
-	sender := NewSender(cfg, nil)
+	sender := NewSender(cfg)
 
 	t.Run("Plain text only", func(t *testing.T) {
 		email := mail.Email{
@@ -488,7 +488,7 @@ func TestSender_BuildMessage_AllContentTypes(t *testing.T) {
 // TestSender_FormatAddress_EdgeCases tests edge cases for address formatting
 func TestSender_FormatAddress_EdgeCases(t *testing.T) {
 	cfg := Config{Host: "localhost"}
-	sender := NewSender(cfg, nil)
+	sender := NewSender(cfg)
 
 	tests := []struct {
 		name     string
@@ -538,7 +538,7 @@ func TestSender_FormatAddress_EdgeCases(t *testing.T) {
 // TestSender_FormatAddressList_EdgeCases tests edge cases for address list formatting
 func TestSender_FormatAddressList_EdgeCases(t *testing.T) {
 	cfg := Config{Host: "localhost"}
-	sender := NewSender(cfg, nil)
+	sender := NewSender(cfg)
 
 	t.Run("empty list", func(t *testing.T) {
 		addrs := []mail.Address{}
@@ -571,7 +571,7 @@ func TestSender_FormatAddressList_EdgeCases(t *testing.T) {
 // TestSender_GetEmailAddresses_EdgeCases tests edge cases for extracting email addresses
 func TestSender_GetEmailAddresses_EdgeCases(t *testing.T) {
 	cfg := Config{Host: "localhost"}
-	sender := NewSender(cfg, nil)
+	sender := NewSender(cfg)
 
 	t.Run("empty list", func(t *testing.T) {
 		addrs := []mail.Address{}
@@ -633,7 +633,7 @@ func TestSender_Config_AllTLSCombinations(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			sender := NewSender(tt.cfg, nil)
+			sender := NewSender(tt.cfg)
 			assert.Equal(t, tt.wantTLS, sender.cfg.TLS)
 			assert.Equal(t, tt.wantInsec, sender.cfg.Insecure)
 			_ = sender.Close()
@@ -643,18 +643,9 @@ func TestSender_Config_AllTLSCombinations(t *testing.T) {
 
 // TestSender_NewSender_Variations tests sender creation with various configs
 func TestSender_NewSender_Variations(t *testing.T) {
-	t.Run("with nil options", func(t *testing.T) {
+	t.Run("with no options", func(t *testing.T) {
 		cfg := Config{Host: "localhost", Port: 25}
-		sender := NewSender(cfg, nil)
-		assert.NotNil(t, sender)
-		assert.False(t, sender.closed)
-		_ = sender.Close()
-	})
-
-	t.Run("with empty options", func(t *testing.T) {
-		cfg := Config{Host: "localhost", Port: 25}
-		opts := &SenderOptions{}
-		sender := NewSender(cfg, opts)
+		sender := NewSender(cfg)
 		assert.NotNil(t, sender)
 		assert.False(t, sender.closed)
 		_ = sender.Close()
@@ -670,7 +661,7 @@ func TestSender_NewSender_Variations(t *testing.T) {
 			TLS:      true,
 			Insecure: true,
 		}
-		sender := NewSender(cfg, nil)
+		sender := NewSender(cfg)
 		assert.Equal(t, "smtp.example.com", sender.cfg.Host)
 		assert.Equal(t, 587, sender.cfg.Port)
 		assert.Equal(t, "user", sender.cfg.Username)

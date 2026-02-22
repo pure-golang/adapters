@@ -17,7 +17,7 @@ func (s *KafkaSuite) TestPublisher_Publish() {
 	cfg := Config{
 		Brokers: s.brokers,
 	}
-	dialer := NewDialer(cfg, nil)
+	dialer := NewDialer(cfg)
 
 	s.T().Cleanup(func() {
 		require.NoError(s.T(), dialer.Close())
@@ -76,7 +76,7 @@ func (s *KafkaSuite) TestPublisher_PublishMultiple() {
 	cfg := Config{
 		Brokers: s.brokers,
 	}
-	dialer := NewDialer(cfg, nil)
+	dialer := NewDialer(cfg)
 
 	s.T().Cleanup(func() {
 		require.NoError(s.T(), dialer.Close())
@@ -107,7 +107,7 @@ func (s *KafkaSuite) TestPublisher_WithHeaders() {
 	cfg := Config{
 		Brokers: s.brokers,
 	}
-	dialer := NewDialer(cfg, nil)
+	dialer := NewDialer(cfg)
 
 	s.T().Cleanup(func() {
 		require.NoError(s.T(), dialer.Close())
@@ -138,7 +138,7 @@ func (s *KafkaSuite) TestPublisher_WithTextEncoder() {
 	cfg := Config{
 		Brokers: s.brokers,
 	}
-	dialer := NewDialer(cfg, nil)
+	dialer := NewDialer(cfg)
 
 	s.T().Cleanup(func() {
 		require.NoError(s.T(), dialer.Close())
@@ -167,7 +167,7 @@ func (s *KafkaSuite) TestPublisher_WhenClosed() {
 	cfg := Config{
 		Brokers: s.brokers,
 	}
-	dialer := NewDialer(cfg, nil)
+	dialer := NewDialer(cfg)
 
 	pub := NewPublisher(dialer, PublisherConfig{
 		Encoder: encoders.JSON{},
@@ -192,7 +192,7 @@ func (s *KafkaSuite) TestPublisher_DefaultBalancer() {
 	cfg := Config{
 		Brokers: s.brokers,
 	}
-	dialer := NewDialer(cfg, nil)
+	dialer := NewDialer(cfg)
 
 	// Создаем publisher без указания балансировщика
 	pub := NewPublisher(dialer, PublisherConfig{})
@@ -206,7 +206,7 @@ func (s *KafkaSuite) TestPublisher_WithLeastBytesBalancer() {
 	cfg := Config{
 		Brokers: s.brokers,
 	}
-	dialer := NewDialer(cfg, nil)
+	dialer := NewDialer(cfg)
 
 	pub := NewPublisher(dialer, PublisherConfig{
 		Balancer: &kafka.LeastBytes{},

@@ -18,34 +18,44 @@ type Dialer struct {
 	closed bool
 }
 
-// DialerOptions содержит опции для создания Dialer
-type DialerOptions struct {
-	Logger *slog.Logger
+// Option определяет функцию для настройки Dialer
+type Option func(*Dialer)
+
+// WithLogger устанавливает логгер для Dialer
+func WithLogger(logger *slog.Logger) Option {
+	return func(d *Dialer) {
+		if logger != nil {
+			d.logger = logger.WithGroup("kafka")
+		}
+	}
 }
 
 // NewDialer создает новый Dialer для работы с Kafka
-func NewDialer(cfg Config, options *DialerOptions) *Dialer {
-	if options == nil {
-		options = new(DialerOptions)
-	}
-	if options.Logger == nil {
-		options.Logger = slog.Default()
-	}
-	options.Logger = options.Logger.WithGroup("kafka")
-
-	return &Dialer{
-		cfg:    cfg,
-		logger: options.Logger,
+func NewDialer(cfg Config, opts ...Option) *Dialer {
+	d := &Dialer{
+		cfg: cfg,
 		dialer: &kafka.Dialer{
 			Timeout:   10 * time.Second,
 			DualStack: true,
 		},
 	}
+
+	// Применяем опции
+	for _, opt := range opts {
+		opt(d)
+	}
+
+	// Устанавливаем значения по умолчанию
+	if d.logger == nil {
+		d.logger = slog.Default().WithGroup("kafka")
+	}
+
+	return d
 }
 
 // NewDefaultDialer создает Dialer с параметрами по умолчанию
 func NewDefaultDialer(brokers []string) *Dialer {
-	return NewDialer(Config{Brokers: brokers}, nil)
+	return NewDialer(Config{Brokers: brokers})
 }
 
 // GetDialer возвращает базовый kafka.Dialer

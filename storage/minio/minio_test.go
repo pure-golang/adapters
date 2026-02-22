@@ -166,7 +166,7 @@ func TestIsNotFoundError(t *testing.T) {
 // TestNewClient tests the NewClient function.
 func TestNewClient(t *testing.T) {
 	t.Parallel()
-	t.Run("with nil options fails to connect", func(t *testing.T) {
+	t.Run("with no options fails to connect", func(t *testing.T) {
 		t.Parallel()
 		cfg := Config{
 			Endpoint:  "invalid-endpoint:9999",
@@ -174,7 +174,7 @@ func TestNewClient(t *testing.T) {
 			SecretKey: "test",
 		}
 
-		client, err := NewClient(cfg, nil)
+		client, err := NewClient(cfg)
 		assert.Error(t, err)
 		assert.Nil(t, client)
 	})

@@ -28,21 +28,33 @@ type Client struct {
 	closed bool
 }
 
-// ClientOptions contains options for client creation.
-type ClientOptions struct {
-	Logger *slog.Logger
+// Option определяет функцию для настройки Client
+type Option func(*Client)
+
+// WithLogger устанавливает логгер для Client
+func WithLogger(logger *slog.Logger) Option {
+	return func(c *Client) {
+		if logger != nil {
+			c.logger = logger.WithGroup("s3")
+		}
+	}
 }
 
 // NewClient creates a new S3-compatible storage client.
-func NewClient(cfg Config, options *ClientOptions) (*Client, error) {
-	if options == nil {
-		options = &ClientOptions{}
-	}
-	if options.Logger == nil {
-		options.Logger = slog.Default()
+func NewClient(cfg Config, opts ...Option) (*Client, error) {
+	c := &Client{
+		cfg: cfg,
 	}
 
-	logger := options.Logger.WithGroup("s3")
+	// Применяем опции
+	for _, opt := range opts {
+		opt(c)
+	}
+
+	// Устанавливаем значения по умолчанию
+	if c.logger == nil {
+		c.logger = slog.Default().WithGroup("s3")
+	}
 
 	// Initialize minio client with static credentials
 	creds := credentials.NewStaticV4(cfg.AccessKey, cfg.SecretKey, "")
@@ -55,16 +67,18 @@ func NewClient(cfg Config, options *ClientOptions) (*Client, error) {
 		secure = false
 	}
 
-	opts := &minio.Options{
+	minioOpts := &minio.Options{
 		Creds:  creds,
 		Region: cfg.Region,
 		Secure: secure,
 	}
 
-	client, err := minio.New(endpoint, opts)
+	client, err := minio.New(endpoint, minioOpts)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create S3 client")
 	}
+
+	c.client = client
 
 	// Verify connection by listing buckets
 	timeout := time.Duration(cfg.Timeout) * time.Second
@@ -79,18 +93,14 @@ func NewClient(cfg Config, options *ClientOptions) (*Client, error) {
 		return nil, errors.Wrap(err, "failed to connect to S3 storage")
 	}
 
-	logger.Info("S3 client initialized", "endpoint", endpoint, "region", cfg.Region)
+	c.logger.Info("S3 client initialized", "endpoint", endpoint, "region", cfg.Region)
 
-	return &Client{
-		client: client,
-		cfg:    cfg,
-		logger: logger,
-	}, nil
+	return c, nil
 }
 
 // NewDefaultClient creates a client with default options.
 func NewDefaultClient(cfg Config) (*Client, error) {
-	return NewClient(cfg, nil)
+	return NewClient(cfg)
 }
 
 // GetMinioClient returns the underlying minio.Client.

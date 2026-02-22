@@ -21,7 +21,7 @@ func TestNewSender_WithDefaultConfig(t *testing.T) {
 		TLS:      true, // explicit for test
 	}
 
-	sender := NewSender(cfg, nil)
+	sender := NewSender(cfg)
 
 	assert.NotNil(t, sender)
 	assert.Equal(t, "localhost", sender.cfg.Host)
@@ -41,7 +41,7 @@ func TestSender_CloseTwice(t *testing.T) {
 		Password: "test",
 	}
 
-	sender := NewSender(cfg, nil)
+	sender := NewSender(cfg)
 
 	err := sender.Close()
 	assert.NoError(t, err)
@@ -56,7 +56,7 @@ func TestSender_Send_WhenClosed(t *testing.T) {
 		Host: "localhost",
 		Port: 2525,
 	}
-	sender := NewSender(cfg, nil)
+	sender := NewSender(cfg)
 
 	require.NoError(t, sender.Close())
 
@@ -77,7 +77,7 @@ func TestSender_Send_NoFromAddress(t *testing.T) {
 		Host: "localhost",
 		Port: 2525,
 	}
-	sender := NewSender(cfg, nil)
+	sender := NewSender(cfg)
 
 	ctx := context.Background()
 	email := mail.Email{
@@ -95,7 +95,7 @@ func TestSender_Send_NoRecipients(t *testing.T) {
 		Host: "localhost",
 		Port: 2525,
 	}
-	sender := NewSender(cfg, nil)
+	sender := NewSender(cfg)
 
 	ctx := context.Background()
 	email := mail.Email{
@@ -110,7 +110,7 @@ func TestSender_Send_NoRecipients(t *testing.T) {
 func TestSender_BuildMessage(t *testing.T) {
 	t.Parallel()
 	cfg := Config{Host: "localhost"}
-	sender := NewSender(cfg, nil)
+	sender := NewSender(cfg)
 
 	email := mail.Email{
 		From:    mail.Address{Name: "Sender", Address: "sender@example.com"},
@@ -134,7 +134,7 @@ func TestSender_BuildMessage(t *testing.T) {
 func TestSender_BuildMessageWithHTML(t *testing.T) {
 	t.Parallel()
 	cfg := Config{Host: "localhost"}
-	sender := NewSender(cfg, nil)
+	sender := NewSender(cfg)
 
 	email := mail.Email{
 		From:    mail.Address{Address: "sender@example.com"},
@@ -156,7 +156,7 @@ func TestSender_BuildMessageWithHTML(t *testing.T) {
 func TestSender_BuildMessageWithCcAndBcc(t *testing.T) {
 	t.Parallel()
 	cfg := Config{Host: "localhost"}
-	sender := NewSender(cfg, nil)
+	sender := NewSender(cfg)
 
 	email := mail.Email{
 		From: mail.Address{Address: "sender@example.com"},
@@ -177,7 +177,7 @@ func TestSender_BuildMessageWithCcAndBcc(t *testing.T) {
 func TestSender_FormatAddress(t *testing.T) {
 	t.Parallel()
 	cfg := Config{Host: "localhost"}
-	sender := NewSender(cfg, nil)
+	sender := NewSender(cfg)
 
 	addr := mail.Address{Name: "John Doe", Address: "john@example.com"}
 	result := sender.formatAddress(addr)
@@ -187,7 +187,7 @@ func TestSender_FormatAddress(t *testing.T) {
 func TestSender_FormatAddress_WithQuotes(t *testing.T) {
 	t.Parallel()
 	cfg := Config{Host: "localhost"}
-	sender := NewSender(cfg, nil)
+	sender := NewSender(cfg)
 
 	addr := mail.Address{Name: `John "The Rock" Doe`, Address: "john@example.com"}
 	result := sender.formatAddress(addr)
@@ -197,7 +197,7 @@ func TestSender_FormatAddress_WithQuotes(t *testing.T) {
 func TestSender_FormatAddress_NoName(t *testing.T) {
 	t.Parallel()
 	cfg := Config{Host: "localhost"}
-	sender := NewSender(cfg, nil)
+	sender := NewSender(cfg)
 
 	addr := mail.Address{Address: "john@example.com"}
 	result := sender.formatAddress(addr)
@@ -207,7 +207,7 @@ func TestSender_FormatAddress_NoName(t *testing.T) {
 func TestSender_FormatAddressList(t *testing.T) {
 	t.Parallel()
 	cfg := Config{Host: "localhost"}
-	sender := NewSender(cfg, nil)
+	sender := NewSender(cfg)
 
 	addrs := []mail.Address{
 		{Name: "John", Address: "john@example.com"},
@@ -223,7 +223,7 @@ func TestSender_FormatAddressList(t *testing.T) {
 func TestSender_GetEmailAddresses(t *testing.T) {
 	t.Parallel()
 	cfg := Config{Host: "localhost"}
-	sender := NewSender(cfg, nil)
+	sender := NewSender(cfg)
 
 	addrs := []mail.Address{
 		{Name: "John", Address: "john@example.com"},
@@ -237,7 +237,7 @@ func TestSender_GetEmailAddresses(t *testing.T) {
 func TestSender_BuildMessage_WithSpecialCharactersInSubject(t *testing.T) {
 	t.Parallel()
 	cfg := Config{Host: "localhost"}
-	sender := NewSender(cfg, nil)
+	sender := NewSender(cfg)
 
 	email := mail.Email{
 		From:    mail.Address{Address: "sender@example.com"},
@@ -262,7 +262,7 @@ func TestSender_Send_ContextCancellation(t *testing.T) {
 		Password: "test",
 		TLS:      true,
 	}
-	sender := NewSender(cfg, nil)
+	sender := NewSender(cfg)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel() // Cancel immediately
@@ -284,7 +284,7 @@ func TestSender_Send_WithDefaultFrom(t *testing.T) {
 		Port: 2525,
 		From: "default@example.com", // Default From address
 	}
-	sender := NewSender(cfg, nil)
+	sender := NewSender(cfg)
 
 	ctx := context.Background()
 	email := mail.Email{
@@ -306,7 +306,7 @@ func TestSender_Send_WithDefaultFromAndEmailFrom(t *testing.T) {
 		Port: 2525,
 		From: "default@example.com", // Default From address
 	}
-	sender := NewSender(cfg, nil)
+	sender := NewSender(cfg)
 
 	ctx := context.Background()
 	email := mail.Email{
@@ -328,7 +328,7 @@ func TestSender_Send_MultipleEmails(t *testing.T) {
 		Port: 2525,
 		From: "test@example.com",
 	}
-	sender := NewSender(cfg, nil)
+	sender := NewSender(cfg)
 
 	ctx := context.Background()
 	emails := []mail.Email{
@@ -363,7 +363,7 @@ func TestSender_Send_OnlyCcRecipients(t *testing.T) {
 		Host: "localhost",
 		Port: 2525,
 	}
-	sender := NewSender(cfg, nil)
+	sender := NewSender(cfg)
 
 	ctx := context.Background()
 	email := mail.Email{
@@ -382,7 +382,7 @@ func TestSender_Send_OnlyBccRecipients(t *testing.T) {
 		Host: "localhost",
 		Port: 2525,
 	}
-	sender := NewSender(cfg, nil)
+	sender := NewSender(cfg)
 
 	ctx := context.Background()
 	email := mail.Email{
@@ -398,7 +398,7 @@ func TestSender_Send_OnlyBccRecipients(t *testing.T) {
 func TestSender_BuildMessage_WithOnlyHTML(t *testing.T) {
 	t.Parallel()
 	cfg := Config{Host: "localhost"}
-	sender := NewSender(cfg, nil)
+	sender := NewSender(cfg)
 
 	email := mail.Email{
 		From:    mail.Address{Address: "sender@example.com"},
@@ -421,7 +421,7 @@ func TestSender_BuildMessage_WithOnlyHTML(t *testing.T) {
 func TestSender_BuildMessage_WithMultipleCustomHeaders(t *testing.T) {
 	t.Parallel()
 	cfg := Config{Host: "localhost"}
-	sender := NewSender(cfg, nil)
+	sender := NewSender(cfg)
 
 	email := mail.Email{
 		From:    mail.Address{Address: "sender@example.com"},
@@ -448,7 +448,7 @@ func TestSender_BuildMessage_WithMultipleCustomHeaders(t *testing.T) {
 func TestSender_BuildMessage_WithEmptySubject(t *testing.T) {
 	t.Parallel()
 	cfg := Config{Host: "localhost"}
-	sender := NewSender(cfg, nil)
+	sender := NewSender(cfg)
 
 	email := mail.Email{
 		From:    mail.Address{Address: "sender@example.com"},
@@ -466,7 +466,7 @@ func TestSender_BuildMessage_WithEmptySubject(t *testing.T) {
 func TestSender_BuildMessage_VerifyStructure(t *testing.T) {
 	t.Parallel()
 	cfg := Config{Host: "localhost"}
-	sender := NewSender(cfg, nil)
+	sender := NewSender(cfg)
 
 	email := mail.Email{
 		From:    mail.Address{Address: "sender@example.com"},
@@ -505,7 +505,7 @@ func TestSender_Config_WithUsernameAndPassword(t *testing.T) {
 		Password: "secret",
 		TLS:      true,
 	}
-	sender := NewSender(cfg, nil)
+	sender := NewSender(cfg)
 
 	assert.Equal(t, "smtp.example.com", sender.cfg.Host)
 	assert.Equal(t, 587, sender.cfg.Port)
@@ -521,7 +521,7 @@ func TestSender_Config_WithInsecureTLS(t *testing.T) {
 		Port:     587,
 		Insecure: true,
 	}
-	sender := NewSender(cfg, nil)
+	sender := NewSender(cfg)
 
 	assert.True(t, sender.cfg.Insecure)
 }
@@ -529,7 +529,7 @@ func TestSender_Config_WithInsecureTLS(t *testing.T) {
 func TestSender_FormatAddress_EmptyName(t *testing.T) {
 	t.Parallel()
 	cfg := Config{Host: "localhost"}
-	sender := NewSender(cfg, nil)
+	sender := NewSender(cfg)
 
 	addr := mail.Address{Name: "", Address: "test@example.com"}
 	result := sender.formatAddress(addr)
@@ -539,7 +539,7 @@ func TestSender_FormatAddress_EmptyName(t *testing.T) {
 func TestSender_FormatAddressList_Empty(t *testing.T) {
 	t.Parallel()
 	cfg := Config{Host: "localhost"}
-	sender := NewSender(cfg, nil)
+	sender := NewSender(cfg)
 
 	addrs := []mail.Address{}
 	result := sender.formatAddressList(addrs)
@@ -549,7 +549,7 @@ func TestSender_FormatAddressList_Empty(t *testing.T) {
 func TestSender_GetEmailAddresses_Empty(t *testing.T) {
 	t.Parallel()
 	cfg := Config{Host: "localhost"}
-	sender := NewSender(cfg, nil)
+	sender := NewSender(cfg)
 
 	addrs := []mail.Address{}
 	result := sender.getEmailAddresses(addrs)
@@ -562,8 +562,7 @@ func TestSender_NewSender_WithOptions(t *testing.T) {
 		Host: "localhost",
 		Port: 2525,
 	}
-	options := &SenderOptions{}
-	sender := NewSender(cfg, options)
+	sender := NewSender(cfg)
 
 	assert.NotNil(t, sender)
 	assert.False(t, sender.closed)
@@ -575,7 +574,7 @@ func TestSender_NewSender_NilOptions(t *testing.T) {
 		Host: "localhost",
 		Port: 2525,
 	}
-	sender := NewSender(cfg, nil)
+	sender := NewSender(cfg)
 
 	assert.NotNil(t, sender)
 	assert.False(t, sender.closed)
@@ -587,7 +586,7 @@ func TestSender_Send_MultipleRecipients(t *testing.T) {
 		Host: "localhost",
 		Port: 2525,
 	}
-	sender := NewSender(cfg, nil)
+	sender := NewSender(cfg)
 
 	ctx := context.Background()
 	email := mail.Email{
@@ -621,7 +620,7 @@ func TestSender_Config_DefaultValues(t *testing.T) {
 		Host: "localhost",
 		Port: 25,
 	}
-	sender := NewSender(cfg, nil)
+	sender := NewSender(cfg)
 
 	assert.Equal(t, "localhost", sender.cfg.Host)
 	assert.Equal(t, 25, sender.cfg.Port)
@@ -643,7 +642,7 @@ func TestSender_Config_AllFields(t *testing.T) {
 		TLS:      true,
 		Insecure: false,
 	}
-	sender := NewSender(cfg, nil)
+	sender := NewSender(cfg)
 
 	assert.Equal(t, "smtp.gmail.com", sender.cfg.Host)
 	assert.Equal(t, 587, sender.cfg.Port)
@@ -657,7 +656,7 @@ func TestSender_Config_AllFields(t *testing.T) {
 func TestSender_BuildMessage_WithAllFields(t *testing.T) {
 	t.Parallel()
 	cfg := Config{Host: "localhost"}
-	sender := NewSender(cfg, nil)
+	sender := NewSender(cfg)
 
 	email := mail.Email{
 		From: mail.Address{
@@ -700,7 +699,7 @@ func TestSender_BuildMessage_WithAllFields(t *testing.T) {
 func TestSender_FormatAddress_SpecialCharacters(t *testing.T) {
 	t.Parallel()
 	cfg := Config{Host: "localhost"}
-	sender := NewSender(cfg, nil)
+	sender := NewSender(cfg)
 
 	tests := []struct {
 		name     string
@@ -741,7 +740,7 @@ func TestSender_FormatAddress_SpecialCharacters(t *testing.T) {
 func TestSender_GetEmailAddresses_Single(t *testing.T) {
 	t.Parallel()
 	cfg := Config{Host: "localhost"}
-	sender := NewSender(cfg, nil)
+	sender := NewSender(cfg)
 
 	addrs := []mail.Address{
 		{Address: "single@example.com"},
@@ -754,7 +753,7 @@ func TestSender_GetEmailAddresses_Single(t *testing.T) {
 func TestSender_GetEmailAddresses_Multiple(t *testing.T) {
 	t.Parallel()
 	cfg := Config{Host: "localhost"}
-	sender := NewSender(cfg, nil)
+	sender := NewSender(cfg)
 
 	addrs := []mail.Address{
 		{Name: "A", Address: "a@example.com"},
@@ -769,7 +768,7 @@ func TestSender_GetEmailAddresses_Multiple(t *testing.T) {
 func TestSender_FormatAddressList_Single(t *testing.T) {
 	t.Parallel()
 	cfg := Config{Host: "localhost"}
-	sender := NewSender(cfg, nil)
+	sender := NewSender(cfg)
 
 	addrs := []mail.Address{
 		{Name: "Single", Address: "single@example.com"},
@@ -785,7 +784,7 @@ func TestSender_Send_ZeroEmails(t *testing.T) {
 		Host: "localhost",
 		Port: 2525,
 	}
-	sender := NewSender(cfg, nil)
+	sender := NewSender(cfg)
 
 	ctx := context.Background()
 	err := sender.Send(ctx)
@@ -799,7 +798,7 @@ func TestSender_Send_EmptyEmails(t *testing.T) {
 		Host: "localhost",
 		Port: 2525,
 	}
-	sender := NewSender(cfg, nil)
+	sender := NewSender(cfg)
 
 	ctx := context.Background()
 	err := sender.Send(ctx, mail.Email{}, mail.Email{})

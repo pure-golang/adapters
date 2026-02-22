@@ -18,7 +18,7 @@ func TestNewPublisher_WithNilEncoder(t *testing.T) {
 	cfg := Config{
 		Brokers: []string{"localhost:9092"},
 	}
-	dialer := NewDialer(cfg, nil)
+	dialer := NewDialer(cfg)
 
 	// Создаем publisher без encoder - должен использовать JSON по умолчанию
 	pub := NewPublisher(dialer, PublisherConfig{})
@@ -38,7 +38,7 @@ func TestNewPublisher_WithCustomBalancer(t *testing.T) {
 	cfg := Config{
 		Brokers: []string{"localhost:9092"},
 	}
-	dialer := NewDialer(cfg, nil)
+	dialer := NewDialer(cfg)
 
 	// Создаем publisher с кастомным балансировщиком
 	pub := NewPublisher(dialer, PublisherConfig{
@@ -60,7 +60,7 @@ func TestPublisher_CloseTwice(t *testing.T) {
 	cfg := Config{
 		Brokers: []string{"localhost:9092"},
 	}
-	dialer := NewDialer(cfg, nil)
+	dialer := NewDialer(cfg)
 
 	pub := NewPublisher(dialer, PublisherConfig{
 		Encoder: encoders.JSON{},
@@ -83,7 +83,7 @@ func TestNewSubscriber_WithDefaultConfig(t *testing.T) {
 	cfg := Config{
 		Brokers: []string{"localhost:9092"},
 	}
-	dialer := NewDialer(cfg, nil)
+	dialer := NewDialer(cfg)
 
 	// Создаем subscriber с дефолтным конфигом
 	sub := NewSubscriber(dialer, "test-topic", SubscriberConfig{})
@@ -108,7 +108,7 @@ func TestNewSubscriber_WithCustomConfig(t *testing.T) {
 		Brokers: []string{"localhost:9092"},
 		GroupID: "my-group",
 	}
-	dialer := NewDialer(cfg, nil)
+	dialer := NewDialer(cfg)
 
 	// Создаем subscriber с кастомным конфигом
 	sub := NewSubscriber(dialer, "test-topic", SubscriberConfig{
@@ -137,7 +137,7 @@ func TestSubscriber_CloseTwice(t *testing.T) {
 	cfg := Config{
 		Brokers: []string{"localhost:9092"},
 	}
-	dialer := NewDialer(cfg, nil)
+	dialer := NewDialer(cfg)
 
 	sub := NewSubscriber(dialer, "test-topic", SubscriberConfig{})
 
@@ -158,7 +158,7 @@ func TestSubscriber_WithInfiniteRetries(t *testing.T) {
 	cfg := Config{
 		Brokers: []string{"localhost:9092"},
 	}
-	dialer := NewDialer(cfg, nil)
+	dialer := NewDialer(cfg)
 
 	// Создаем subscriber с бесконечными попытками
 	sub := NewSubscriber(dialer, "test-topic", SubscriberConfig{
@@ -180,7 +180,7 @@ func TestSubscriber_WithZeroTryNum(t *testing.T) {
 	cfg := Config{
 		Brokers: []string{"localhost:9092"},
 	}
-	dialer := NewDialer(cfg, nil)
+	dialer := NewDialer(cfg)
 
 	// Создаем subscriber с MaxTryNum = 0 (должен стать 3 по умолчанию)
 	sub := NewSubscriber(dialer, "test-topic", SubscriberConfig{
@@ -202,7 +202,7 @@ func TestSubscriber_WithZeroPrefetchCount(t *testing.T) {
 	cfg := Config{
 		Brokers: []string{"localhost:9092"},
 	}
-	dialer := NewDialer(cfg, nil)
+	dialer := NewDialer(cfg)
 
 	// Создаем subscriber с PrefetchCount = 0 (должен стать 1 по умолчанию)
 	sub := NewSubscriber(dialer, "test-topic", SubscriberConfig{
@@ -224,7 +224,7 @@ func TestSubscriber_HandlerReturnsError(t *testing.T) {
 	cfg := Config{
 		Brokers: []string{"localhost:9092"},
 	}
-	dialer := NewDialer(cfg, nil)
+	dialer := NewDialer(cfg)
 
 	sub := NewSubscriber(dialer, "test-topic", SubscriberConfig{})
 
@@ -250,7 +250,7 @@ func TestSubscriber_HandlerSuccess(t *testing.T) {
 	cfg := Config{
 		Brokers: []string{"localhost:9092"},
 	}
-	dialer := NewDialer(cfg, nil)
+	dialer := NewDialer(cfg)
 
 	sub := NewSubscriber(dialer, "test-topic", SubscriberConfig{})
 

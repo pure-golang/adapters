@@ -203,7 +203,7 @@ func TestSender_STARTTLS_Success(t *testing.T) {
 		Insecure: true, // Skip cert verification
 	}
 
-	sender := NewSender(cfg, nil)
+	sender := NewSender(cfg)
 	defer sender.Close()
 
 	ctx := context.Background()
@@ -232,7 +232,7 @@ func TestSender_STARTTLS_WithAuth(t *testing.T) {
 		Password: "testpass",
 	}
 
-	sender := NewSender(cfg, nil)
+	sender := NewSender(cfg)
 	defer sender.Close()
 
 	ctx := context.Background()
@@ -259,7 +259,7 @@ func TestSender_STARTTLS_MultipleRecipients(t *testing.T) {
 		Insecure: true,
 	}
 
-	sender := NewSender(cfg, nil)
+	sender := NewSender(cfg)
 	defer sender.Close()
 
 	ctx := context.Background()
@@ -295,7 +295,7 @@ func TestSender_STARTTLS_WithHTML(t *testing.T) {
 		Insecure: true,
 	}
 
-	sender := NewSender(cfg, nil)
+	sender := NewSender(cfg)
 	defer sender.Close()
 
 	ctx := context.Background()
@@ -323,7 +323,7 @@ func TestSender_STARTTLS_ContextCancellation(t *testing.T) {
 		Insecure: true,
 	}
 
-	sender := NewSender(cfg, nil)
+	sender := NewSender(cfg)
 	defer sender.Close()
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -353,7 +353,7 @@ func TestSender_STARTTLS_WithDefaultFrom(t *testing.T) {
 		Insecure: true,
 	}
 
-	sender := NewSender(cfg, nil)
+	sender := NewSender(cfg)
 	defer sender.Close()
 
 	ctx := context.Background()

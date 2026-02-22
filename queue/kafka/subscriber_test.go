@@ -21,7 +21,7 @@ func (s *KafkaSuite) TestSubscriber_Listen() {
 	cfg := Config{
 		Brokers: s.brokers,
 	}
-	dialer := NewDialer(cfg, nil)
+	dialer := NewDialer(cfg)
 
 	s.T().Cleanup(func() {
 		require.NoError(s.T(), dialer.Close())
@@ -135,7 +135,7 @@ func (s *KafkaSuite) TestSubscriber_WithRetryableError() {
 	cfg := Config{
 		Brokers: s.brokers,
 	}
-	dialer := NewDialer(cfg, nil)
+	dialer := NewDialer(cfg)
 
 	s.T().Cleanup(func() {
 		require.NoError(s.T(), dialer.Close())
@@ -203,7 +203,7 @@ func (s *KafkaSuite) TestSubscriber_WithNonRetryableError() {
 	cfg := Config{
 		Brokers: s.brokers,
 	}
-	dialer := NewDialer(cfg, nil)
+	dialer := NewDialer(cfg)
 
 	s.T().Cleanup(func() {
 		require.NoError(s.T(), dialer.Close())
@@ -262,7 +262,7 @@ func (s *KafkaSuite) TestSubscriber_DefaultConfig() {
 	cfg := Config{
 		Brokers: s.brokers,
 	}
-	dialer := NewDialer(cfg, nil)
+	dialer := NewDialer(cfg)
 
 	// Создаем subscriber с дефолтным конфигом
 	sub := NewDefaultSubscriber(dialer, s.topic)
@@ -276,7 +276,7 @@ func (s *KafkaSuite) TestSubscriber_CustomConfig() {
 	cfg := Config{
 		Brokers: s.brokers,
 	}
-	dialer := NewDialer(cfg, nil)
+	dialer := NewDialer(cfg)
 
 	// Создаем subscriber с кастомным конфигом
 	sub := NewSubscriber(dialer, s.topic, SubscriberConfig{
@@ -295,7 +295,7 @@ func (s *KafkaSuite) TestSubscriber_Close() {
 	cfg := Config{
 		Brokers: s.brokers,
 	}
-	dialer := NewDialer(cfg, nil)
+	dialer := NewDialer(cfg)
 
 	// Создаем subscriber
 	sub := NewSubscriber(dialer, s.topic, SubscriberConfig{

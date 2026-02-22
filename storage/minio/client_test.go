@@ -16,7 +16,7 @@ func TestNewClient_InvalidConfig(t *testing.T) {
 	tests := []struct {
 		name        string
 		cfg         Config
-		options     *ClientOptions
+		opts        []Option
 		expectedErr string
 	}{
 		{
@@ -26,7 +26,7 @@ func TestNewClient_InvalidConfig(t *testing.T) {
 				AccessKey: "test",
 				SecretKey: "test",
 			},
-			options:     &ClientOptions{Logger: slog.Default()},
+			opts:        []Option{WithLogger(slog.Default())},
 			expectedErr: "failed to connect to S3 storage",
 		},
 		{
@@ -36,7 +36,7 @@ func TestNewClient_InvalidConfig(t *testing.T) {
 				AccessKey: "test",
 				SecretKey: "test",
 			},
-			options:     nil,
+			opts:        nil,
 			expectedErr: "failed to connect to S3 storage",
 		},
 	}
@@ -44,7 +44,7 @@ func TestNewClient_InvalidConfig(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			client, err := NewClient(tt.cfg, tt.options)
+			client, err := NewClient(tt.cfg, tt.opts...)
 			assert.Error(t, err)
 			assert.Nil(t, client)
 			assert.Contains(t, err.Error(), tt.expectedErr)
@@ -56,9 +56,9 @@ func TestNewClient_InvalidConfig(t *testing.T) {
 func TestNewClient_Options(t *testing.T) {
 	t.Parallel()
 	tests := []struct {
-		name    string
-		cfg     Config
-		options *ClientOptions
+		name string
+		cfg  Config
+		opts []Option
 	}{
 		{
 			name: "nil options",
@@ -67,7 +67,7 @@ func TestNewClient_Options(t *testing.T) {
 				AccessKey: "key",
 				SecretKey: "secret",
 			},
-			options: nil,
+			opts: nil,
 		},
 		{
 			name: "empty options",
@@ -76,7 +76,7 @@ func TestNewClient_Options(t *testing.T) {
 				AccessKey: "key",
 				SecretKey: "secret",
 			},
-			options: &ClientOptions{},
+			opts: []Option{},
 		},
 		{
 			name: "options with nil logger",
@@ -85,9 +85,7 @@ func TestNewClient_Options(t *testing.T) {
 				AccessKey: "key",
 				SecretKey: "secret",
 			},
-			options: &ClientOptions{
-				Logger: nil,
-			},
+			opts: []Option{WithLogger(nil)},
 		},
 		{
 			name: "options with custom logger",
@@ -96,9 +94,7 @@ func TestNewClient_Options(t *testing.T) {
 				AccessKey: "key",
 				SecretKey: "secret",
 			},
-			options: &ClientOptions{
-				Logger: slog.Default(),
-			},
+			opts: []Option{WithLogger(slog.Default())},
 		},
 	}
 
@@ -106,7 +102,7 @@ func TestNewClient_Options(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 			// These will fail to connect, but we're testing option handling
-			client, err := NewClient(tt.cfg, tt.options)
+			client, err := NewClient(tt.cfg, tt.opts...)
 			assert.Error(t, err) // Expected to fail connection
 			assert.Nil(t, client)
 		})
@@ -169,7 +165,7 @@ func TestNewClient_SecureFlag(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 			// These will fail to connect, but we're testing config handling
-			_, err := NewClient(tt.cfg, nil)
+			_, err := NewClient(tt.cfg)
 			assert.Error(t, err)
 		})
 	}
@@ -219,7 +215,7 @@ func TestNewClient_Timeout(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 			// These will fail to connect, but we're testing timeout handling
-			_, err := NewClient(tt.cfg, nil)
+			_, err := NewClient(tt.cfg)
 			assert.Error(t, err)
 		})
 	}
@@ -401,7 +397,7 @@ func TestClient_Initialization(t *testing.T) {
 		}
 
 		// Will fail to connect but tests config parsing
-		client, err := NewClient(cfg, &ClientOptions{Logger: slog.Default()})
+		client, err := NewClient(cfg, WithLogger(slog.Default()))
 		assert.Error(t, err)
 		assert.Nil(t, client)
 	})
@@ -422,7 +418,7 @@ func TestClient_ConnectionTimeout(t *testing.T) {
 	}
 
 	start := time.Now()
-	_, err := NewClient(cfg, nil)
+	_, err := NewClient(cfg)
 	elapsed := time.Since(start)
 
 	assert.Error(t, err)
@@ -470,7 +466,7 @@ func TestNewClient_Context(t *testing.T) {
 			Timeout:   1,
 		}
 
-		_, err := NewClient(cfg, nil)
+		_, err := NewClient(cfg)
 		assert.Error(t, err)
 	})
 }

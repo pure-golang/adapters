@@ -132,7 +132,7 @@ func TestSender_MiniSMTPServer_Success(t *testing.T) {
 		TLS:  false,
 	}
 
-	sender := NewSender(cfg, nil)
+	sender := NewSender(cfg)
 	defer sender.Close()
 
 	ctx := context.Background()
@@ -163,7 +163,7 @@ func TestSender_MiniSMTPServer_MultipleEmails(t *testing.T) {
 		TLS:  false,
 	}
 
-	sender := NewSender(cfg, nil)
+	sender := NewSender(cfg)
 	defer sender.Close()
 
 	ctx := context.Background()
@@ -198,7 +198,7 @@ func TestSender_MiniSMTPServer_HTMLMessage(t *testing.T) {
 		TLS:  false,
 	}
 
-	sender := NewSender(cfg, nil)
+	sender := NewSender(cfg)
 	defer sender.Close()
 
 	ctx := context.Background()
@@ -226,7 +226,7 @@ func TestSender_MiniSMTPServer_MultipleRecipients(t *testing.T) {
 		TLS:  false,
 	}
 
-	sender := NewSender(cfg, nil)
+	sender := NewSender(cfg)
 	defer sender.Close()
 
 	ctx := context.Background()
@@ -263,7 +263,7 @@ func TestSender_MiniSMTPServer_WithDefaultFrom(t *testing.T) {
 		TLS:  false,
 	}
 
-	sender := NewSender(cfg, nil)
+	sender := NewSender(cfg)
 	defer sender.Close()
 
 	ctx := context.Background()
@@ -290,7 +290,7 @@ func TestSender_MiniSMTPServer_WithCustomHeaders(t *testing.T) {
 		TLS:  false,
 	}
 
-	sender := NewSender(cfg, nil)
+	sender := NewSender(cfg)
 	defer sender.Close()
 
 	ctx := context.Background()
@@ -321,7 +321,7 @@ func TestSender_MiniSMTPServer_OnlyBccRecipients(t *testing.T) {
 		TLS:  false,
 	}
 
-	sender := NewSender(cfg, nil)
+	sender := NewSender(cfg)
 	defer sender.Close()
 
 	ctx := context.Background()
@@ -348,7 +348,7 @@ func TestSender_MiniSMTPServer_OnlyCcRecipients(t *testing.T) {
 		TLS:  false,
 	}
 
-	sender := NewSender(cfg, nil)
+	sender := NewSender(cfg)
 	defer sender.Close()
 
 	ctx := context.Background()
@@ -375,7 +375,7 @@ func TestSender_MiniSMTPServer_EmptySubject(t *testing.T) {
 		TLS:  false,
 	}
 
-	sender := NewSender(cfg, nil)
+	sender := NewSender(cfg)
 	defer sender.Close()
 
 	ctx := context.Background()

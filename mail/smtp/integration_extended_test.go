@@ -97,7 +97,7 @@ func TestSender_Extended_NoTLS(t *testing.T) {
 		TLS:  false,
 	}
 
-	sender := NewSender(cfg, nil)
+	sender := NewSender(cfg)
 	defer sender.Close()
 
 	ctx := context.Background()
@@ -125,7 +125,7 @@ func TestSender_Extended_WithDefaultFrom(t *testing.T) {
 		TLS:  false,
 	}
 
-	sender := NewSender(cfg, nil)
+	sender := NewSender(cfg)
 	defer sender.Close()
 
 	ctx := context.Background()
@@ -153,7 +153,7 @@ func TestSender_Extended_ExplicitFromOverridesDefault(t *testing.T) {
 		TLS:  false,
 	}
 
-	sender := NewSender(cfg, nil)
+	sender := NewSender(cfg)
 	defer sender.Close()
 
 	ctx := context.Background()
@@ -180,7 +180,7 @@ func TestSender_Extended_MultipleEmails(t *testing.T) {
 		TLS:  false,
 	}
 
-	sender := NewSender(cfg, nil)
+	sender := NewSender(cfg)
 	defer sender.Close()
 
 	ctx := context.Background()
@@ -221,7 +221,7 @@ func TestSender_Extended_MultipleRecipients(t *testing.T) {
 		TLS:  false,
 	}
 
-	sender := NewSender(cfg, nil)
+	sender := NewSender(cfg)
 	defer sender.Close()
 
 	ctx := context.Background()
@@ -260,7 +260,7 @@ func TestSender_Extended_OnlyCcRecipients(t *testing.T) {
 		TLS:  false,
 	}
 
-	sender := NewSender(cfg, nil)
+	sender := NewSender(cfg)
 	defer sender.Close()
 
 	ctx := context.Background()
@@ -287,7 +287,7 @@ func TestSender_Extended_OnlyBccRecipients(t *testing.T) {
 		TLS:  false,
 	}
 
-	sender := NewSender(cfg, nil)
+	sender := NewSender(cfg)
 	defer sender.Close()
 
 	ctx := context.Background()
@@ -314,7 +314,7 @@ func TestSender_Extended_HTMLWithMultipart(t *testing.T) {
 		TLS:  false,
 	}
 
-	sender := NewSender(cfg, nil)
+	sender := NewSender(cfg)
 	defer sender.Close()
 
 	ctx := context.Background()
@@ -342,7 +342,7 @@ func TestSender_Extended_MultipleCustomHeaders(t *testing.T) {
 		TLS:  false,
 	}
 
-	sender := NewSender(cfg, nil)
+	sender := NewSender(cfg)
 	defer sender.Close()
 
 	ctx := context.Background()
@@ -376,7 +376,7 @@ func TestSender_Extended_EmptySubject(t *testing.T) {
 		TLS:  false,
 	}
 
-	sender := NewSender(cfg, nil)
+	sender := NewSender(cfg)
 	defer sender.Close()
 
 	ctx := context.Background()
@@ -403,7 +403,7 @@ func TestSender_Extended_LongSubject(t *testing.T) {
 		TLS:  false,
 	}
 
-	sender := NewSender(cfg, nil)
+	sender := NewSender(cfg)
 	defer sender.Close()
 
 	ctx := context.Background()
@@ -432,7 +432,7 @@ func TestSender_Extended_SpecialCharactersInBody(t *testing.T) {
 		TLS:  false,
 	}
 
-	sender := NewSender(cfg, nil)
+	sender := NewSender(cfg)
 	defer sender.Close()
 
 	ctx := context.Background()
@@ -459,7 +459,7 @@ func TestSender_Extended_UnicodeContent(t *testing.T) {
 		TLS:  false,
 	}
 
-	sender := NewSender(cfg, nil)
+	sender := NewSender(cfg)
 	defer sender.Close()
 
 	ctx := context.Background()
@@ -486,7 +486,7 @@ func TestSender_Extended_SenderConcurrency(t *testing.T) {
 		TLS:  false,
 	}
 
-	sender := NewSender(cfg, nil)
+	sender := NewSender(cfg)
 	defer sender.Close()
 
 	ctx := context.Background()
@@ -532,7 +532,7 @@ func TestSender_Extended_VerifyMessageFormat(t *testing.T) {
 		TLS:  false,
 	}
 
-	sender := NewSender(cfg, nil)
+	sender := NewSender(cfg)
 	defer sender.Close()
 
 	email := mail.Email{
@@ -577,7 +577,7 @@ func TestSender_Extended_ConnectionRefused(t *testing.T) {
 		TLS:  false,
 	}
 
-	sender := NewSender(cfg, nil)
+	sender := NewSender(cfg)
 	defer sender.Close()
 
 	ctx := context.Background()
@@ -601,7 +601,7 @@ func TestSender_Extended_InvalidHost(t *testing.T) {
 		TLS:  false,
 	}
 
-	sender := NewSender(cfg, nil)
+	sender := NewSender(cfg)
 	defer sender.Close()
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
@@ -626,7 +626,7 @@ func TestSender_Extended_ContextTimeout(t *testing.T) {
 		TLS:  false,
 	}
 
-	sender := NewSender(cfg, nil)
+	sender := NewSender(cfg)
 	defer sender.Close()
 
 	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
@@ -691,7 +691,7 @@ func TestSender_Extended_CloseIdempotent(t *testing.T) {
 		TLS:  false,
 	}
 
-	sender := NewSender(cfg, nil)
+	sender := NewSender(cfg)
 
 	// Close multiple times
 	err1 := sender.Close()
@@ -715,7 +715,7 @@ func TestSender_Extended_BuildMessageVerifyBoundary(t *testing.T) {
 		TLS:  false,
 	}
 
-	sender := NewSender(cfg, nil)
+	sender := NewSender(cfg)
 	defer sender.Close()
 
 	// Build multiple messages and verify boundaries are different
@@ -769,7 +769,7 @@ func TestSender_Extended_BodyOnlyNoHTML(t *testing.T) {
 		TLS:  false,
 	}
 
-	sender := NewSender(cfg, nil)
+	sender := NewSender(cfg)
 	defer sender.Close()
 
 	ctx := context.Background()
@@ -802,7 +802,7 @@ func TestSender_Extended_HTMLNoBody(t *testing.T) {
 		TLS:  false,
 	}
 
-	sender := NewSender(cfg, nil)
+	sender := NewSender(cfg)
 	defer sender.Close()
 
 	ctx := context.Background()

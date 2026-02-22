@@ -78,7 +78,7 @@ func TestMain(m *testing.M) {
 	// Wait a bit for the server to be fully ready
 	time.Sleep(1 * time.Second)
 
-	testSender = NewSender(cfg, nil)
+	testSender = NewSender(cfg)
 
 	code := m.Run()
 

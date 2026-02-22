@@ -22,7 +22,7 @@ func TestNewDialer(t *testing.T) {
 		Brokers: []string{"broker1:9092", "broker2:9092"},
 	}
 
-	dialer := NewDialer(cfg, nil)
+	dialer := NewDialer(cfg)
 
 	assert.NotNil(t, dialer)
 	assert.Equal(t, cfg.Brokers, dialer.GetBrokers())

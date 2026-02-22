@@ -48,7 +48,7 @@ func TestIntegrationWithTestcontainers(t *testing.T) {
 		Secure:    false,
 	}
 
-	client, err := NewClient(cfg, nil)
+	client, err := NewClient(cfg)
 	require.NoError(t, err)
 	defer client.Close()
 
@@ -271,7 +271,7 @@ func TestIntegrationWithTestcontainers(t *testing.T) {
 		// Create storage with default bucket set in config
 		cfgWithDefault := cfg
 		cfgWithDefault.DefaultBucket = bucket
-		client2, err := NewClient(cfgWithDefault, nil)
+		client2, err := NewClient(cfgWithDefault)
 		require.NoError(t, err)
 		defer client2.Close()
 
@@ -369,7 +369,7 @@ func TestIntegrationWithTestcontainers(t *testing.T) {
 		// Create storage with default bucket
 		cfgWithDefault := cfg
 		cfgWithDefault.DefaultBucket = bucket
-		client3, err := NewClient(cfgWithDefault, nil)
+		client3, err := NewClient(cfgWithDefault)
 		require.NoError(t, err)
 		defer client3.Close()
 

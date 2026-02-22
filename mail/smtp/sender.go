@@ -27,17 +27,22 @@ type Sender struct {
 	closed bool
 }
 
-// SenderOptions contains options for creating a Sender.
-type SenderOptions struct {
-	// Logger can be added later if needed
-}
+// Option определяет функцию для настройки Sender
+type Option func(*Sender)
 
 // NewSender creates a new SMTP Sender.
-func NewSender(cfg Config, options *SenderOptions) *Sender {
-	return &Sender{
+func NewSender(cfg Config, opts ...Option) *Sender {
+	s := &Sender{
 		cfg:    cfg,
 		closed: false,
 	}
+
+	// Применяем опции
+	for _, opt := range opts {
+		opt(s)
+	}
+
+	return s
 }
 
 // Send sends one or more emails.
