@@ -6,15 +6,13 @@ import (
 	"context"
 	"flag"
 	"fmt"
-	"net"
 	"os"
 	"strconv"
 	"testing"
-	"time"
 
-	"github.com/ory/dockertest/v3"
-	"github.com/ory/dockertest/v3/docker"
 	"github.com/stretchr/testify/require"
+	"github.com/testcontainers/testcontainers-go"
+	"github.com/testcontainers/testcontainers-go/wait"
 
 	"github.com/pure-golang/adapters/mail"
 )
@@ -29,54 +27,46 @@ func TestMain(m *testing.M) {
 		os.Exit(0)
 	}
 
-	pool, err := dockertest.NewPool("")
-	if err != nil {
-		panic(fmt.Sprintf("Could not connect to docker: %s", err))
+	ctx := context.Background()
+
+	req := testcontainers.ContainerRequest{
+		Image:        "mailhog/mailhog:latest",
+		ExposedPorts: []string{"1025/tcp"},
+		WaitingFor: wait.ForAll(
+			wait.ForLog("Starting SMTP"),
+			wait.ForListeningPort("1025/tcp"),
+		),
 	}
 
-	// Use mailhog/mailhog with explicit port binding
-	resource, err := pool.RunWithOptions(&dockertest.RunOptions{
-		Repository: "mailhog/mailhog",
-		Tag:        "latest",
-	}, func(config *docker.HostConfig) {
-		config.AutoRemove = true
-		config.RestartPolicy = docker.RestartPolicy{Name: "no"}
-		config.PortBindings = map[docker.Port][]docker.PortBinding{
-			"1025/tcp": {{HostIP: "", HostPort: "1025"}},
-		}
+	container, err := testcontainers.GenericContainer(ctx, testcontainers.GenericContainerRequest{
+		ContainerRequest: req,
+		Started:          true,
 	})
 	if err != nil {
-		panic(fmt.Sprintf("Could not start resource: %s", err))
+		panic(fmt.Sprintf("could not start mailhog container: %s", err))
+	}
+	defer container.Terminate(ctx) //nolint:errcheck
+
+	host, err := container.Host(ctx)
+	if err != nil {
+		panic(fmt.Sprintf("could not get container host: %s", err))
 	}
 
-	defer pool.Purge(resource)
-
-	port, err := strconv.Atoi(resource.GetPort("1025/tcp"))
+	port, err := container.MappedPort(ctx, "1025")
 	if err != nil {
-		panic(fmt.Sprintf("Could not parse port: %s", err))
+		panic(fmt.Sprintf("could not get container port: %s", err))
+	}
+
+	portNum, err := strconv.Atoi(port.Port())
+	if err != nil {
+		panic(fmt.Sprintf("could not parse port number: %s", err))
 	}
 
 	cfg := Config{
-		Host: "localhost",
-		Port: port,
+		Host: host,
+		Port: portNum,
 		TLS:  false,
 	}
-
-	// Wait for SMTP to be ready
-	if err := pool.Retry(func() error {
-		addr := fmt.Sprintf("%s:%d", cfg.Host, cfg.Port)
-		conn, err := net.DialTimeout("tcp", addr, 2*time.Second)
-		if err != nil {
-			return err
-		}
-		conn.Close()
-		return nil
-	}); err != nil {
-		panic(fmt.Sprintf("Could not connect to SMTP: %s", err))
-	}
-
-	// Wait a bit for the server to be fully ready
-	time.Sleep(1 * time.Second)
 
 	testSender = NewSender(cfg)
 
