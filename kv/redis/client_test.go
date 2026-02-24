@@ -432,6 +432,14 @@ func TestClient_IsNil_Variations(t *testing.T) {
 	})
 }
 
+func TestNilError(t *testing.T) {
+	t.Parallel()
+	n := Nil{}
+	if n.Error() != "redis: nil" {
+		t.Errorf("expected 'redis: nil', got '%s'", n.Error())
+	}
+}
+
 // minInt returns the minimum of two integers for testing.
 func minInt(a, b int) int {
 	if a < b {

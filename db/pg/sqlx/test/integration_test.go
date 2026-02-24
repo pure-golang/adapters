@@ -1,4 +1,4 @@
-package sqlx
+package sqlx_test
 
 import (
 	"context"
@@ -13,19 +13,19 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/wait"
+
+	"github.com/pure-golang/adapters/db/pg/sqlx"
 )
 
-var testDB *Connection
+var testDB *sqlx.Connection
+var testCfg sqlx.Config
 
 func TestMain(m *testing.M) {
-	// Сначала обрабатываем флаги
 	flag.Parse()
 
-	// Если установлен флаг -short, пропускаем интеграционные тесты
 	if testing.Short() {
 		fmt.Println("Skipping integration tests in short mode")
 		os.Exit(0)
@@ -34,12 +34,9 @@ func TestMain(m *testing.M) {
 	os.Exit(runTests(m))
 }
 
-// runTests выполняет setup, запускает тесты и возвращает код завершения.
-// Вынесено в отдельную функцию, чтобы defer корректно выполнился до os.Exit.
 func runTests(m *testing.M) int {
 	ctx := context.Background()
 
-	// Создаем контейнер PostgreSQL
 	req := testcontainers.ContainerRequest{
 		Image:        "postgres:15",
 		ExposedPorts: []string{"5432/tcp"},
@@ -60,14 +57,12 @@ func runTests(m *testing.M) int {
 		return 1
 	}
 
-	// Очищаем ресурсы после тестов
 	defer func() {
 		if err := container.Terminate(ctx); err != nil {
 			fmt.Printf("Warning: could not terminate container: %s\n", err)
 		}
 	}()
 
-	// Получаем порт
 	host, err := container.Host(ctx)
 	if err != nil {
 		log.Printf("Could not get container host: %s", err)
@@ -86,8 +81,7 @@ func runTests(m *testing.M) int {
 		return 1
 	}
 
-	// Конфигурация для подключения к тестовой БД
-	cfg := Config{
+	testCfg = sqlx.Config{
 		Host:           host,
 		Port:           port,
 		User:           "test_user",
@@ -98,12 +92,11 @@ func runTests(m *testing.M) int {
 		QueryTimeout:   30 * time.Second,
 	}
 
-	// Ждем готовности БД и подключаемся
 	maxRetries := 30
 	retryInterval := 500 * time.Millisecond
 
 	for i := range maxRetries {
-		testDB, err = Connect(ctx, cfg)
+		testDB, err = sqlx.Connect(ctx, testCfg)
 		if err == nil {
 			break
 		}
@@ -116,10 +109,8 @@ func runTests(m *testing.M) int {
 		return 1
 	}
 
-	// Запускаем тесты после успешного подключения
 	code := m.Run()
 
-	// Закрываем соединение с БД
 	if testDB != nil {
 		if err := testDB.Close(); err != nil {
 			fmt.Printf("Warning: failed to close test DB: %s\n", err)
@@ -135,7 +126,6 @@ func TestConnection_Exec(t *testing.T) {
 	}
 	ctx := context.Background()
 
-	// Создаем тестовую таблицу
 	_, err := testDB.Exec(ctx, `
 		CREATE TABLE IF NOT EXISTS test_users (
 			id SERIAL PRIMARY KEY,
@@ -145,23 +135,20 @@ func TestConnection_Exec(t *testing.T) {
 	`)
 	require.NoError(t, err)
 
-	// Вставляем тестовые данные
 	result, err := testDB.Exec(ctx, `
 		INSERT INTO test_users (name, email) VALUES ($1, $2)
 	`, "John Doe", "john@example.com")
 	require.NoError(t, err)
 
-	// Проверяем количество затронутых строк
 	affected, err := result.RowsAffected()
 	require.NoError(t, err)
 	require.Equal(t, int64(1), affected)
 
-	// Проверяем уникальность email
 	_, err = testDB.Exec(ctx, `
 		INSERT INTO test_users (name, email) VALUES ($1, $2)
 	`, "Jane Doe", "john@example.com")
 	require.Error(t, err)
-	require.True(t, IsUniqueViolation(err))
+	require.True(t, sqlx.IsUniqueViolation(err))
 }
 
 func TestConnection_Transaction(t *testing.T) {
@@ -170,7 +157,6 @@ func TestConnection_Transaction(t *testing.T) {
 	}
 	ctx := context.Background()
 
-	// Создаем тестовую таблицу с проверкой баланса
 	_, err := testDB.Exec(ctx, `
 		CREATE TABLE IF NOT EXISTS test_accounts (
 			id SERIAL PRIMARY KEY,
@@ -179,9 +165,7 @@ func TestConnection_Transaction(t *testing.T) {
 	`)
 	require.NoError(t, err)
 
-	// Тестируем успешную транзакцию
-	err = testDB.RunTx(ctx, nil, func(ctx context.Context, tx *Tx) error {
-		// Создаем два счета
+	err = testDB.RunTx(ctx, nil, func(ctx context.Context, tx *sqlx.Tx) error {
 		_, err := tx.Exec(ctx, `
 			INSERT INTO test_accounts (balance) VALUES ($1), ($2)
 		`, 100, 0)
@@ -189,7 +173,6 @@ func TestConnection_Transaction(t *testing.T) {
 			return err
 		}
 
-		// Переводим деньги между счетами
 		_, err = tx.Exec(ctx, "UPDATE test_accounts SET balance = balance - $1 WHERE id = 1", 50)
 		if err != nil {
 			return err
@@ -199,7 +182,6 @@ func TestConnection_Transaction(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	// Проверяем балансы
 	var balance1, balance2 int
 	err = testDB.Get(ctx, &balance1, "SELECT balance FROM test_accounts WHERE id = 1")
 	require.NoError(t, err)
@@ -209,16 +191,14 @@ func TestConnection_Transaction(t *testing.T) {
 	require.Equal(t, 50, balance1)
 	require.Equal(t, 50, balance2)
 
-	// Тестируем откат транзакции
-	err = testDB.RunTx(ctx, nil, func(ctx context.Context, tx *Tx) error {
+	err = testDB.RunTx(ctx, nil, func(ctx context.Context, tx *sqlx.Tx) error {
 		_, err := tx.Exec(ctx, `
 			UPDATE test_accounts SET balance = balance - $1 WHERE id = 1;
-		`, 100) // Недостаточно средств
+		`, 100)
 		return err
 	})
 	require.Error(t, err)
 
-	// Проверяем что балансы не изменились
 	err = testDB.Get(ctx, &balance1, "SELECT balance FROM test_accounts WHERE id = 1")
 	require.NoError(t, err)
 	require.Equal(t, 50, balance1)
@@ -230,7 +210,6 @@ func TestConnection_Get(t *testing.T) {
 	}
 	ctx := context.Background()
 
-	// Создаем тестовую таблицу и данные
 	_, err := testDB.Exec(ctx, `
 		CREATE TABLE IF NOT EXISTS test_items (
 			id SERIAL PRIMARY KEY,
@@ -245,7 +224,6 @@ func TestConnection_Get(t *testing.T) {
 	`, "test item", 100)
 	require.NoError(t, err)
 
-	// Тестируем Get
 	type Item struct {
 		ID    int    `db:"id"`
 		Name  string `db:"name"`
@@ -258,7 +236,6 @@ func TestConnection_Get(t *testing.T) {
 	require.Equal(t, "test item", item.Name)
 	require.Equal(t, 100, item.Price)
 
-	// Тестируем Get с несуществующей записью
 	err = testDB.Get(ctx, &item, "SELECT * FROM test_items WHERE id = $1", 999)
 	require.Error(t, err)
 }
@@ -269,7 +246,6 @@ func TestConnection_Select(t *testing.T) {
 	}
 	ctx := context.Background()
 
-	// Создаем тестовую таблицу и данные
 	_, err := testDB.Exec(ctx, `
 		CREATE TABLE IF NOT EXISTS test_products (
 			id SERIAL PRIMARY KEY,
@@ -280,7 +256,6 @@ func TestConnection_Select(t *testing.T) {
 	`)
 	require.NoError(t, err)
 
-	// Вставляем тестовые данные
 	_, err = testDB.Exec(ctx, `
 		INSERT INTO test_products (name, category, price) VALUES
 		($1, $2, $3),
@@ -288,7 +263,6 @@ func TestConnection_Select(t *testing.T) {
 	`, "Product 1", "A", 100, "Product 2", "B", 200)
 	require.NoError(t, err)
 
-	// Тестируем Select
 	type Product struct {
 		ID       int    `db:"id"`
 		Name     string `db:"name"`
@@ -303,7 +277,6 @@ func TestConnection_Select(t *testing.T) {
 	require.Equal(t, "Product 1", products[0].Name)
 	require.Equal(t, "Product 2", products[1].Name)
 
-	// Тестируем Select с фильтрацией
 	err = testDB.Select(ctx, &products, "SELECT * FROM test_products WHERE category = $1", "A")
 	require.NoError(t, err)
 	require.Len(t, products, 1)
@@ -316,7 +289,6 @@ func TestConnection_QueryTimeout(t *testing.T) {
 	}
 	ctx := context.Background()
 
-	// Создаем запрос с искусственной задержкой
 	_, err := testDB.Exec(ctx, `
 		CREATE OR REPLACE FUNCTION test_delay() RETURNS void AS $$
 		BEGIN
@@ -326,13 +298,13 @@ func TestConnection_QueryTimeout(t *testing.T) {
 	`)
 	require.NoError(t, err)
 
-	// Сохраняем и восстанавливаем исходный таймаут
-	oldTimeout := testDB.cfg.QueryTimeout
-	testDB.cfg.QueryTimeout = 100 * time.Millisecond
-	t.Cleanup(func() { testDB.cfg.QueryTimeout = oldTimeout })
+	shortTimeoutCfg := testCfg
+	shortTimeoutCfg.QueryTimeout = 100 * time.Millisecond
+	shortTimeoutDB, err := sqlx.Connect(ctx, shortTimeoutCfg)
+	require.NoError(t, err)
+	t.Cleanup(func() { shortTimeoutDB.Close() })
 
-	// Проверяем что запрос прерывается по таймауту
-	_, err = testDB.Exec(ctx, "SELECT test_delay()")
+	_, err = shortTimeoutDB.Exec(ctx, "SELECT test_delay()")
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "canceling statement due to user request")
 }
@@ -343,7 +315,6 @@ func TestConnection_ErrorHandling(t *testing.T) {
 	}
 	ctx := context.Background()
 
-	// Создаем тестовую таблицу с ограничениями
 	_, err := testDB.Exec(ctx, `
 		CREATE TABLE IF NOT EXISTS test_constraints (
 			id SERIAL PRIMARY KEY,
@@ -354,7 +325,6 @@ func TestConnection_ErrorHandling(t *testing.T) {
 	`)
 	require.NoError(t, err)
 
-	// Тест на нарушение UNIQUE
 	_, err = testDB.Exec(ctx, `
 		INSERT INTO test_constraints (code, value) VALUES ($1, $2)
 	`, "CODE1", 100)
@@ -364,28 +334,25 @@ func TestConnection_ErrorHandling(t *testing.T) {
 		INSERT INTO test_constraints (code, value) VALUES ($1, $2)
 	`, "CODE1", 200)
 	require.Error(t, err)
-	require.True(t, IsUniqueViolation(err))
+	require.True(t, sqlx.IsUniqueViolation(err))
 
-	// Тест на нарушение CHECK
 	_, err = testDB.Exec(ctx, `
 		INSERT INTO test_constraints (code, value) VALUES ($1, $2)
 	`, "CODE2", -1)
 	require.Error(t, err)
-	require.True(t, IsCheckViolation(err))
+	require.True(t, sqlx.IsCheckViolation(err))
 
-	// Тест на нарушение FOREIGN KEY
 	_, err = testDB.Exec(ctx, `
 		INSERT INTO test_constraints (code, value, ref_id) VALUES ($1, $2, $3)
 	`, "CODE3", 100, 999)
 	require.Error(t, err)
-	require.True(t, IsForeignKeyViolation(err))
+	require.True(t, sqlx.IsForeignKeyViolation(err))
 
-	// Тест на нарушение NOT NULL
 	_, err = testDB.Exec(ctx, `
 		INSERT INTO test_constraints (value) VALUES ($1)
 	`, 100)
 	require.Error(t, err)
-	require.True(t, IsNotNullViolation(err))
+	require.True(t, sqlx.IsNotNullViolation(err))
 }
 
 func TestConnection_NamedQueries(t *testing.T) {
@@ -393,7 +360,6 @@ func TestConnection_NamedQueries(t *testing.T) {
 		t.Skip("integration test")
 	}
 
-	// Создаем тестовую таблицу
 	createCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	t.Cleanup(cancel)
 
@@ -420,7 +386,6 @@ func TestConnection_NamedQueries(t *testing.T) {
 		Status:       "new",
 	}
 
-	// Тестируем NamedExec с отдельным контекстом
 	insertCtx, cancel2 := context.WithTimeout(context.Background(), 30*time.Second)
 	t.Cleanup(cancel2)
 
@@ -444,9 +409,8 @@ func TestConnection_NamedQueries(t *testing.T) {
 		Status:    "new",
 	}
 
-	// Тестируем NamedQuery с отдельным контекстом
-	queryCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-	t.Cleanup(cancel)
+	queryCtx, cancel3 := context.WithTimeout(context.Background(), 30*time.Second)
+	t.Cleanup(cancel3)
 
 	rows, err := testDB.NamedQuery(queryCtx, `
 		SELECT * FROM test_orders
@@ -478,7 +442,6 @@ func TestConnection_TransactionIsolation(t *testing.T) {
 	}
 	ctx := context.Background()
 
-	// Создаем тестовую таблицу
 	_, err := testDB.Exec(ctx, `
 		CREATE TABLE IF NOT EXISTS test_isolation (
 			id SERIAL PRIMARY KEY,
@@ -487,54 +450,45 @@ func TestConnection_TransactionIsolation(t *testing.T) {
 	`)
 	require.NoError(t, err)
 
-	// Вставляем начальные данные
 	_, err = testDB.Exec(ctx, `INSERT INTO test_isolation (value) VALUES ($1)`, 100)
 	require.NoError(t, err)
 
-	// Тестируем READ COMMITTED (по умолчанию)
-	err = testDB.RunTx(ctx, nil, func(ctx context.Context, tx1 *Tx) error {
-		// Читаем значение в первой транзакции
+	err = testDB.RunTx(ctx, nil, func(ctx context.Context, tx1 *sqlx.Tx) error {
 		var value1 int
 		err := tx1.Get(ctx, &value1, "SELECT value FROM test_isolation WHERE id = 1")
 		require.NoError(t, err)
 		require.Equal(t, 100, value1)
 
-		// Запускаем вторую транзакцию и меняем значение
-		err = testDB.RunTx(ctx, nil, func(ctx context.Context, tx2 *Tx) error {
+		err = testDB.RunTx(ctx, nil, func(ctx context.Context, tx2 *sqlx.Tx) error {
 			_, err := tx2.Exec(ctx, "UPDATE test_isolation SET value = $1 WHERE id = 1", 200)
 			return err
 		})
 		require.NoError(t, err)
 
-		// Повторно читаем значение в первой транзакции
 		err = tx1.Get(ctx, &value1, "SELECT value FROM test_isolation WHERE id = 1")
 		require.NoError(t, err)
-		require.Equal(t, 200, value1) // В READ COMMITTED видим изменения второй транзакции
+		require.Equal(t, 200, value1)
 
 		return nil
 	})
 	require.NoError(t, err)
 
-	// Тестируем REPEATABLE READ
-	opts := &TxOptions{Isolation: sql.LevelRepeatableRead}
-	err = testDB.RunTx(ctx, opts, func(ctx context.Context, tx1 *Tx) error {
-		// Читаем значение в первой транзакции
+	opts := &sqlx.TxOptions{Isolation: sql.LevelRepeatableRead}
+	err = testDB.RunTx(ctx, opts, func(ctx context.Context, tx1 *sqlx.Tx) error {
 		var value1 int
 		err := tx1.Get(ctx, &value1, "SELECT value FROM test_isolation WHERE id = 1")
 		require.NoError(t, err)
 		require.Equal(t, 200, value1)
 
-		// Запускаем вторую транзакцию и меняем значение
-		err = testDB.RunTx(ctx, nil, func(ctx context.Context, tx2 *Tx) error {
+		err = testDB.RunTx(ctx, nil, func(ctx context.Context, tx2 *sqlx.Tx) error {
 			_, err := tx2.Exec(ctx, "UPDATE test_isolation SET value = $1 WHERE id = 1", 300)
 			return err
 		})
 		require.NoError(t, err)
 
-		// Повторно читаем значение в первой транзакции
 		err = tx1.Get(ctx, &value1, "SELECT value FROM test_isolation WHERE id = 1")
 		require.NoError(t, err)
-		require.Equal(t, 200, value1) // В REPEATABLE READ не видим изменения второй транзакции
+		require.Equal(t, 200, value1)
 
 		return nil
 	})
@@ -547,7 +501,6 @@ func TestConnection_ConcurrentTransactions(t *testing.T) {
 	}
 	ctx := context.Background()
 
-	// Создаем тестовую таблицу
 	_, err := testDB.Exec(ctx, `
 		CREATE TABLE IF NOT EXISTS test_concurrent (
 			id INTEGER PRIMARY KEY,
@@ -556,18 +509,15 @@ func TestConnection_ConcurrentTransactions(t *testing.T) {
 	`)
 	require.NoError(t, err)
 
-	// Вставляем начальные данные
 	_, err = testDB.Exec(ctx, `INSERT INTO test_concurrent (id, counter) VALUES (1, 0)`)
 	require.NoError(t, err)
 
-	// Запускаем конкурентные транзакции
 	const goroutines = 10
 	const iterations = 10
 
 	var wg sync.WaitGroup
 	wg.Add(goroutines)
 
-	// Добавляем mutex для безопасной проверки ошибок
 	var (
 		errMu sync.Mutex
 		errs  []error
@@ -578,8 +528,7 @@ func TestConnection_ConcurrentTransactions(t *testing.T) {
 			defer wg.Done()
 
 			for range iterations {
-				err := testDB.RunTx(ctx, nil, func(ctx context.Context, tx *Tx) error {
-					// Блокируем строку для обновления
+				err := testDB.RunTx(ctx, nil, func(ctx context.Context, tx *sqlx.Tx) error {
 					var counter int
 					err := tx.Get(ctx, &counter, "SELECT counter FROM test_concurrent WHERE id = 1 FOR UPDATE")
 					if err != nil {
@@ -600,10 +549,8 @@ func TestConnection_ConcurrentTransactions(t *testing.T) {
 
 	wg.Wait()
 
-	// Проверяем ошибки после завершения всех горутин
 	require.Empty(t, errs, "got unexpected errors")
 
-	// Проверяем финальное значение счетчика
 	var finalCounter int
 	err = testDB.Get(ctx, &finalCounter, "SELECT counter FROM test_concurrent WHERE id = 1")
 	require.NoError(t, err)
@@ -617,7 +564,6 @@ func TestConnection_Query(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	t.Cleanup(cancel)
 
-	// Создаем тестовую таблицу
 	_, err := testDB.Exec(ctx, `
 		CREATE TABLE IF NOT EXISTS test_query (
 			id SERIAL PRIMARY KEY,
@@ -627,22 +573,17 @@ func TestConnection_Query(t *testing.T) {
 	`)
 	require.NoError(t, err)
 
-	// Вставляем тестовые данные
 	_, err = testDB.Exec(ctx, `
 		INSERT INTO test_query (name, value) VALUES
 		($1, $2), ($3, $4), ($5, $6)
 	`, "item1", 10, "item2", 20, "item3", 30)
 	require.NoError(t, err)
 
-	// Тестируем Query - verifies Query method is callable and returns non-nil rows
 	rows, err := testDB.Query(ctx, "SELECT * FROM test_query ORDER BY id")
 	require.NoError(t, err)
 	require.NotNil(t, rows)
-
-	// Close rows immediately to avoid context cancellation issues
 	rows.Close()
 
-	// Verify Query handles errors correctly
 	_, err = testDB.Query(ctx, "SELECT * FROM nonexistent_table")
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "failed to execute query")
@@ -655,7 +596,6 @@ func TestConnection_QueryRow(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	t.Cleanup(cancel)
 
-	// Создаем тестовую таблицу
 	_, err := testDB.Exec(ctx, `
 		CREATE TABLE IF NOT EXISTS test_query_row (
 			id SERIAL PRIMARY KEY,
@@ -665,17 +605,14 @@ func TestConnection_QueryRow(t *testing.T) {
 	`)
 	require.NoError(t, err)
 
-	// Вставляем тестовые данные
 	_, err = testDB.Exec(ctx, `
 		INSERT INTO test_query_row (name, age) VALUES ($1, $2)
 	`, "Alice", 30)
 	require.NoError(t, err)
 
-	// Тестируем QueryRow - verifies QueryRow method is callable and returns non-nil row
 	row := testDB.QueryRow(ctx, "SELECT * FROM test_query_row WHERE name = $1", "Alice")
 	require.NotNil(t, row)
 
-	// Verify QueryRow with error case
 	row = testDB.QueryRow(ctx, "SELECT * FROM test_query_row WHERE name = $1", "Bob")
 	var name string
 	var age int
@@ -688,10 +625,9 @@ func TestConnection_Close(t *testing.T) {
 		t.Skip("integration test")
 	}
 
-	// Создаем новое соединение для теста закрытия
-	cfg := Config{
-		Host:           "localhost",
-		Port:           testDB.cfg.Port,
+	cfg := sqlx.Config{
+		Host:           testCfg.Host,
+		Port:           testCfg.Port,
 		User:           "test_user",
 		Password:       "secret",
 		Database:       "test_db",
@@ -700,20 +636,17 @@ func TestConnection_Close(t *testing.T) {
 		QueryTimeout:   5 * time.Second,
 	}
 
-	conn, err := Connect(context.Background(), cfg)
+	conn, err := sqlx.Connect(context.Background(), cfg)
 	require.NoError(t, err)
 	require.NotNil(t, conn)
 
-	// Проверяем что соединение работает
 	var result int
 	err = conn.Get(context.Background(), &result, "SELECT 1")
 	require.NoError(t, err)
 
-	// Закрываем соединение
 	err = conn.Close()
 	require.NoError(t, err)
 
-	// После закрытия запросы должны возвращать ошибку
 	err = conn.Get(context.Background(), &result, "SELECT 1")
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "closed")
@@ -725,7 +658,6 @@ func TestConnection_NamedQuery_Close(t *testing.T) {
 	}
 	ctx := context.Background()
 
-	// Создаем тестовую таблицу
 	_, err := testDB.Exec(ctx, `
 		CREATE TABLE IF NOT EXISTS test_named_query_close (
 			id SERIAL PRIMARY KEY,
@@ -735,7 +667,6 @@ func TestConnection_NamedQuery_Close(t *testing.T) {
 	`)
 	require.NoError(t, err)
 
-	// Вставляем тестовые данные
 	_, err = testDB.Exec(ctx, `
 		INSERT INTO test_named_query_close (title, active) VALUES
 		($1, $2), ($3, $4)
@@ -746,7 +677,6 @@ func TestConnection_NamedQuery_Close(t *testing.T) {
 		Active bool `db:"active"`
 	}
 
-	// Тестируем NamedQuery с закрытием rows
 	params := QueryParams{Active: true}
 	rows, err := testDB.NamedQuery(ctx, `
 		SELECT * FROM test_named_query_close WHERE active = :active
@@ -754,7 +684,6 @@ func TestConnection_NamedQuery_Close(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, rows)
 
-	// Читаем данные
 	var titles []string
 	for rows.Next() {
 		var id int
@@ -767,11 +696,9 @@ func TestConnection_NamedQuery_Close(t *testing.T) {
 	require.NoError(t, rows.Err())
 	require.Len(t, titles, 1)
 
-	// Закрываем rows
 	err = rows.Close()
 	require.NoError(t, err)
 
-	// Повторное закрытие не должно вызывать ошибку
 	err = rows.Close()
 	require.NoError(t, err)
 }
@@ -782,7 +709,6 @@ func TestTx_Select(t *testing.T) {
 	}
 	ctx := context.Background()
 
-	// Создаем тестовую таблицу
 	_, err := testDB.Exec(ctx, `
 		CREATE TABLE IF NOT EXISTS test_tx_select (
 			id SERIAL PRIMARY KEY,
@@ -792,9 +718,7 @@ func TestTx_Select(t *testing.T) {
 	`)
 	require.NoError(t, err)
 
-	// Вставляем данные внутри транзакции
-	err = testDB.RunTx(ctx, nil, func(ctx context.Context, tx *Tx) error {
-		// Вставляем тестовые данные
+	err = testDB.RunTx(ctx, nil, func(ctx context.Context, tx *sqlx.Tx) error {
 		_, err := tx.Exec(ctx, `
 			INSERT INTO test_tx_select (category, amount) VALUES
 			($1, $2), ($3, $4), ($5, $6)
@@ -803,7 +727,6 @@ func TestTx_Select(t *testing.T) {
 			return err
 		}
 
-		// Тестируем Select в транзакции
 		type Record struct {
 			ID       int    `db:"id"`
 			Category string `db:"category"`
@@ -815,7 +738,6 @@ func TestTx_Select(t *testing.T) {
 		require.NoError(t, err)
 		require.Len(t, records, 2)
 
-		// Проверяем сумму
 		var total int
 		for _, r := range records {
 			total += r.Amount
@@ -833,7 +755,6 @@ func TestTx_Query(t *testing.T) {
 	}
 	ctx := context.Background()
 
-	// Создаем тестовую таблицу
 	_, err := testDB.Exec(ctx, `
 		CREATE TABLE IF NOT EXISTS test_tx_query (
 			id SERIAL PRIMARY KEY,
@@ -843,16 +764,13 @@ func TestTx_Query(t *testing.T) {
 	`)
 	require.NoError(t, err)
 
-	// First, insert data
 	_, err = testDB.Exec(ctx, `
 		INSERT INTO test_tx_query (label, score) VALUES
 		($1, $2), ($3, $4), ($5, $6)
 	`, "alpha", 10, "beta", 20, "gamma", 30)
 	require.NoError(t, err)
 
-	// Now test Query in a transaction - use Get to verify Query method works
-	err = testDB.RunTx(ctx, nil, func(ctx context.Context, tx *Tx) error {
-		// Тестируем Get в транзакции - verifies Query method via Get
+	err = testDB.RunTx(ctx, nil, func(ctx context.Context, tx *sqlx.Tx) error {
 		var count int
 		err := tx.Get(ctx, &count, "SELECT COUNT(*) FROM test_tx_query")
 		if err != nil {
@@ -871,7 +789,6 @@ func TestTx_QueryRow(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	t.Cleanup(cancel)
 
-	// Создаем тестовую таблицу
 	_, err := testDB.Exec(ctx, `
 		CREATE TABLE IF NOT EXISTS test_tx_query_row (
 			id SERIAL PRIMARY KEY,
@@ -881,20 +798,16 @@ func TestTx_QueryRow(t *testing.T) {
 	`)
 	require.NoError(t, err)
 
-	// First, insert data
 	_, err = testDB.Exec(ctx, `
 		INSERT INTO test_tx_query_row (username, email) VALUES
 		($1, $2), ($3, $4)
 	`, "user1", "user1@example.com", "user2", "user2@example.com")
 	require.NoError(t, err)
 
-	// Тестируем QueryRow в транзакции
-	err = testDB.RunTx(ctx, nil, func(ctx context.Context, tx *Tx) error {
-		// Тестируем QueryRow - verifies method is callable and returns non-nil row
+	err = testDB.RunTx(ctx, nil, func(ctx context.Context, tx *sqlx.Tx) error {
 		row := tx.QueryRow(ctx, "SELECT username FROM test_tx_query_row WHERE username = $1", "user1")
 		require.NotNil(t, row)
 
-		// Consume the row
 		var username string
 		err := row.Scan(&username)
 		require.NoError(t, err)
@@ -905,22 +818,12 @@ func TestTx_QueryRow(t *testing.T) {
 	require.NoError(t, err)
 }
 
-func TestDefaultTxOptions(t *testing.T) {
-	opts := DefaultTxOptions()
-
-	require.NotNil(t, opts)
-	assert.Equal(t, sql.LevelDefault, opts.Isolation)
-	assert.False(t, opts.ReadOnly)
-	assert.False(t, opts.Deferrable)
-}
-
 func TestConnection_BeginTx(t *testing.T) {
 	if testing.Short() {
 		t.Skip("integration test")
 	}
 	ctx := context.Background()
 
-	// Создаем тестовую таблицу
 	_, err := testDB.Exec(ctx, `
 		CREATE TABLE IF NOT EXISTS test_begin_tx (
 			id SERIAL PRIMARY KEY,
@@ -929,26 +832,22 @@ func TestConnection_BeginTx(t *testing.T) {
 	`)
 	require.NoError(t, err)
 
-	// Тестируем BeginTx с nil options
 	tx, err := testDB.BeginTx(ctx, nil)
 	require.NoError(t, err)
 	require.NotNil(t, tx)
 
-	// Выполняем операцию и коммитим
 	_, err = tx.Exec(ctx, "INSERT INTO test_begin_tx (value) VALUES ($1)", 100)
 	require.NoError(t, err)
 
 	err = tx.Commit()
 	require.NoError(t, err)
 
-	// Проверяем данные
 	var value int
 	err = testDB.Get(ctx, &value, "SELECT value FROM test_begin_tx WHERE id = 1")
 	require.NoError(t, err)
 	require.Equal(t, 100, value)
 
-	// Тестируем BeginTx с опциями
-	opts := &TxOptions{
+	opts := &sqlx.TxOptions{
 		Isolation: sql.LevelSerializable,
 		ReadOnly:  true,
 	}
@@ -957,7 +856,6 @@ func TestConnection_BeginTx(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, tx)
 
-	// В read-only транзакции можно читать
 	err = tx.Get(ctx, &value, "SELECT value FROM test_begin_tx WHERE id = 1")
 	require.NoError(t, err)
 	require.Equal(t, 100, value)
@@ -972,7 +870,6 @@ func TestTx_Commit(t *testing.T) {
 	}
 	ctx := context.Background()
 
-	// Создаем тестовую таблицу
 	_, err := testDB.Exec(ctx, `
 		CREATE TABLE IF NOT EXISTS test_tx_commit (
 			id SERIAL PRIMARY KEY,
@@ -981,25 +878,20 @@ func TestTx_Commit(t *testing.T) {
 	`)
 	require.NoError(t, err)
 
-	// Создаем транзакцию вручную
 	tx, err := testDB.BeginTx(ctx, nil)
 	require.NoError(t, err)
 
-	// Вставляем данные
 	_, err = tx.Exec(ctx, "INSERT INTO test_tx_commit (data) VALUES ($1)", "test data")
 	require.NoError(t, err)
 
-	// Коммитим транзакцию
 	err = tx.Commit()
 	require.NoError(t, err)
 
-	// Проверяем что данные сохранены
 	var data string
 	err = testDB.Get(ctx, &data, "SELECT data FROM test_tx_commit WHERE id = 1")
 	require.NoError(t, err)
 	require.Equal(t, "test data", data)
 
-	// Повторный коммит должен вернуть ошибку
 	err = tx.Commit()
 	require.Error(t, err)
 }
@@ -1010,7 +902,6 @@ func TestTx_Rollback(t *testing.T) {
 	}
 	ctx := context.Background()
 
-	// Создаем тестовую таблицу
 	_, err := testDB.Exec(ctx, `
 		CREATE TABLE IF NOT EXISTS test_tx_rollback (
 			id SERIAL PRIMARY KEY,
@@ -1019,25 +910,20 @@ func TestTx_Rollback(t *testing.T) {
 	`)
 	require.NoError(t, err)
 
-	// Создаем транзакцию вручную
 	tx, err := testDB.BeginTx(ctx, nil)
 	require.NoError(t, err)
 
-	// Вставляем данные
 	_, err = tx.Exec(ctx, "INSERT INTO test_tx_rollback (info) VALUES ($1)", "will be rolled back")
 	require.NoError(t, err)
 
-	// Откатываем транзакцию
 	err = tx.Rollback()
 	require.NoError(t, err)
 
-	// Проверяем что данные не сохранены
 	var count int
 	err = testDB.Get(ctx, &count, "SELECT COUNT(*) FROM test_tx_rollback")
 	require.NoError(t, err)
 	require.Equal(t, 0, count)
 
-	// Повторный rollback не должен возвращать ошибку (даже если транзакция уже закрыта)
 	err = tx.Rollback()
 	require.NoError(t, err)
 }
@@ -1048,12 +934,10 @@ func TestConnection_Query_ErrorHandling(t *testing.T) {
 	}
 	ctx := context.Background()
 
-	// Тестируем Query с синтаксической ошибкой
 	_, err := testDB.Query(ctx, "SELECT * FROM nonexistent_table")
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "failed to execute query")
 
-	// Тестируем QueryRow с ошибкой в запросе (возвращает Row, ошибка при сканировании)
 	row := testDB.QueryRow(ctx, "SELECT * FROM nonexistent_table")
 	require.NotNil(t, row)
 
@@ -1062,30 +946,7 @@ func TestConnection_Query_ErrorHandling(t *testing.T) {
 	require.Error(t, err)
 }
 
-func TestConnection_WithTimeout(t *testing.T) {
-	// Тестируем WithTimeout с положительным таймаутом
-	ctx := context.Background()
-	ctxWithTimeout, cancel := WithTimeout(ctx, 5*time.Second)
-	require.NotNil(t, ctxWithTimeout)
-	require.NotNil(t, cancel)
-
-	deadline, ok := ctxWithTimeout.Deadline()
-	require.True(t, ok)
-	require.True(t, deadline.After(time.Now()))
-	cancel()
-
-	// Тестируем WithTimeout с нулевым таймаутом
-	ctxNoTimeout, cancel2 := WithTimeout(ctx, 0)
-	require.NotNil(t, ctxNoTimeout)
-	require.NotNil(t, cancel2)
-
-	_, ok = ctxNoTimeout.Deadline()
-	require.False(t, ok, "Context without timeout should not have deadline")
-	cancel2()
-}
-
 func TestIsConstraintViolation(t *testing.T) {
-	// Создаем таблицу с ограничениями для тестов
 	if testing.Short() {
 		t.Skip("integration test")
 	}
@@ -1100,37 +961,32 @@ func TestIsConstraintViolation(t *testing.T) {
 	`)
 	require.NoError(t, err)
 
-	// Тестируем UNIQUE violation
 	_, err = testDB.Exec(ctx, "INSERT INTO test_constraint_violations (code, value) VALUES ($1, $2)", "UNIQUE_1", 10)
 	require.NoError(t, err)
 
 	_, err = testDB.Exec(ctx, "INSERT INTO test_constraint_violations (code, value) VALUES ($1, $2)", "UNIQUE_1", 20)
 	require.Error(t, err)
-	require.True(t, IsConstraintViolation(err))
-	require.True(t, IsUniqueViolation(err))
+	require.True(t, sqlx.IsConstraintViolation(err))
+	require.True(t, sqlx.IsUniqueViolation(err))
 
-	// Тестируем CHECK violation
 	_, err = testDB.Exec(ctx, "INSERT INTO test_constraint_violations (code, value) VALUES ($1, $2)", "UNIQUE_2", -1)
 	require.Error(t, err)
-	require.True(t, IsConstraintViolation(err))
-	require.True(t, IsCheckViolation(err))
+	require.True(t, sqlx.IsConstraintViolation(err))
+	require.True(t, sqlx.IsCheckViolation(err))
 
-	// Тестируем с не-pq ошибкой
 	notPqErr := errors.New("some other error")
-	require.False(t, IsConstraintViolation(notPqErr))
-	require.False(t, IsUniqueViolation(notPqErr))
-	require.False(t, IsForeignKeyViolation(notPqErr))
-	require.False(t, IsCheckViolation(notPqErr))
-	require.False(t, IsNotNullViolation(notPqErr))
+	require.False(t, sqlx.IsConstraintViolation(notPqErr))
+	require.False(t, sqlx.IsUniqueViolation(notPqErr))
+	require.False(t, sqlx.IsForeignKeyViolation(notPqErr))
+	require.False(t, sqlx.IsCheckViolation(notPqErr))
+	require.False(t, sqlx.IsNotNullViolation(notPqErr))
 }
 
 func TestGetConstraintName(t *testing.T) {
-	// Тестируем с не-pq ошибкой
 	notPqErr := errors.New("some error")
-	name := GetConstraintName(notPqErr)
+	name := sqlx.GetConstraintName(notPqErr)
 	require.Empty(t, name)
 
-	// Создаем таблицу с именованным ограничением для теста
 	if testing.Short() {
 		t.Skip("integration test")
 	}
@@ -1144,16 +1000,12 @@ func TestGetConstraintName(t *testing.T) {
 	`)
 	require.NoError(t, err)
 
-	// Пытаемся вставить дубликат
 	_, err = testDB.Exec(ctx, "INSERT INTO test_constraint_name (email) VALUES ($1)", "test@example.com")
 	require.NoError(t, err)
 
 	_, err = testDB.Exec(ctx, "INSERT INTO test_constraint_name (email) VALUES ($1)", "test@example.com")
 	require.Error(t, err)
 
-	// Извлекаем имя ограничения
-	name = GetConstraintName(err)
-	// Имя ограничения будет содержать "email" или быть autogenerated
-	// Главное - функция не должна паниковать
+	name = sqlx.GetConstraintName(err)
 	require.NotEmpty(t, name)
 }

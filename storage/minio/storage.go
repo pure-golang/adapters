@@ -370,7 +370,7 @@ func (s *Storage) GetFileHeader(ctx context.Context, bucket, key string) ([]byte
 	if err != nil && err != io.EOF && err != io.ErrUnexpectedEOF {
 		span.RecordError(err)
 		span.SetStatus(codes.Error, err.Error())
-		return nil, errors.Wrapf(err, "failed to read object header %s/%s", bucket, key)
+		return nil, toStorageError(err, bucket, key)
 	}
 
 	span.SetAttributes(

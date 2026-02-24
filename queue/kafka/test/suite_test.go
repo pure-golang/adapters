@@ -1,4 +1,4 @@
-package kafka
+package kafka_test
 
 import (
 	"context"
@@ -9,6 +9,9 @@ import (
 	kafkago "github.com/segmentio/kafka-go"
 	"github.com/stretchr/testify/suite"
 	kafkatestcontainers "github.com/testcontainers/testcontainers-go/modules/kafka"
+
+	"github.com/pure-golang/adapters/queue"
+	"github.com/pure-golang/adapters/queue/kafka"
 )
 
 type KafkaSuite struct {
@@ -82,22 +85,27 @@ func (s *KafkaSuite) TearDownSuite() {
 	}
 }
 
-func (s *KafkaSuite) TestHeadersCarrier() {
-	headers := make(map[string]string)
-	headers["traceparent"] = "00-12345678901234567890123456789012-1234567890123456-01"
-	headers["custom-header"] = "test-value"
-
-	carrier := headersCarrier(headers)
-
-	s.Require().Equal("00-12345678901234567890123456789012-1234567890123456-01", carrier.Get("traceparent"))
-	s.Require().Equal("test-value", carrier.Get("custom-header"))
-	s.Require().Equal("", carrier.Get("non-existent"))
+// createDialer создает dialer для тестов
+func (s *KafkaSuite) createDialer() *kafka.Dialer {
+	cfg := kafka.Config{
+		Brokers: s.brokers,
+	}
+	return kafka.NewDialer(cfg)
 }
 
-func (s *KafkaSuite) TestHeadersCarrier_Empty() {
-	headers := make(map[string]string)
-	carrier := headersCarrier(headers)
+// createPublisher создает publisher для тестов
+func (s *KafkaSuite) createPublisher(encoder queue.Encoder) *kafka.Publisher {
+	dialer := s.createDialer()
+	s.T().Cleanup(func() {
+		dialer.Close()
+	})
 
-	s.Require().Equal("", carrier.Get("traceparent"))
-	s.Require().Equal(0, len(carrier.Keys()))
+	pub := kafka.NewPublisher(dialer, kafka.PublisherConfig{
+		Encoder: encoder,
+	})
+	s.T().Cleanup(func() {
+		pub.Close()
+	})
+
+	return pub
 }

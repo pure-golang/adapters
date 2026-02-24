@@ -1,6 +1,7 @@
 package sqlx
 
 import (
+	"context"
 	"testing"
 	"time"
 
@@ -214,6 +215,28 @@ func TestConfig_RequiredFields(t *testing.T) {
 	require.NotEmpty(t, cfg.User)
 	require.NotEmpty(t, cfg.Password)
 	require.NotEmpty(t, cfg.Database)
+}
+
+func TestConnection_WithTimeout(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
+	ctxWithTimeout, cancel := WithTimeout(ctx, 5*time.Second)
+	require.NotNil(t, ctxWithTimeout)
+	require.NotNil(t, cancel)
+
+	deadline, ok := ctxWithTimeout.Deadline()
+	require.True(t, ok)
+	require.True(t, deadline.After(time.Now()))
+	cancel()
+
+	ctxNoTimeout, cancel2 := WithTimeout(ctx, 0)
+	require.NotNil(t, ctxNoTimeout)
+	require.NotNil(t, cancel2)
+
+	_, ok = ctxNoTimeout.Deadline()
+	require.False(t, ok, "Context without timeout should not have deadline")
+	cancel2()
 }
 
 func timeoutString(timeout int) string {

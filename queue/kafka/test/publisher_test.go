@@ -1,36 +1,21 @@
-package kafka
+package kafka_test
 
 import (
 	"context"
 
-	"github.com/segmentio/kafka-go"
+	kafkago "github.com/segmentio/kafka-go"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/pure-golang/adapters/queue"
 	"github.com/pure-golang/adapters/queue/encoders"
+	"github.com/pure-golang/adapters/queue/kafka"
 )
 
 func (s *KafkaSuite) TestPublisher_Publish() {
 	ctx := context.Background()
 
-	cfg := Config{
-		Brokers: s.brokers,
-	}
-	dialer := NewDialer(cfg)
-
-	s.T().Cleanup(func() {
-		require.NoError(s.T(), dialer.Close())
-	})
-
-	encoder := encoders.JSON{}
-	pub := NewPublisher(dialer, PublisherConfig{
-		Encoder: encoder,
-	})
-
-	s.T().Cleanup(func() {
-		require.NoError(s.T(), pub.Close())
-	})
+	pub := s.createPublisher(encoders.JSON{})
 
 	// Отправляем сообщение
 	type TestData struct {
@@ -52,7 +37,7 @@ func (s *KafkaSuite) TestPublisher_Publish() {
 	require.NoError(s.T(), err)
 
 	// Читаем сообщение из Kafka
-	reader := kafka.NewReader(kafka.ReaderConfig{
+	reader := kafkago.NewReader(kafkago.ReaderConfig{
 		Brokers: s.brokers,
 		Topic:   s.topic,
 		GroupID: "test-consumer-" + s.topic,
@@ -73,22 +58,7 @@ func (s *KafkaSuite) TestPublisher_Publish() {
 func (s *KafkaSuite) TestPublisher_PublishMultiple() {
 	ctx := context.Background()
 
-	cfg := Config{
-		Brokers: s.brokers,
-	}
-	dialer := NewDialer(cfg)
-
-	s.T().Cleanup(func() {
-		require.NoError(s.T(), dialer.Close())
-	})
-
-	pub := NewPublisher(dialer, PublisherConfig{
-		Encoder: encoders.JSON{},
-	})
-
-	s.T().Cleanup(func() {
-		require.NoError(s.T(), pub.Close())
-	})
+	pub := s.createPublisher(encoders.JSON{})
 
 	// Отправляем несколько сообщений
 	messages := []queue.Message{
@@ -104,22 +74,7 @@ func (s *KafkaSuite) TestPublisher_PublishMultiple() {
 func (s *KafkaSuite) TestPublisher_WithHeaders() {
 	ctx := context.Background()
 
-	cfg := Config{
-		Brokers: s.brokers,
-	}
-	dialer := NewDialer(cfg)
-
-	s.T().Cleanup(func() {
-		require.NoError(s.T(), dialer.Close())
-	})
-
-	pub := NewPublisher(dialer, PublisherConfig{
-		Encoder: encoders.JSON{},
-	})
-
-	s.T().Cleanup(func() {
-		require.NoError(s.T(), pub.Close())
-	})
+	pub := s.createPublisher(encoders.JSON{})
 
 	// Отправляем сообщение с заголовками
 	msg := queue.Message{
@@ -135,22 +90,7 @@ func (s *KafkaSuite) TestPublisher_WithHeaders() {
 func (s *KafkaSuite) TestPublisher_WithTextEncoder() {
 	ctx := context.Background()
 
-	cfg := Config{
-		Brokers: s.brokers,
-	}
-	dialer := NewDialer(cfg)
-
-	s.T().Cleanup(func() {
-		require.NoError(s.T(), dialer.Close())
-	})
-
-	pub := NewPublisher(dialer, PublisherConfig{
-		Encoder: encoders.Text{},
-	})
-
-	s.T().Cleanup(func() {
-		require.NoError(s.T(), pub.Close())
-	})
+	pub := s.createPublisher(encoders.Text{})
 
 	msg := queue.Message{
 		Topic: s.topic,
@@ -164,12 +104,8 @@ func (s *KafkaSuite) TestPublisher_WithTextEncoder() {
 func (s *KafkaSuite) TestPublisher_WhenClosed() {
 	ctx := context.Background()
 
-	cfg := Config{
-		Brokers: s.brokers,
-	}
-	dialer := NewDialer(cfg)
-
-	pub := NewPublisher(dialer, PublisherConfig{
+	dialer := s.createDialer()
+	pub := kafka.NewPublisher(dialer, kafka.PublisherConfig{
 		Encoder: encoders.JSON{},
 	})
 
@@ -189,13 +125,10 @@ func (s *KafkaSuite) TestPublisher_WhenClosed() {
 }
 
 func (s *KafkaSuite) TestPublisher_DefaultBalancer() {
-	cfg := Config{
-		Brokers: s.brokers,
-	}
-	dialer := NewDialer(cfg)
+	dialer := s.createDialer()
 
 	// Создаем publisher без указания балансировщика
-	pub := NewPublisher(dialer, PublisherConfig{})
+	pub := kafka.NewPublisher(dialer, kafka.PublisherConfig{})
 
 	assert.NotNil(s.T(), pub)
 	require.NoError(s.T(), pub.Close())
@@ -203,13 +136,10 @@ func (s *KafkaSuite) TestPublisher_DefaultBalancer() {
 }
 
 func (s *KafkaSuite) TestPublisher_WithLeastBytesBalancer() {
-	cfg := Config{
-		Brokers: s.brokers,
-	}
-	dialer := NewDialer(cfg)
+	dialer := s.createDialer()
 
-	pub := NewPublisher(dialer, PublisherConfig{
-		Balancer: &kafka.LeastBytes{},
+	pub := kafka.NewPublisher(dialer, kafka.PublisherConfig{
+		Balancer: &kafkago.LeastBytes{},
 	})
 
 	assert.NotNil(s.T(), pub)

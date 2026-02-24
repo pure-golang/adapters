@@ -1,14 +1,11 @@
-package kafka
+package kafka_test
 
 import (
 	"github.com/stretchr/testify/assert"
 )
 
 func (s *KafkaSuite) TestDialer_Connect() {
-	cfg := Config{
-		Brokers: s.brokers,
-	}
-	dialer := NewDialer(cfg)
+	dialer := s.createDialer()
 	assert.NotNil(s.T(), dialer)
 	assert.NotNil(s.T(), dialer.GetDialer())
 	assert.Equal(s.T(), s.brokers, dialer.GetBrokers())
@@ -18,10 +15,7 @@ func (s *KafkaSuite) TestDialer_Connect() {
 }
 
 func (s *KafkaSuite) TestDialer_Close() {
-	cfg := Config{
-		Brokers: s.brokers,
-	}
-	dialer := NewDialer(cfg)
+	dialer := s.createDialer()
 
 	err := dialer.Close()
 	assert.NoError(s.T(), err)

@@ -1,4 +1,4 @@
-package kafka
+package kafka_test
 
 import (
 	"context"
@@ -13,27 +13,20 @@ import (
 
 	"github.com/pure-golang/adapters/queue"
 	"github.com/pure-golang/adapters/queue/encoders"
+	"github.com/pure-golang/adapters/queue/kafka"
 )
 
 func (s *KafkaSuite) TestSubscriber_Listen() {
 	ctx := context.Background()
 
-	cfg := Config{
-		Brokers: s.brokers,
-	}
-	dialer := NewDialer(cfg)
-
-	s.T().Cleanup(func() {
-		require.NoError(s.T(), dialer.Close())
-	})
+	dialer := s.createDialer()
 
 	// Создаем publisher для отправки тестовых сообщений
-	pub := NewPublisher(dialer, PublisherConfig{
+	pub := kafka.NewPublisher(dialer, kafka.PublisherConfig{
 		Encoder: encoders.Text{},
 	})
-
 	s.T().Cleanup(func() {
-		require.NoError(s.T(), pub.Close())
+		pub.Close()
 	})
 
 	// Создаем уникальную тему для этого теста, чтобы избежать конфликтов с другими тестами
@@ -73,7 +66,7 @@ func (s *KafkaSuite) TestSubscriber_Listen() {
 		return false, nil
 	}
 
-	sub := NewSubscriber(dialer, uniqueTopic, SubscriberConfig{
+	sub := kafka.NewSubscriber(dialer, uniqueTopic, kafka.SubscriberConfig{
 		Name: "test-subscriber-" + uuid.NewString(),
 	})
 
@@ -132,22 +125,14 @@ func (s *KafkaSuite) TestSubscriber_Listen() {
 func (s *KafkaSuite) TestSubscriber_WithRetryableError() {
 	ctx := context.Background()
 
-	cfg := Config{
-		Brokers: s.brokers,
-	}
-	dialer := NewDialer(cfg)
-
-	s.T().Cleanup(func() {
-		require.NoError(s.T(), dialer.Close())
-	})
+	dialer := s.createDialer()
 
 	// Создаем publisher
-	pub := NewPublisher(dialer, PublisherConfig{
+	pub := kafka.NewPublisher(dialer, kafka.PublisherConfig{
 		Encoder: encoders.JSON{},
 	})
-
 	s.T().Cleanup(func() {
-		require.NoError(s.T(), pub.Close())
+		pub.Close()
 	})
 
 	// Создаем subscriber с коротким backoff для тестов
@@ -165,7 +150,7 @@ func (s *KafkaSuite) TestSubscriber_WithRetryableError() {
 		return false, nil
 	}
 
-	sub := NewSubscriber(dialer, s.topic, SubscriberConfig{
+	sub := kafka.NewSubscriber(dialer, s.topic, kafka.SubscriberConfig{
 		Name:    "test-subscriber-retry-" + uuid.NewString(),
 		Backoff: 100 * time.Millisecond,
 	})
@@ -200,22 +185,14 @@ func (s *KafkaSuite) TestSubscriber_WithRetryableError() {
 func (s *KafkaSuite) TestSubscriber_WithNonRetryableError() {
 	ctx := context.Background()
 
-	cfg := Config{
-		Brokers: s.brokers,
-	}
-	dialer := NewDialer(cfg)
-
-	s.T().Cleanup(func() {
-		require.NoError(s.T(), dialer.Close())
-	})
+	dialer := s.createDialer()
 
 	// Создаем publisher
-	pub := NewPublisher(dialer, PublisherConfig{
+	pub := kafka.NewPublisher(dialer, kafka.PublisherConfig{
 		Encoder: encoders.JSON{},
 	})
-
 	s.T().Cleanup(func() {
-		require.NoError(s.T(), pub.Close())
+		pub.Close()
 	})
 
 	// Создаем subscriber
@@ -227,7 +204,7 @@ func (s *KafkaSuite) TestSubscriber_WithNonRetryableError() {
 		return false, errors.New("permanent error")
 	}
 
-	sub := NewSubscriber(dialer, s.topic, SubscriberConfig{
+	sub := kafka.NewSubscriber(dialer, s.topic, kafka.SubscriberConfig{
 		Name: "test-subscriber-non-retry-" + uuid.NewString(),
 	})
 
@@ -259,13 +236,10 @@ func (s *KafkaSuite) TestSubscriber_WithNonRetryableError() {
 }
 
 func (s *KafkaSuite) TestSubscriber_DefaultConfig() {
-	cfg := Config{
-		Brokers: s.brokers,
-	}
-	dialer := NewDialer(cfg)
+	dialer := s.createDialer()
 
 	// Создаем subscriber с дефолтным конфигом
-	sub := NewDefaultSubscriber(dialer, s.topic)
+	sub := kafka.NewDefaultSubscriber(dialer, s.topic)
 
 	assert.NotNil(s.T(), sub)
 	require.NoError(s.T(), sub.Close())
@@ -273,13 +247,10 @@ func (s *KafkaSuite) TestSubscriber_DefaultConfig() {
 }
 
 func (s *KafkaSuite) TestSubscriber_CustomConfig() {
-	cfg := Config{
-		Brokers: s.brokers,
-	}
-	dialer := NewDialer(cfg)
+	dialer := s.createDialer()
 
 	// Создаем subscriber с кастомным конфигом
-	sub := NewSubscriber(dialer, s.topic, SubscriberConfig{
+	sub := kafka.NewSubscriber(dialer, s.topic, kafka.SubscriberConfig{
 		Name:          "custom-sub",
 		PrefetchCount: 5,
 		MaxTryNum:     10,
@@ -292,13 +263,10 @@ func (s *KafkaSuite) TestSubscriber_CustomConfig() {
 }
 
 func (s *KafkaSuite) TestSubscriber_Close() {
-	cfg := Config{
-		Brokers: s.brokers,
-	}
-	dialer := NewDialer(cfg)
+	dialer := s.createDialer()
 
 	// Создаем subscriber
-	sub := NewSubscriber(dialer, s.topic, SubscriberConfig{
+	sub := kafka.NewSubscriber(dialer, s.topic, kafka.SubscriberConfig{
 		Name: "test-close",
 	})
 

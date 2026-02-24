@@ -1,6 +1,4 @@
-//go:build integration
-
-package smtp
+package smtp_test
 
 import (
 	"context"
@@ -15,9 +13,10 @@ import (
 	"github.com/testcontainers/testcontainers-go/wait"
 
 	"github.com/pure-golang/adapters/mail"
+	"github.com/pure-golang/adapters/mail/smtp"
 )
 
-var testSender *Sender
+var testSender *smtp.Sender
 
 func TestMain(m *testing.M) {
 	flag.Parse()
@@ -32,10 +31,7 @@ func TestMain(m *testing.M) {
 	req := testcontainers.ContainerRequest{
 		Image:        "mailhog/mailhog:latest",
 		ExposedPorts: []string{"1025/tcp"},
-		WaitingFor: wait.ForAll(
-			wait.ForLog("Starting SMTP"),
-			wait.ForListeningPort("1025/tcp"),
-		),
+		WaitingFor:   wait.ForListeningPort("1025/tcp"),
 	}
 
 	container, err := testcontainers.GenericContainer(ctx, testcontainers.GenericContainerRequest{
@@ -62,13 +58,13 @@ func TestMain(m *testing.M) {
 		panic(fmt.Sprintf("could not parse port number: %s", err))
 	}
 
-	cfg := Config{
+	cfg := smtp.Config{
 		Host: host,
 		Port: portNum,
 		TLS:  false,
 	}
 
-	testSender = NewSender(cfg)
+	testSender = smtp.NewSender(cfg)
 
 	code := m.Run()
 
