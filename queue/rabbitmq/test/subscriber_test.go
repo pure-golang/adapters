@@ -29,6 +29,7 @@ func (s *RabbitMQSuite) TestSubscriber_Listen_Ack() {
 
 	ch, err := dialer.Channel()
 	require.NoError(t, err)
+	t.Cleanup(func() { _ = ch.Close() })
 	_, err = ch.QueueDeclare(qName, false, false, false, false, nil)
 	require.NoError(t, err)
 
@@ -42,7 +43,11 @@ func (s *RabbitMQSuite) TestSubscriber_Listen_Ack() {
 
 	ctx, cancel := context.WithCancel(context.Background())
 	sub := rabbitmq.NewSubscriber(dialer, qName, rabbitmq.SubscriberOptions{MaxRetries: 3})
-	go sub.Listen(ctx, handler)
+	done := make(chan struct{})
+	go func() {
+		defer close(done)
+		sub.Listen(ctx, handler)
+	}()
 	time.Sleep(100 * time.Millisecond)
 
 	require.NoError(t, pub.Publish(context.Background(), queue.Message{Body: "hello"}))
@@ -53,6 +58,7 @@ func (s *RabbitMQSuite) TestSubscriber_Listen_Ack() {
 		t.Fatal("timeout waiting for message")
 	}
 	cancel()
+	<-done
 }
 
 func (s *RabbitMQSuite) TestSubscriber_Listen_DLQ() {
@@ -89,6 +95,7 @@ func (s *RabbitMQSuite) TestSubscriber_Listen_DLQ() {
 
 	ch, err := dialer.Channel()
 	require.NoError(t, err)
+	t.Cleanup(func() { _ = ch.Close() })
 	require.NoError(t, applyDefinitions(ch, defs))
 
 	// Publish a message with x-death count already at MaxRetries so subscriber nacks it to DLQ immediately.
@@ -113,7 +120,11 @@ func (s *RabbitMQSuite) TestSubscriber_Listen_DLQ() {
 		MaxRetries:     maxRetries,
 		RetryQueueName: qRetry,
 	})
-	go sub.Listen(ctx, handler)
+	done := make(chan struct{})
+	go func() {
+		defer close(done)
+		sub.Listen(ctx, handler)
+	}()
 
 	dlqDeliveries, err := ch.Consume(qDLQ, "", false, false, false, false, nil)
 	require.NoError(t, err)
@@ -125,6 +136,7 @@ func (s *RabbitMQSuite) TestSubscriber_Listen_DLQ() {
 		t.Fatal("timeout: message did not reach DLQ")
 	}
 	cancel()
+	<-done
 }
 
 func (s *RabbitMQSuite) TestSubscriber_Listen_RetryQueue() {
@@ -142,6 +154,7 @@ func (s *RabbitMQSuite) TestSubscriber_Listen_RetryQueue() {
 
 	ch, err := dialer.Channel()
 	require.NoError(t, err)
+	t.Cleanup(func() { _ = ch.Close() })
 	_, err = ch.QueueDeclare(qName, false, false, false, false, nil)
 	require.NoError(t, err)
 	_, err = ch.QueueDeclare(qRetry, false, false, false, false, nil)
@@ -162,7 +175,11 @@ func (s *RabbitMQSuite) TestSubscriber_Listen_RetryQueue() {
 		MaxRetries:     3,
 		RetryQueueName: qRetry,
 	})
-	go sub.Listen(ctx, handler)
+	done := make(chan struct{})
+	go func() {
+		defer close(done)
+		sub.Listen(ctx, handler)
+	}()
 
 	retryDeliveries, err := ch.Consume(qRetry, "", false, false, false, false, nil)
 	require.NoError(t, err)
@@ -175,6 +192,7 @@ func (s *RabbitMQSuite) TestSubscriber_Listen_RetryQueue() {
 		t.Fatal("timeout: message did not reach retry queue")
 	}
 	cancel()
+	<-done
 }
 
 func (s *RabbitMQSuite) TestSubscriber_Listen_GracefulShutdown() {
@@ -190,6 +208,7 @@ func (s *RabbitMQSuite) TestSubscriber_Listen_GracefulShutdown() {
 
 	ch, err := dialer.Channel()
 	require.NoError(t, err)
+	t.Cleanup(func() { _ = ch.Close() })
 	_, err = ch.QueueDeclare(qName, false, false, false, false, nil)
 	require.NoError(t, err)
 
@@ -227,6 +246,7 @@ func (s *RabbitMQSuite) TestSubscriber_MessageTimeout() {
 
 	ch, err := dialer.Channel()
 	require.NoError(t, err)
+	t.Cleanup(func() { _ = ch.Close() })
 	_, err = ch.QueueDeclare(qName, false, false, false, false, nil)
 	require.NoError(t, err)
 
@@ -240,13 +260,15 @@ func (s *RabbitMQSuite) TestSubscriber_MessageTimeout() {
 	}
 
 	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
 	sub := rabbitmq.NewSubscriber(dialer, qName, rabbitmq.SubscriberOptions{
 		MaxRetries:     3,
 		MessageTimeout: 10 * time.Second,
 	})
-	go sub.Listen(ctx, handler)
+	done := make(chan struct{})
+	go func() {
+		defer close(done)
+		sub.Listen(ctx, handler)
+	}()
 
 	select {
 	case hCtx := <-ctxReceived:
@@ -256,4 +278,6 @@ func (s *RabbitMQSuite) TestSubscriber_MessageTimeout() {
 	case <-time.After(3 * time.Second):
 		t.Fatal("timeout waiting for message")
 	}
+	cancel()
+	<-done
 }

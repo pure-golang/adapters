@@ -16,6 +16,7 @@ type Dialer struct {
 	conn    *amqp.Connection
 	options *DialerOptions
 	mx      sync.Mutex
+	closed  bool
 }
 
 // RetryPolicy of dialer reconnection.
@@ -89,6 +90,7 @@ func (d *Dialer) Close() error {
 	d.mx.Lock()
 	defer d.mx.Unlock()
 
+	d.closed = true
 	if d.conn == nil {
 		return nil
 	}
@@ -104,6 +106,13 @@ func (d *Dialer) handleReconnect(ch chan *amqp.Error) {
 	err, ok := <-ch
 	if !ok {
 		d.options.Logger.Debug("Shutdown")
+		return
+	}
+
+	d.mx.Lock()
+	closed := d.closed
+	d.mx.Unlock()
+	if closed {
 		return
 	}
 
