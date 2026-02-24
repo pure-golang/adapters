@@ -10,7 +10,7 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/pure-golang/adapters/httpserver"
+	"git.korputeam.ru/newbackend/adapters/httpserver"
 )
 
 const ShutdownTimeout = 15 * time.Second

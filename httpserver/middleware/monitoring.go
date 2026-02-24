@@ -17,17 +17,17 @@ import (
 	semconv "go.opentelemetry.io/otel/semconv/v1.12.0"
 	"go.opentelemetry.io/otel/trace"
 
-	"github.com/pure-golang/adapters/logger"
+	"git.korputeam.ru/newbackend/adapters/logger"
 )
 
 var (
-	meter = otel.GetMeterProvider().Meter("github.com/pure-golang/adapters/httpserver/middleware")
+	meter = otel.GetMeterProvider().Meter("git.korputeam.ru/newbackend/adapters/httpserver/middleware")
 	// nolint:errcheck // Sync OpenTelemetry instruments never return errors
 	requestsCount, _       = meter.Int64Counter("http.request_count")
 	requestTimeHist, _     = meter.Int64Histogram("http.request_time", metric.WithUnit("ms"))
 	requestBodyLenHist, _  = meter.Int64Histogram("http.request_body_len", metric.WithUnit("KB"))
 	responseBodyLenHist, _ = meter.Int64Histogram("http.response_body_len", metric.WithUnit("KB"))
-	tracer                 = otel.Tracer("github.com/pure-golang/adapters/httpserver/middleware")
+	tracer                 = otel.Tracer("git.korputeam.ru/newbackend/adapters/httpserver/middleware")
 )
 
 // Monitoring traces incoming http requests using open telemetry tracer + attaches logger to request context

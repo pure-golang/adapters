@@ -8,7 +8,7 @@
 //
 // Использование:
 //
-//	import "github.com/pure-golang/adapters/httpserver/middleware"
+//	import "git.korputeam.ru/newbackend/adapters/httpserver/middleware"
 //
 //	mux := http.NewServeMux()
 //	mux.HandleFunc("/api", handler)

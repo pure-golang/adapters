@@ -7,7 +7,7 @@
 //
 // Использование:
 //
-//	import httpstd "github.com/pure-golang/adapters/httpserver/std"
+//	import httpstd "git.korputeam.ru/newbackend/adapters/httpserver/std"
 //
 //	cfg := httpstd.Config{
 //	    Port: 8080,

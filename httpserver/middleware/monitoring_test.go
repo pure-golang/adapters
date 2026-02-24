@@ -13,8 +13,8 @@ import (
 	"github.com/stretchr/testify/require"
 	"go.opentelemetry.io/otel/trace"
 
-	"github.com/pure-golang/adapters/logger"
-	"github.com/pure-golang/adapters/logger/noop"
+	"git.korputeam.ru/newbackend/adapters/logger"
+	"git.korputeam.ru/newbackend/adapters/logger/noop"
 )
 
 func init() {

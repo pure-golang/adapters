@@ -10,8 +10,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/pure-golang/adapters/logger"
-	"github.com/pure-golang/adapters/logger/noop"
+	"git.korputeam.ru/newbackend/adapters/logger"
+	"git.korputeam.ru/newbackend/adapters/logger/noop"
 )
 
 func init() {
