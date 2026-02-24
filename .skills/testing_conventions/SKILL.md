@@ -75,6 +75,54 @@ func TestDB(t *testing.T) {
 ```
 
 ## Test Organization
-- Unit tests: Standard `*_test.go` files in the same package
-- Integration tests: Use `testify/suite` for complex setups with containers
-- Suites: `SetupSuite()` / `TearDownSuite()` for container lifecycle
+
+### Structure
+- **Unit tests**: `*_test.go` files in the package directory
+- **Integration tests**: `test/*_test.go` subdirectory
+
+### Naming Conventions
+- Do NOT use "unit" or "integration" in file names
+- Use descriptive names: `client_test.go`, `publisher_test.go`, `suite_test.go`
+
+### Example Structure
+```
+adapter/adaptername/
+├── client.go
+├── client_test.go        # Unit tests
+├── publisher.go
+├── publisher_test.go     # Unit tests
+└── test/
+    ├── suite_test.go     # Test suite with container setup
+    ├── client_test.go    # Integration tests for client
+    └── publisher_test.go # Integration tests for publisher
+```
+
+### Mixed Test Files
+If a file contains both unit and integration tests:
+1. Move integration tests to `test/` subdirectory
+2. Keep unit tests in the original file
+
+## Test Suites
+For complex setups with containers, use `testify/suite`:
+```go
+type MySuite struct {
+    suite.Suite
+    container testcontainers.Container
+    dsn       string
+}
+
+func TestMySuite(t *testing.T) {
+    if testing.Short() {
+        t.Skip("integration test")
+    }
+    suite.Run(t, new(MySuite))
+}
+
+func (s *MySuite) SetupSuite() {
+    // Start container
+}
+
+func (s *MySuite) TearDownSuite() {
+    // Stop container
+}
+```

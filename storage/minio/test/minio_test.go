@@ -25,7 +25,7 @@ func TestIntegrationWithTestcontainers(t *testing.T) {
 
 	ctx := context.Background()
 
-	minioContainer, err := tcminio.RunContainer(ctx,
+	minioContainer, err := tcminio.Run(ctx, "minio/minio:latest",
 		tcminio.WithUsername("minioadmin"),
 		tcminio.WithPassword("minioadmin"),
 	)

@@ -8,9 +8,7 @@ import (
 )
 
 func TestNewMaxInterval(t *testing.T) {
-	if testing.Short() {
-		t.Skip("integration test")
-	}
+	t.Parallel()
 
 	correctBaseInterval := DefaultRetryInterval
 	incorrectBaseInterval := time.Duration(0)
@@ -76,9 +74,7 @@ func TestNewMaxInterval(t *testing.T) {
 }
 
 func TestMaxInterval_TryNum(t *testing.T) {
-	if testing.Short() {
-		t.Skip("integration test")
-	}
+	t.Parallel()
 
 	testCases := []struct {
 		baseInterval  time.Duration

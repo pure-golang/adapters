@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
-	"net"
 	"os"
 	"testing"
 	"time"
@@ -417,90 +416,6 @@ func TestShutdownTimeout_Constant(t *testing.T) {
 	assert.Equal(t, 15*time.Second, ShutdownTimeout)
 }
 
-func TestServer_Start_ListenOnAvailablePort(t *testing.T) {
-	if testing.Short() {
-		t.Skip("integration test")
-	}
-
-	// Find an available port
-	l, err := net.Listen("tcp", "localhost:0")
-	require.NoError(t, err)
-	defer l.Close()
-
-	addr := l.Addr().(*net.TCPAddr)
-	c := Config{
-		Port: addr.Port,
-	}
-
-	s := New(c, func(srv *grpc.Server) {})
-	require.NotNil(t, s)
-
-	// Start server in a goroutine to avoid blocking
-	startDone := make(chan struct{})
-	go func() {
-		_ = s.Start()
-		close(startDone)
-	}()
-
-	// Give server time to start
-	time.Sleep(100 * time.Millisecond)
-
-	// Server should be running with listener set
-	if s.GetListener() != nil {
-		// Successfully started, close it
-		s.Close()
-		<-startDone // Wait for Start to return
-	} else {
-		s.Close()
-		<-startDone
-		t.Skip("server did not start in time")
-	}
-}
-
-func TestServer_Close_WithListener(t *testing.T) {
-	if testing.Short() {
-		t.Skip("integration test")
-	}
-
-	// Find an available port
-	l, err := net.Listen("tcp", "localhost:0")
-	require.NoError(t, err)
-
-	addr := l.Addr().(*net.TCPAddr)
-	port := addr.Port
-	l.Close()
-
-	c := Config{
-		Port: port,
-	}
-
-	s := New(c, func(srv *grpc.Server) {})
-	require.NotNil(t, s)
-
-	// Start the server in a goroutine
-	startDone := make(chan struct{})
-	go func() {
-		_ = s.Start()
-		close(startDone)
-	}()
-
-	// Give server time to start
-	time.Sleep(100 * time.Millisecond)
-
-	if s.GetListener() != nil {
-		// Server started successfully
-		assert.NotNil(t, s.GetListener())
-
-		// Close should stop server and close listener
-		s.Close()
-		<-startDone
-	} else {
-		s.Close()
-		<-startDone
-		t.Skip("port was taken")
-	}
-}
-
 func TestServer_MultipleCloseCalls(t *testing.T) {
 	t.Parallel()
 	c := Config{
@@ -587,47 +502,6 @@ func TestServer_Start_AlreadyListening(t *testing.T) {
 	// This test is skipped because gRPC server behavior with port conflicts
 	// can vary across platforms and the test may be flaky.
 	// In production, the server would fail to start if port is in use.
-}
-
-func TestServer_Close_Timeout(t *testing.T) {
-	if testing.Short() {
-		t.Skip("integration test")
-	}
-
-	// Find an available port
-	l, err := net.Listen("tcp", "localhost:0")
-	require.NoError(t, err)
-
-	addr := l.Addr().(*net.TCPAddr)
-	port := addr.Port
-	l.Close()
-
-	c := Config{
-		Port: port,
-	}
-
-	s := New(c, func(srv *grpc.Server) {})
-	require.NotNil(t, s)
-
-	// Start server in goroutine
-	startDone := make(chan struct{})
-	go func() {
-		_ = s.Start()
-		close(startDone)
-	}()
-
-	// Give server time to start
-	time.Sleep(100 * time.Millisecond)
-
-	if s.GetListener() != nil {
-		// Close the server - should complete within timeout
-		s.Close()
-		<-startDone
-	} else {
-		s.Close()
-		<-startDone
-		t.Skip("port was taken")
-	}
 }
 
 func TestReflection_Default(t *testing.T) {
@@ -745,50 +619,6 @@ func TestServer_Run_Panics(t *testing.T) {
 	time.Sleep(50 * time.Millisecond)
 
 	s.Close()
-}
-
-func TestServer_Start_NetworkErrClosed(t *testing.T) {
-	if testing.Short() {
-		t.Skip("integration test")
-	}
-
-	// Find an available port
-	l, err := net.Listen("tcp", "localhost:0")
-	require.NoError(t, err)
-
-	addr := l.Addr().(*net.TCPAddr)
-	port := addr.Port
-	l.Close()
-
-	c := Config{
-		Port: port,
-	}
-
-	s := New(c, func(srv *grpc.Server) {})
-	require.NotNil(t, s)
-
-	// Start the server in a goroutine
-	startDone := make(chan struct{})
-	go func() {
-		_ = s.Start()
-		close(startDone)
-	}()
-
-	// Give server time to start
-	time.Sleep(100 * time.Millisecond)
-
-	if s.GetListener() != nil {
-		// Stop the server
-		s.server.GracefulStop()
-
-		// Close should not error even though server is already stopped
-		s.Close()
-		<-startDone
-	} else {
-		s.Close()
-		<-startDone
-		t.Skip("port was taken")
-	}
 }
 
 func TestNew_WithValidTLSFiles(t *testing.T) {

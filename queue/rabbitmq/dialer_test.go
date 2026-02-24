@@ -1,46 +1,99 @@
 package rabbitmq
 
 import (
+	"log/slog"
+	"os"
 	"testing"
 
-	amqp "github.com/rabbitmq/amqp091-go"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
-func (s *RabbitMQSuite) TestDialer_Connect() {
-	dialer := NewDialer(s.RabbitURI, nil)
-	if t := s.T(); assert.NoError(t, dialer.Connect()) {
-		assert.NoError(t, dialer.Close())
-	}
+func TestNewDefaultDialer(t *testing.T) {
+	t.Parallel()
+	uri := "amqp://guest:guest@localhost:5672/"
+
+	dialer := NewDefaultDialer(uri)
+
+	require.NotNil(t, dialer)
+	assert.Equal(t, uri, dialer.uri)
+	assert.NotNil(t, dialer.options)
+	assert.NotNil(t, dialer.options.RetryPolicy)
+	assert.NotNil(t, dialer.options.Logger)
 }
 
-func (s *RabbitMQSuite) TestDialer_Channel() {
-	t := s.T()
-	dialer := NewDialer(s.RabbitURI, nil)
-	assert.NoError(t, dialer.Connect())
-	t.Cleanup(func() {
-		assert.NoError(t, dialer.Close())
+func TestNewDialer(t *testing.T) {
+	t.Parallel()
+	t.Run("with nil options", func(t *testing.T) {
+		t.Parallel()
+		uri := "amqp://guest:guest@localhost:5672/"
+		dialer := NewDialer(uri, nil)
+
+		require.NotNil(t, dialer)
+		assert.Equal(t, uri, dialer.uri)
+		assert.NotNil(t, dialer.options)
+		assert.NotNil(t, dialer.options.RetryPolicy)
+		assert.NotNil(t, dialer.options.Logger)
 	})
 
-	channel, err := dialer.Channel()
-	assert.NoError(t, err)
-	assert.NoError(t, channel.Publish("", "", false, false, amqp.Publishing{}))
+	t.Run("with default logger", func(t *testing.T) {
+		t.Parallel()
+		uri := "amqp://guest:guest@localhost:5672/"
+		dialer := NewDialer(uri, &DialerOptions{})
 
-	t.Run("when dialer is closed", func(t *testing.T) {
-		dialer := NewDialer(s.RabbitURI, nil)
-		_, err := dialer.Channel()
-		assert.ErrorIs(t, err, ErrConnectionClosed)
+		require.NotNil(t, dialer)
+		assert.NotNil(t, dialer.options.Logger)
 	})
-}
 
-func (s *RabbitMQSuite) TestDialer_Close() {
-	t := s.T()
-	dialer := NewDialer(s.RabbitURI, nil)
-	assert.NoError(t, dialer.Connect())
-	assert.NoError(t, dialer.Close())
+	t.Run("with custom logger", func(t *testing.T) {
+		t.Parallel()
+		uri := "amqp://guest:guest@localhost:5672/"
+		customLogger := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
+			Level: slog.LevelDebug,
+		}))
 
-	t.Run("when dialer is closed", func(t *testing.T) {
-		dialer := NewDialer(s.RabbitURI, nil)
-		assert.NoError(t, dialer.Close())
+		dialer := NewDialer(uri, &DialerOptions{
+			Logger: customLogger,
+		})
+
+		require.NotNil(t, dialer)
+		// Logger is wrapped with "rabbitmq" group, so we can't compare directly
+		assert.NotNil(t, dialer.options.Logger)
+	})
+
+	t.Run("with default retry policy", func(t *testing.T) {
+		t.Parallel()
+		uri := "amqp://guest:guest@localhost:5672/"
+		dialer := NewDialer(uri, &DialerOptions{})
+
+		require.NotNil(t, dialer)
+		assert.NotNil(t, dialer.options.RetryPolicy)
+		// Should be MaxInterval with defaults
+		_, ok := dialer.options.RetryPolicy.(*MaxInterval)
+		assert.True(t, ok, "Default retry policy should be MaxInterval")
+	})
+
+	t.Run("with custom retry policy", func(t *testing.T) {
+		t.Parallel()
+		uri := "amqp://guest:guest@localhost:5672/"
+		customPolicy := NewConstantInterval(5)
+
+		dialer := NewDialer(uri, &DialerOptions{
+			RetryPolicy: customPolicy,
+		})
+
+		require.NotNil(t, dialer)
+		assert.Equal(t, customPolicy, dialer.options.RetryPolicy)
+	})
+
+	t.Run("logger has rabbitmq group", func(t *testing.T) {
+		t.Parallel()
+		uri := "amqp://guest:guest@localhost:5672/"
+		dialer := NewDialer(uri, nil)
+
+		// Logger should be set with the "rabbitmq" group
+		// We can't easily test the group without exposing internals,
+		// but we can verify the logger is not nil
+		assert.NotNil(t, dialer.options.Logger)
 	})
 }

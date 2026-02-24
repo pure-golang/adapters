@@ -41,20 +41,22 @@ func TestMain(m *testing.M) {
 	if err != nil {
 		panic(fmt.Sprintf("could not start mailhog container: %s", err))
 	}
-	defer container.Terminate(ctx) //nolint:errcheck
 
 	host, err := container.Host(ctx)
 	if err != nil {
+		_ = container.Terminate(ctx)
 		panic(fmt.Sprintf("could not get container host: %s", err))
 	}
 
 	port, err := container.MappedPort(ctx, "1025")
 	if err != nil {
+		_ = container.Terminate(ctx)
 		panic(fmt.Sprintf("could not get container port: %s", err))
 	}
 
 	portNum, err := strconv.Atoi(port.Port())
 	if err != nil {
+		_ = container.Terminate(ctx)
 		panic(fmt.Sprintf("could not parse port number: %s", err))
 	}
 
@@ -70,6 +72,10 @@ func TestMain(m *testing.M) {
 
 	if testSender != nil {
 		testSender.Close()
+	}
+
+	if err := container.Terminate(ctx); err != nil {
+		fmt.Fprintf(os.Stderr, "failed to terminate container: %v\n", err)
 	}
 
 	os.Exit(code)
