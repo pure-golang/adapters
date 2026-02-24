@@ -147,7 +147,7 @@
 				
 				<option value="file45">github.com/pure-golang/adapters/queue/rabbitmq/constant_retry_policy.go (100.0%)</option>
 				
-				<option value="file46">github.com/pure-golang/adapters/queue/rabbitmq/dialer.go (90.2%)</option>
+				<option value="file46">github.com/pure-golang/adapters/queue/rabbitmq/dialer.go (75.4%)</option>
 				
 				<option value="file47">github.com/pure-golang/adapters/queue/rabbitmq/interval_retry_policy.go (100.0%)</option>
 				
@@ -163,17 +163,17 @@
 				
 				<option value="file53">github.com/pure-golang/adapters/storage/errors.go (100.0%)</option>
 				
-				<option value="file54">github.com/pure-golang/adapters/storage/minio/client.go (92.5%)</option>
+				<option value="file54">github.com/pure-golang/adapters/storage/minio/client.go (97.5%)</option>
 				
 				<option value="file55">github.com/pure-golang/adapters/storage/minio/errors.go (100.0%)</option>
 				
 				<option value="file56">github.com/pure-golang/adapters/storage/minio/minio.go (100.0%)</option>
 				
-				<option value="file57">github.com/pure-golang/adapters/storage/minio/multipart.go (35.4%)</option>
+				<option value="file57">github.com/pure-golang/adapters/storage/minio/multipart.go (74.6%)</option>
 				
-				<option value="file58">github.com/pure-golang/adapters/storage/minio/presigned.go (69.7%)</option>
+				<option value="file58">github.com/pure-golang/adapters/storage/minio/presigned.go (90.9%)</option>
 				
-				<option value="file59">github.com/pure-golang/adapters/storage/minio/storage.go (49.0%)</option>
+				<option value="file59">github.com/pure-golang/adapters/storage/minio/storage.go (84.1%)</option>
 				
 				<option value="file60">github.com/pure-golang/adapters/tracing/jaeger/jaeger.go (72.2%)</option>
 				
@@ -465,7 +465,7 @@ type Connection struct {
 }
 
 // Connect создает новое соединение с базой данных PostgreSQL
-func Connect(ctx context.Context, cfg Config) (*Connection, error) <span class="cov10" title="3">{
+func Connect(ctx context.Context, cfg Config) (*Connection, error) <span class="cov10" title="4">{
         ctx, span := tracer.Start(ctx, "sqlx.Connect")
         defer span.End()
 
@@ -482,11 +482,11 @@ func Connect(ctx context.Context, cfg Config) (*Connection, error) <span class="
                 cfg.Host, cfg.Port, cfg.User, cfg.Password, cfg.Database, cfg.SSLMode,
         )
 
-        if cfg.ConnectTimeout &gt; 0 </span><span class="cov10" title="3">{
+        if cfg.ConnectTimeout &gt; 0 </span><span class="cov10" title="4">{
                 dsn += fmt.Sprintf(" connect_timeout=%d", cfg.ConnectTimeout)
         }</span>
 
-        <span class="cov10" title="3">dsn += " application_name=sqlx"
+        <span class="cov10" title="4">dsn += " application_name=sqlx"
 
         db, err := sqlx.ConnectContext(ctx, "postgres", dsn)
         if err != nil </span><span class="cov1" title="1">{
@@ -494,40 +494,40 @@ func Connect(ctx context.Context, cfg Config) (*Connection, error) <span class="
                 return nil, errors.Wrap(err, "failed to connect to PostgreSQL")
         }</span>
 
-        <span class="cov6" title="2">if cfg.MaxOpenConns &gt; 0 </span><span class="cov0" title="0">{
+        <span class="cov8" title="3">if cfg.MaxOpenConns &gt; 0 </span><span class="cov0" title="0">{
                 db.SetMaxOpenConns(cfg.MaxOpenConns)
                 span.SetAttributes(attribute.Int("db.max_open_conns", cfg.MaxOpenConns))
         }</span>
 
-        <span class="cov6" title="2">if cfg.MaxIdleConns &gt; 0 </span><span class="cov0" title="0">{
+        <span class="cov8" title="3">if cfg.MaxIdleConns &gt; 0 </span><span class="cov0" title="0">{
                 db.SetMaxIdleConns(cfg.MaxIdleConns)
                 span.SetAttributes(attribute.Int("db.max_idle_conns", cfg.MaxIdleConns))
         }</span>
 
-        <span class="cov6" title="2">if cfg.ConnMaxLifetime &gt; 0 </span><span class="cov0" title="0">{
+        <span class="cov8" title="3">if cfg.ConnMaxLifetime &gt; 0 </span><span class="cov0" title="0">{
                 db.SetConnMaxLifetime(cfg.ConnMaxLifetime)
                 span.SetAttributes(attribute.String("db.conn_max_lifetime", cfg.ConnMaxLifetime.String()))
         }</span>
 
-        <span class="cov6" title="2">if cfg.ConnMaxIdleTime &gt; 0 </span><span class="cov0" title="0">{
+        <span class="cov8" title="3">if cfg.ConnMaxIdleTime &gt; 0 </span><span class="cov0" title="0">{
                 db.SetConnMaxIdleTime(cfg.ConnMaxIdleTime)
                 span.SetAttributes(attribute.String("db.conn_max_idle_time", cfg.ConnMaxIdleTime.String()))
         }</span>
 
         // Проверка соединения
-        <span class="cov6" title="2">if err := db.PingContext(ctx); err != nil </span><span class="cov0" title="0">{
+        <span class="cov8" title="3">if err := db.PingContext(ctx); err != nil </span><span class="cov0" title="0">{
                 span.RecordError(err)
                 return nil, errors.Wrap(err, "failed to ping PostgreSQL")
         }</span>
 
-        <span class="cov6" title="2">return &amp;Connection{
+        <span class="cov8" title="3">return &amp;Connection{
                 DB:  db,
                 cfg: cfg,
         }, nil</span>
 }
 
 // Close закрывает соединение с базой данных
-func (c *Connection) Close() error <span class="cov1" title="1">{
+func (c *Connection) Close() error <span class="cov5" title="2">{
         _, span := tracer.Start(context.Background(), "sqlx.Close")
         defer span.End()
 
@@ -535,7 +535,7 @@ func (c *Connection) Close() error <span class="cov1" title="1">{
                 span.RecordError(err)
                 return errors.Wrap(err, "failed to close database connection")
         }</span>
-        <span class="cov1" title="1">return nil</span>
+        <span class="cov5" title="2">return nil</span>
 }
 </pre>
 		
@@ -878,7 +878,7 @@ type TxOptions struct {
 }
 
 // DefaultTxOptions возвращает опции транзакции по умолчанию
-func DefaultTxOptions() *TxOptions <span class="cov2" title="2">{
+func DefaultTxOptions() *TxOptions <span class="cov1" title="1">{
         return &amp;TxOptions{
                 Isolation: sql.LevelDefault,
                 ReadOnly:  false,
@@ -1307,7 +1307,7 @@ var (
         )
 )
 
-func init() <span class="cov1" title="1">{
+func init() <span class="cov2" title="2">{
         // Регистрация метрик в Prometheus
         prometheus.MustRegister(execDuration)
         prometheus.MustRegister(execTotal)
@@ -1399,7 +1399,7 @@ import (
 )
 
 // LoggingInterceptor создает интерцептор для логирования gRPC запросов
-func LoggingInterceptor(logger *slog.Logger) grpc.UnaryServerInterceptor <span class="cov10" title="60">{
+func LoggingInterceptor(logger *slog.Logger) grpc.UnaryServerInterceptor <span class="cov10" title="59">{
         return func(ctx context.Context, req any, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (any, error) </span><span class="cov6" title="12">{
                 start := time.Now()
                 resp, err := handler(ctx, req)
@@ -1428,7 +1428,7 @@ func LoggingInterceptor(logger *slog.Logger) grpc.UnaryServerInterceptor <span c
 }
 
 // RecoveryInterceptor создает интерцептор для восстановления после паники
-func RecoveryInterceptor(logger *slog.Logger) grpc.UnaryServerInterceptor <span class="cov9" title="51">{
+func RecoveryInterceptor(logger *slog.Logger) grpc.UnaryServerInterceptor <span class="cov9" title="50">{
         return func(ctx context.Context, req any, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp any, err error) </span><span class="cov5" title="7">{
                 defer func() </span><span class="cov5" title="7">{
                         if r := recover(); r != nil </span><span class="cov4" title="5">{
@@ -1444,7 +1444,7 @@ func RecoveryInterceptor(logger *slog.Logger) grpc.UnaryServerInterceptor <span 
 }
 
 // LoggingStreamInterceptor создает интерцептор для логирования потоковых gRPC запросов
-func LoggingStreamInterceptor(logger *slog.Logger) grpc.StreamServerInterceptor <span class="cov9" title="53">{
+func LoggingStreamInterceptor(logger *slog.Logger) grpc.StreamServerInterceptor <span class="cov9" title="52">{
         return func(srv any, ss grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) error </span><span class="cov4" title="6">{
                 start := time.Now()
                 err := handler(srv, ss)
@@ -1474,7 +1474,7 @@ func LoggingStreamInterceptor(logger *slog.Logger) grpc.StreamServerInterceptor 
 }
 
 // RecoveryStreamInterceptor создает интерцептор для восстановления в потоковых запросах
-func RecoveryStreamInterceptor(logger *slog.Logger) grpc.StreamServerInterceptor <span class="cov9" title="50">{
+func RecoveryStreamInterceptor(logger *slog.Logger) grpc.StreamServerInterceptor <span class="cov9" title="49">{
         return func(srv any, ss grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) (err error) </span><span class="cov3" title="3">{
                 defer func() </span><span class="cov3" title="3">{
                         if r := recover(); r != nil </span><span class="cov2" title="2">{
@@ -1514,7 +1514,7 @@ var (
         responsePayloadSize metric.Int64Histogram
 )
 
-func init() <span class="cov2" title="2">{
+func init() <span class="cov3" title="3">{
         var err error
 
         requestsCount, err = meter.Int64Counter(
@@ -1525,7 +1525,7 @@ func init() <span class="cov2" title="2">{
                 panic(errors.Wrap(err, "failed to create requests counter"))</span>
         }
 
-        <span class="cov2" title="2">requestDuration, err = meter.Int64Histogram(
+        <span class="cov3" title="3">requestDuration, err = meter.Int64Histogram(
                 "grpc.server.duration_ms",
                 metric.WithDescription("gRPC request duration in milliseconds"),
                 metric.WithUnit("ms"),
@@ -1534,7 +1534,7 @@ func init() <span class="cov2" title="2">{
                 panic(errors.Wrap(err, "failed to create request duration histogram"))</span>
         }
 
-        <span class="cov2" title="2">requestPayloadSize, err = meter.Int64Histogram(
+        <span class="cov3" title="3">requestPayloadSize, err = meter.Int64Histogram(
                 "grpc.server.request_size_bytes",
                 metric.WithDescription("gRPC request size in bytes"),
                 metric.WithUnit("bytes"),
@@ -1543,7 +1543,7 @@ func init() <span class="cov2" title="2">{
                 panic(errors.Wrap(err, "failed to create request size histogram"))</span>
         }
 
-        <span class="cov2" title="2">responsePayloadSize, err = meter.Int64Histogram(
+        <span class="cov3" title="3">responsePayloadSize, err = meter.Int64Histogram(
                 "grpc.server.response_size_bytes",
                 metric.WithDescription("gRPC response size in bytes"),
                 metric.WithUnit("bytes"),
@@ -1562,7 +1562,7 @@ func getMessageSize(msg any) int64 <span class="cov10" title="71">{
 }
 
 // MetricsUnaryInterceptor создает интерцептор для метрик gRPC запросов
-func MetricsUnaryInterceptor() grpc.UnaryServerInterceptor <span class="cov9" title="59">{
+func MetricsUnaryInterceptor() grpc.UnaryServerInterceptor <span class="cov9" title="58">{
         return func(ctx context.Context, req any, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (any, error) </span><span class="cov8" title="29">{
                 startTime := time.Now()
 
@@ -1602,7 +1602,7 @@ func MetricsUnaryInterceptor() grpc.UnaryServerInterceptor <span class="cov9" ti
 }
 
 // MetricsStreamInterceptor создает интерцептор для метрик потоковых gRPC запросов
-func MetricsStreamInterceptor() grpc.StreamServerInterceptor <span class="cov9" title="55">{
+func MetricsStreamInterceptor() grpc.StreamServerInterceptor <span class="cov9" title="54">{
         return func(srv any, ss grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) error </span><span class="cov6" title="13">{
                 startTime := time.Now()
 
@@ -1660,7 +1660,7 @@ type MonitoringOptions struct {
 }
 
 // DefaultMonitoringOptions возвращает настройки по умолчанию
-func DefaultMonitoringOptions(logger *slog.Logger) *MonitoringOptions <span class="cov9" title="42">{
+func DefaultMonitoringOptions(logger *slog.Logger) *MonitoringOptions <span class="cov9" title="41">{
         return &amp;MonitoringOptions{
                 Logger:             logger,
                 EnableTracing:      true,
@@ -1675,14 +1675,14 @@ func DefaultMonitoringOptions(logger *slog.Logger) *MonitoringOptions <span clas
 func SetupMonitoring(
         ctx context.Context,
         options *MonitoringOptions,
-) ([]grpc.UnaryServerInterceptor, []grpc.StreamServerInterceptor, []grpc.ServerOption) <span class="cov10" title="57">{
+) ([]grpc.UnaryServerInterceptor, []grpc.StreamServerInterceptor, []grpc.ServerOption) <span class="cov10" title="56">{
 
         unaryInterceptors := []grpc.UnaryServerInterceptor{}
         streamInterceptors := []grpc.StreamServerInterceptor{}
         serverOptions := []grpc.ServerOption{}
 
         // Настраиваем трассировку OpenTelemetry
-        if options.EnableTracing </span><span class="cov9" title="49">{
+        if options.EnableTracing </span><span class="cov9" title="48">{
                 // Устанавливаем пропагатор контекста для трассировки
                 otel.SetTextMapPropagator(MetadataTextMapPropagator())
 
@@ -1691,19 +1691,19 @@ func SetupMonitoring(
                 streamInterceptors = append(streamInterceptors, TracingStreamInterceptor())
 
                 // Добавляем StatsHandler для дополнительных метрик трассировки
-                if options.EnableStatsHandler </span><span class="cov9" title="46">{
+                if options.EnableStatsHandler </span><span class="cov9" title="45">{
                         serverOptions = append(serverOptions, grpc.StatsHandler(otelgrpc.NewServerHandler()))
                 }</span>
         }
 
         // Добавляем метрики Prometheus
-        <span class="cov10" title="57">if options.EnableMetrics </span><span class="cov9" title="48">{
+        <span class="cov10" title="56">if options.EnableMetrics </span><span class="cov9" title="47">{
                 unaryInterceptors = append(unaryInterceptors, MetricsUnaryInterceptor())
                 streamInterceptors = append(streamInterceptors, MetricsStreamInterceptor())
         }</span>
 
         // Добавляем логирование и восстановление после паники
-        <span class="cov10" title="57">if options.EnableLogging </span><span class="cov9" title="49">{
+        <span class="cov10" title="56">if options.EnableLogging </span><span class="cov9" title="48">{
                 unaryInterceptors = append(unaryInterceptors,
                         RecoveryInterceptor(options.Logger),
                         LoggingInterceptor(options.Logger),
@@ -1714,7 +1714,7 @@ func SetupMonitoring(
                 )
         }</span>
 
-        <span class="cov10" title="57">return unaryInterceptors, streamInterceptors, serverOptions</span>
+        <span class="cov10" title="56">return unaryInterceptors, streamInterceptors, serverOptions</span>
 }
 </pre>
 		
@@ -1763,7 +1763,7 @@ func (s metadataSupplier) Keys() []string <span class="cov3" title="3">{
 }
 
 // TracingUnaryInterceptor создает интерцептор для трассировки унарных RPC
-func TracingUnaryInterceptor() grpc.UnaryServerInterceptor <span class="cov9" title="55">{
+func TracingUnaryInterceptor() grpc.UnaryServerInterceptor <span class="cov9" title="54">{
         return func(ctx context.Context, req any, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (any, error) </span><span class="cov7" title="19">{
                 // Извлекаем метаданные
                 md, ok := metadata.FromIncomingContext(ctx)
@@ -1829,7 +1829,7 @@ func TracingUnaryInterceptor() grpc.UnaryServerInterceptor <span class="cov9" ti
 }
 
 // TracingStreamInterceptor создает интерцептор для трассировки потоковых RPC
-func TracingStreamInterceptor() grpc.StreamServerInterceptor <span class="cov9" title="54">{
+func TracingStreamInterceptor() grpc.StreamServerInterceptor <span class="cov9" title="53">{
         return func(srv any, ss grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) error </span><span class="cov5" title="7">{
                 // Извлекаем метаданные
                 ctx := ss.Context()
@@ -1931,7 +1931,7 @@ func splitMethodName(fullMethodName string) (string, string) <span class="cov8" 
 }
 
 // MetadataTextMapPropagator возвращает пропагатор контекста трассировки через метаданные gRPC
-func MetadataTextMapPropagator() propagation.TextMapPropagator <span class="cov10" title="63">{
+func MetadataTextMapPropagator() propagation.TextMapPropagator <span class="cov10" title="62">{
         return propagation.NewCompositeTextMapPropagator(
                 propagation.TraceContext{},
                 propagation.Baggage{},
@@ -2017,7 +2017,7 @@ func NewDefault(c Config, registrationFunc func(*grpc.Server)) *Server <span cla
         return s
 }</span>
 
-func New(c Config, registrationFunc func(*grpc.Server), opts ...ServerOption) *Server <span class="cov10" title="42">{
+func New(c Config, registrationFunc func(*grpc.Server), opts ...ServerOption) *Server <span class="cov10" title="41">{
         s := &amp;Server{
                 logger:             logger.FromContext(context.Background()).WithGroup("grpcserver"),
                 config:             c,
@@ -2026,16 +2026,16 @@ func New(c Config, registrationFunc func(*grpc.Server), opts ...ServerOption) *S
                 serverOpts:         []grpc.ServerOption{},
         }
 
-        for _, opt := range opts </span><span class="cov7" title="18">{
+        for _, opt := range opts </span><span class="cov8" title="18">{
                 opt(s)
         }</span>
 
         // Настраиваем мониторинг
-        <span class="cov10" title="42">monitoringOptions := s.monitoringOpts
-        if monitoringOptions == nil </span><span class="cov9" title="39">{
+        <span class="cov10" title="41">monitoringOptions := s.monitoringOpts
+        if monitoringOptions == nil </span><span class="cov9" title="38">{
                 monitoringOptions = middleware.DefaultMonitoringOptions(s.logger)
         }</span>
-        <span class="cov10" title="42">unaryInterceptors, streamInterceptors, monitoringOpts := middleware.SetupMonitoring(
+        <span class="cov10" title="41">unaryInterceptors, streamInterceptors, monitoringOpts := middleware.SetupMonitoring(
                 context.Background(),
                 monitoringOptions,
         )
@@ -2068,7 +2068,7 @@ func New(c Config, registrationFunc func(*grpc.Server), opts ...ServerOption) *S
         }
 
         // Создаем сервер
-        <span class="cov10" title="42">s.server = grpc.NewServer(serverOpts...)
+        <span class="cov10" title="41">s.server = grpc.NewServer(serverOpts...)
 
         // Регистрируем сервисы
         registrationFunc(s.server)
@@ -2078,10 +2078,10 @@ func New(c Config, registrationFunc func(*grpc.Server), opts ...ServerOption) *S
                 reflection.Register(s.server)
         }</span>
 
-        <span class="cov10" title="42">return s</span>
+        <span class="cov10" title="41">return s</span>
 }
 
-func (s *Server) Start() error <span class="cov6" title="10">{
+func (s *Server) Start() error <span class="cov6" title="9">{
         addr := fmt.Sprintf("%s:%d", s.config.Host, s.config.Port)
 
         lis, err := net.Listen("tcp", addr)
@@ -2089,7 +2089,7 @@ func (s *Server) Start() error <span class="cov6" title="10">{
                 return errors.Wrapf(err, "failed to listen on %s", addr)
         }</span>
 
-        <span class="cov4" title="5">s.listenerMu.Lock()
+        <span class="cov4" title="4">s.listenerMu.Lock()
         s.listener = lis
         s.listenerMu.Unlock()
 
@@ -2100,35 +2100,35 @@ func (s *Server) Start() error <span class="cov6" title="10">{
                 return errors.Wrap(err, "failed to serve gRPC")
         }</span>
 
-        <span class="cov4" title="5">return nil</span>
+        <span class="cov4" title="4">return nil</span>
 }
 
-func (s *Server) Close() error <span class="cov6" title="10">{
+func (s *Server) Close() error <span class="cov6" title="9">{
         stopped := make(chan struct{})
 
-        go func() </span><span class="cov6" title="10">{
+        go func() </span><span class="cov6" title="9">{
                 s.server.GracefulStop()
                 close(stopped)
         }</span>()
 
-        <span class="cov6" title="10">ctx, cancel := context.WithTimeout(context.Background(), ShutdownTimeout)
+        <span class="cov6" title="9">ctx, cancel := context.WithTimeout(context.Background(), ShutdownTimeout)
         defer cancel()
 
         select </span>{
-        case &lt;-stopped:<span class="cov6" title="10">
+        case &lt;-stopped:<span class="cov6" title="9">
                 s.logger.Info("gRPC server gracefully stopped")</span>
         case &lt;-ctx.Done():<span class="cov0" title="0">
                 s.logger.Warn("gRPC server shutdown timeout exceeded, forcing stop")
                 s.server.Stop()</span>
         }
 
-        <span class="cov6" title="10">s.listenerMu.RLock()
+        <span class="cov6" title="9">s.listenerMu.RLock()
         listener := s.listener
         s.listenerMu.RUnlock()
 
-        if listener != nil </span><span class="cov4" title="5">{
+        if listener != nil </span><span class="cov4" title="4">{
                 err := listener.Close()
-                if err != nil </span><span class="cov4" title="5">{
+                if err != nil </span><span class="cov4" title="4">{
                         return errors.Wrap(err, "failed to close listener")
                 }</span>
         }
@@ -2147,7 +2147,7 @@ func (s *Server) Run() <span class="cov2" title="2">{
 
 // GetListener returns the server's listener in a thread-safe manner.
 // This is primarily used in tests to check if the listener has been set.
-func (s *Server) GetListener() net.Listener <span class="cov5" title="6">{
+func (s *Server) GetListener() net.Listener <span class="cov4" title="5">{
         s.listenerMu.RLock()
         defer s.listenerMu.RUnlock()
         return s.listener
@@ -3066,7 +3066,7 @@ func (Nil) Error() string <span class="cov1" title="1">{
 }</span>
 
 // IsNil проверяет, является ли ошибка redis.Nil
-func IsNil(err error) bool <span class="cov10" title="9">{
+func IsNil(err error) bool <span class="cov10" title="7">{
         return err == Nil{} || err == nil
 }</span>
 </pre>
@@ -3212,12 +3212,12 @@ func InitDefault(c Config) <span class="cov5" title="8">{
 }
 
 // FromContext pack logger into context.
-func FromContext(ctx context.Context) *slog.Logger <span class="cov10" title="107">{
+func FromContext(ctx context.Context) *slog.Logger <span class="cov10" title="106">{
         if l, ok := ctx.Value(contextKey).(*slog.Logger); ok </span><span class="cov8" title="56">{
                 return l
         }</span>
 
-        <span class="cov8" title="51">return slog.Default()</span>
+        <span class="cov8" title="50">return slog.Default()</span>
 }
 
 // NewContext extract logger from context if exists or return default.
@@ -3295,7 +3295,7 @@ type writer struct {
         slog.Handler
 }
 
-func (n *writer) Write(_ []byte) (int, error) <span class="cov10" title="1197">{
+func (n *writer) Write(_ []byte) (int, error) <span class="cov10" title="1190">{
         return 0, nil
 }</span>
 
@@ -3386,7 +3386,7 @@ type Sender struct {
 type Option func(*Sender)
 
 // NewSender creates a new SMTP Sender.
-func NewSender(cfg Config, opts ...Option) *Sender <span class="cov9" title="74">{
+func NewSender(cfg Config, opts ...Option) *Sender <span class="cov8" title="95">{
         s := &amp;Sender{
                 cfg:    cfg,
                 closed: false,
@@ -3397,21 +3397,21 @@ func NewSender(cfg Config, opts ...Option) *Sender <span class="cov9" title="74"
                 opt(s)
         }</span>
 
-        <span class="cov9" title="74">return s</span>
+        <span class="cov8" title="95">return s</span>
 }
 
 // Send sends one or more emails.
-func (s *Sender) Send(ctx context.Context, emails ...mail.Email) error <span class="cov7" title="35">{
-        for _, email := range emails </span><span class="cov7" title="35">{
-                if err := s.send(ctx, &amp;email); err != nil </span><span class="cov6" title="18">{
+func (s *Sender) Send(ctx context.Context, emails ...mail.Email) error <span class="cov8" title="111">{
+        for _, email := range emails </span><span class="cov8" title="114">{
+                if err := s.send(ctx, &amp;email); err != nil </span><span class="cov5" title="21">{
                         return err
                 }</span>
         }
-        <span class="cov6" title="17">return nil</span>
+        <span class="cov7" title="90">return nil</span>
 }
 
 // send sends a single email.
-func (s *Sender) send(ctx context.Context, email *mail.Email) error <span class="cov7" title="35">{
+func (s *Sender) send(ctx context.Context, email *mail.Email) error <span class="cov8" title="114">{
         ctx, span := tracer.Start(ctx, "SMTP.Send", trace.WithSpanKind(trace.SpanKindClient))
         defer span.End()
 
@@ -3436,15 +3436,15 @@ func (s *Sender) send(ctx context.Context, email *mail.Email) error <span class=
         }</span>
 
         // Build email content
-        <span class="cov7" title="34">from := email.From.Address
-        if from == "" </span><span class="cov4" title="6">{
+        <span class="cov8" title="113">from := email.From.Address
+        if from == "" </span><span class="cov4" title="7">{
                 from = s.cfg.From
         }</span>
-        <span class="cov7" title="34">if from == "" </span><span class="cov2" title="2">{
+        <span class="cov8" title="113">if from == "" </span><span class="cov2" title="2">{
                 return errors.New("no from address specified")
         }</span>
 
-        <span class="cov7" title="32">toAddresses := s.getEmailAddresses(email.To)
+        <span class="cov8" title="111">toAddresses := s.getEmailAddresses(email.To)
         ccAddresses := s.getEmailAddresses(email.Cc)
         bccAddresses := s.getEmailAddresses(email.Bcc)
 
@@ -3453,7 +3453,7 @@ func (s *Sender) send(ctx context.Context, email *mail.Email) error <span class=
         }</span>
 
         // Build message
-        <span class="cov7" title="31">msg := s.buildMessage(email)
+        <span class="cov8" title="110">msg := s.buildMessage(email)
 
         // SMTP server address
         addr := fmt.Sprintf("%s:%d", s.cfg.Host, s.cfg.Port)
@@ -3463,19 +3463,19 @@ func (s *Sender) send(ctx context.Context, email *mail.Email) error <span class=
                 auth = smtp.PlainAuth("", s.cfg.Username, s.cfg.Password, s.cfg.Host)
         }</span>
 
-        <span class="cov7" title="31">allTo := make([]string, 0, len(toAddresses)+len(ccAddresses))
+        <span class="cov8" title="110">allTo := make([]string, 0, len(toAddresses)+len(ccAddresses))
         allTo = append(allTo, toAddresses...)
         allTo = append(allTo, ccAddresses...)
 
         maxRetries := s.cfg.MaxRetries
-        if maxRetries &lt;= 0 </span><span class="cov7" title="31">{
+        if maxRetries &lt;= 0 </span><span class="cov8" title="110">{
                 maxRetries = 1
         }</span>
 
-        <span class="cov7" title="31">span.SetAttributes(attribute.Int("smtp.max_retries", maxRetries))
+        <span class="cov8" title="110">span.SetAttributes(attribute.Int("smtp.max_retries", maxRetries))
 
         var err error
-        for attempt := 0; attempt &lt; maxRetries; attempt++ </span><span class="cov7" title="31">{
+        for attempt := 0; attempt &lt; maxRetries; attempt++ </span><span class="cov8" title="110">{
                 if attempt &gt; 0 </span><span class="cov0" title="0">{
                         backoff := calcBackoff(attempt)
 
@@ -3493,33 +3493,33 @@ func (s *Sender) send(ctx context.Context, email *mail.Email) error <span class=
                         }
                 }
 
-                <span class="cov7" title="31">if s.cfg.TLS </span><span class="cov6" title="15">{
+                <span class="cov8" title="110">if s.cfg.TLS </span><span class="cov5" title="15">{
                         err = s.sendMailWithTLS(ctx, addr, auth, from, allTo, bccAddresses, msg)
-                }</span> else<span class="cov6" title="16"> {
+                }</span> else<span class="cov8" title="95"> {
                         err = s.sendMail(ctx, addr, auth, from, allTo, bccAddresses, msg)
                 }</span>
 
-                <span class="cov7" title="31">if err == nil </span><span class="cov6" title="17">{
+                <span class="cov8" title="110">if err == nil </span><span class="cov7" title="93">{
                         break</span>
                 }
 
-                <span class="cov5" title="14">span.RecordError(err, trace.WithAttributes(
+                <span class="cov5" title="17">span.RecordError(err, trace.WithAttributes(
                         attribute.Int("smtp.attempt", attempt+1),
                 ))</span>
         }
 
-        <span class="cov7" title="31">if err != nil </span><span class="cov5" title="14">{
+        <span class="cov8" title="110">if err != nil </span><span class="cov5" title="17">{
                 span.RecordError(err)
                 span.SetStatus(codes.Error, err.Error())
                 return errors.Wrap(err, "failed to send email")
         }</span>
 
-        <span class="cov6" title="17">span.SetStatus(codes.Ok, "")
+        <span class="cov7" title="93">span.SetStatus(codes.Ok, "")
         return nil</span>
 }
 
 // sendMail sends email without TLS (plain connection).
-func (s *Sender) sendMail(ctx context.Context, addr string, auth smtp.Auth, from string, to, bcc []string, msg []byte) error <span class="cov6" title="16">{
+func (s *Sender) sendMail(ctx context.Context, addr string, auth smtp.Auth, from string, to, bcc []string, msg []byte) error <span class="cov8" title="95">{
         ctx, span := tracer.Start(ctx, "SMTP.SendMail")
         defer span.End()
 
@@ -3533,28 +3533,28 @@ func (s *Sender) sendMail(ctx context.Context, addr string, auth smtp.Auth, from
         // Connect to server using DialContext for proper context support
         dialer := &amp;net.Dialer{}
         conn, err := dialer.DialContext(ctx, "tcp", addr)
-        if err != nil </span><span class="cov4" title="6">{
+        if err != nil </span><span class="cov4" title="9">{
                 span.RecordError(err)
                 span.SetStatus(codes.Error, "failed to connect")
                 return errors.Wrap(err, "failed to connect to SMTP server")
         }</span>
 
         // Use hostname for SMTP client (needed for TLS verification and auth)
-        <span class="cov5" title="10">hostname := s.cfg.Host
+        <span class="cov7" title="86">hostname := s.cfg.Host
         client, err := smtp.NewClient(conn, hostname)
         if err != nil </span><span class="cov0" title="0">{
                 span.RecordError(err)
                 span.SetStatus(codes.Error, "failed to create SMTP client")
                 return errors.Wrap(err, "failed to create SMTP client")
         }</span>
-        <span class="cov5" title="10">defer func() </span><span class="cov5" title="10">{
+        <span class="cov7" title="86">defer func() </span><span class="cov7" title="86">{
                 if err := client.Close(); err != nil </span><span class="cov0" title="0">{
                         span.RecordError(errors.Wrap(err, "failed to close SMTP client"))
                 }</span>
         }()
 
         // Authenticate if credentials provided
-        <span class="cov5" title="10">if auth != nil </span><span class="cov0" title="0">{
+        <span class="cov7" title="86">if auth != nil </span><span class="cov0" title="0">{
                 if err := client.Auth(auth); err != nil </span><span class="cov0" title="0">{
                         span.RecordError(err)
                         span.SetStatus(codes.Error, "failed to authenticate")
@@ -3563,17 +3563,17 @@ func (s *Sender) sendMail(ctx context.Context, addr string, auth smtp.Auth, from
         }
 
         // Set sender
-        <span class="cov5" title="10">if err := client.Mail(from); err != nil </span><span class="cov0" title="0">{
+        <span class="cov7" title="86">if err := client.Mail(from); err != nil </span><span class="cov0" title="0">{
                 span.RecordError(err)
                 span.SetStatus(codes.Error, "failed to set sender")
                 return errors.Wrap(err, "failed to set sender")
         }</span>
 
         // Set recipients
-        <span class="cov5" title="10">allRecipients := make([]string, 0, len(to)+len(bcc))
+        <span class="cov7" title="86">allRecipients := make([]string, 0, len(to)+len(bcc))
         allRecipients = append(allRecipients, to...)
         allRecipients = append(allRecipients, bcc...)
-        for _, addr := range allRecipients </span><span class="cov5" title="13">{
+        for _, addr := range allRecipients </span><span class="cov8" title="98">{
                 if err := client.Rcpt(addr); err != nil </span><span class="cov0" title="0">{
                         span.RecordError(err)
                         span.SetStatus(codes.Error, "failed to set recipient")
@@ -3582,31 +3582,31 @@ func (s *Sender) sendMail(ctx context.Context, addr string, auth smtp.Auth, from
         }
 
         // Send data
-        <span class="cov5" title="10">writer, err := client.Data()
+        <span class="cov7" title="86">writer, err := client.Data()
         if err != nil </span><span class="cov0" title="0">{
                 span.RecordError(err)
                 span.SetStatus(codes.Error, "failed to get data writer")
                 return errors.Wrap(err, "failed to get data writer")
         }</span>
-        <span class="cov5" title="10">defer func() </span><span class="cov5" title="10">{
+        <span class="cov7" title="86">defer func() </span><span class="cov7" title="86">{
                 if err := writer.Close(); err != nil </span><span class="cov0" title="0">{
                         span.RecordError(errors.Wrap(err, "failed to close data writer"))
                 }</span>
         }()
 
-        <span class="cov5" title="10">_, err = writer.Write(msg)
+        <span class="cov7" title="86">_, err = writer.Write(msg)
         if err != nil </span><span class="cov0" title="0">{
                 span.RecordError(err)
                 span.SetStatus(codes.Error, "failed to write message")
                 return errors.Wrap(err, "failed to write message")
         }</span>
 
-        <span class="cov5" title="10">span.SetStatus(codes.Ok, "")
+        <span class="cov7" title="86">span.SetStatus(codes.Ok, "")
         return nil</span>
 }
 
 // sendMailWithTLS sends email using STARTTLS.
-func (s *Sender) sendMailWithTLS(ctx context.Context, addr string, auth smtp.Auth, from string, to, bcc []string, msg []byte) error <span class="cov6" title="15">{
+func (s *Sender) sendMailWithTLS(ctx context.Context, addr string, auth smtp.Auth, from string, to, bcc []string, msg []byte) error <span class="cov5" title="15">{
         ctx, span := tracer.Start(ctx, "SMTP.SendWithTLS")
         defer span.End()
 
@@ -3619,14 +3619,14 @@ func (s *Sender) sendMailWithTLS(ctx context.Context, addr string, auth smtp.Aut
 
         // Check for context cancellation
         select </span>{
-        case &lt;-ctx.Done():<span class="cov3" title="3">
+        case &lt;-ctx.Done():<span class="cov2" title="3">
                 span.SetStatus(codes.Error, "context canceled")
                 return ctx.Err()</span>
-        default:<span class="cov5" title="12"></span>
+        default:<span class="cov4" title="12"></span>
         }
 
         // Connect to server using DialContext for proper context support
-        <span class="cov5" title="12">dialer := &amp;net.Dialer{}
+        <span class="cov4" title="12">dialer := &amp;net.Dialer{}
         conn, err := dialer.DialContext(ctx, "tcp", addr)
         if err != nil </span><span class="cov3" title="5">{
                 span.RecordError(err)
@@ -3668,7 +3668,7 @@ func (s *Sender) sendMailWithTLS(ctx context.Context, addr string, auth smtp.Aut
         }</span>
 
         // Authenticate if credentials provided
-        <span class="cov4" title="7">if auth != nil </span><span class="cov3" title="3">{
+        <span class="cov4" title="7">if auth != nil </span><span class="cov2" title="3">{
                 if err := client.Auth(auth); err != nil </span><span class="cov0" title="0">{
                         span.RecordError(err)
                         span.SetStatus(codes.Error, "failed to authenticate")
@@ -3687,7 +3687,7 @@ func (s *Sender) sendMailWithTLS(ctx context.Context, addr string, auth smtp.Aut
         <span class="cov4" title="7">allRecipients := make([]string, 0, len(to)+len(bcc))
         allRecipients = append(allRecipients, to...)
         allRecipients = append(allRecipients, bcc...)
-        for _, addr := range allRecipients </span><span class="cov5" title="10">{
+        for _, addr := range allRecipients </span><span class="cov4" title="10">{
                 if err := client.Rcpt(addr); err != nil </span><span class="cov0" title="0">{
                         span.RecordError(err)
                         span.SetStatus(codes.Error, "failed to set recipient")
@@ -3720,31 +3720,31 @@ func (s *Sender) sendMailWithTLS(ctx context.Context, addr string, auth smtp.Aut
 }
 
 // buildMessage builds the raw email message.
-func (s *Sender) buildMessage(email *mail.Email) []byte <span class="cov8" title="46">{
+func (s *Sender) buildMessage(email *mail.Email) []byte <span class="cov8" title="125">{
         var msg strings.Builder
 
         // Headers
         msg.WriteString(fmt.Sprintf("From: %s\r\n", s.formatAddress(email.From)))
 
-        if len(email.To) &gt; 0 </span><span class="cov7" title="42">{
+        if len(email.To) &gt; 0 </span><span class="cov8" title="119">{
                 msg.WriteString(fmt.Sprintf("To: %s\r\n", s.formatAddressList(email.To)))
         }</span>
 
-        <span class="cov8" title="46">if len(email.Cc) &gt; 0 </span><span class="cov5" title="9">{
+        <span class="cov8" title="125">if len(email.Cc) &gt; 0 </span><span class="cov4" title="12">{
                 msg.WriteString(fmt.Sprintf("Cc: %s\r\n", s.formatAddressList(email.Cc)))
         }</span>
 
-        <span class="cov8" title="46">msg.WriteString(fmt.Sprintf("Subject: %s\r\n", email.Subject))
+        <span class="cov8" title="125">msg.WriteString(fmt.Sprintf("Subject: %s\r\n", email.Subject))
         msg.WriteString("MIME-Version: 1.0\r\n")
         msg.WriteString(fmt.Sprintf("Date: %s\r\n", time.Now().Format(time.RFC1123Z)))
 
         // Add custom headers
-        for k, v := range email.Headers </span><span class="cov5" title="12">{
+        for k, v := range email.Headers </span><span class="cov5" title="19">{
                 msg.WriteString(fmt.Sprintf("%s: %s\r\n", k, v))
         }</span>
 
         // Build body
-        <span class="cov8" title="46">if email.HTML != "" </span><span class="cov4" title="8">{
+        <span class="cov8" title="125">if email.HTML != "" </span><span class="cov4" title="11">{
                 boundary := fmt.Sprintf("boundary_%d", time.Now().UnixNano())
                 msg.WriteString(fmt.Sprintf("Content-Type: multipart/alternative; boundary=%s\r\n", boundary))
                 msg.WriteString("\r\n")
@@ -3762,41 +3762,41 @@ func (s *Sender) buildMessage(email *mail.Email) []byte <span class="cov8" title
                 msg.WriteString("\r\n")
 
                 msg.WriteString(fmt.Sprintf("--%s--\r\n", boundary))
-        }</span> else<span class="cov7" title="38"> {
+        }</span> else<span class="cov8" title="114"> {
                 msg.WriteString("Content-Type: text/plain; charset=UTF-8\r\n\r\n")
                 msg.WriteString(email.Body)
                 msg.WriteString("\r\n")
         }</span>
 
-        <span class="cov8" title="46">return []byte(msg.String())</span>
+        <span class="cov8" title="125">return []byte(msg.String())</span>
 }
 
 // formatAddress formats a single address.
-func (s *Sender) formatAddress(addr mail.Address) string <span class="cov10" title="126">{
-        if addr.Name != "" </span><span class="cov6" title="22">{
+func (s *Sender) formatAddress(addr mail.Address) string <span class="cov9" title="289">{
+        if addr.Name != "" </span><span class="cov6" title="31">{
                 // Escape quotes in name
                 escapedName := strings.ReplaceAll(addr.Name, "\"", "\\\"")
                 return fmt.Sprintf("%s &lt;%s&gt;", escapedName, addr.Address)
         }</span>
-        <span class="cov9" title="104">return addr.Address</span>
+        <span class="cov9" title="258">return addr.Address</span>
 }
 
 // formatAddressList formats a list of addresses.
-func (s *Sender) formatAddressList(addrs []mail.Address) string <span class="cov8" title="57">{
+func (s *Sender) formatAddressList(addrs []mail.Address) string <span class="cov8" title="137">{
         formatted := make([]string, len(addrs))
-        for i, addr := range addrs </span><span class="cov8" title="66">{
+        for i, addr := range addrs </span><span class="cov8" title="150">{
                 formatted[i] = s.formatAddress(addr)
         }</span>
-        <span class="cov8" title="57">return strings.Join(formatted, ", ")</span>
+        <span class="cov8" title="137">return strings.Join(formatted, ", ")</span>
 }
 
 // getEmailAddresses extracts email addresses from mail.Address slice.
-func (s *Sender) getEmailAddresses(addrs []mail.Address) []string <span class="cov9" title="103">{
+func (s *Sender) getEmailAddresses(addrs []mail.Address) []string <span class="cov10" title="340">{
         result := make([]string, len(addrs))
-        for i, addr := range addrs </span><span class="cov8" title="53">{
+        for i, addr := range addrs </span><span class="cov8" title="141">{
                 result[i] = addr.Address
         }</span>
-        <span class="cov9" title="103">return result</span>
+        <span class="cov10" title="340">return result</span>
 }
 
 // calcBackoff returns the exponential backoff duration for the given retry attempt (1-based).
@@ -3812,14 +3812,14 @@ func calcBackoff(attempt int) time.Duration <span class="cov0" title="0">{
 }
 
 // Close closes the sender.
-func (s *Sender) Close() error <span class="cov7" title="33">{
+func (s *Sender) Close() error <span class="cov7" title="55">{
         s.mx.Lock()
         defer s.mx.Unlock()
 
-        if s.closed </span><span class="cov1" title="1">{
+        if s.closed </span><span class="cov2" title="3">{
                 return nil
         }</span>
-        <span class="cov7" title="32">s.closed = true
+        <span class="cov7" title="52">s.closed = true
         return nil</span>
 }
 </pre>
@@ -3858,7 +3858,7 @@ func InitDefault(config Config) (io.Closer, error) <span class="cov3" title="2">
         <span class="cov3" title="2">return provider, nil</span>
 }
 
-func New(config Config) *Metrics <span class="cov9" title="12">{
+func New(config Config) *Metrics <span class="cov9" title="14">{
         return &amp;Metrics{
                 config: config,
                 server: NewHttpServer(config),
@@ -3879,11 +3879,11 @@ func (s *Metrics) Start() error <span class="cov7" title="8">{
         <span class="cov7" title="8">return nil</span>
 }
 
-func (s *Metrics) Close() error <span class="cov8" title="9">{
+func (s *Metrics) Close() error <span class="cov8" title="10">{
         return errors.Wrap(s.server.Close(), "failed to close metrics")
 }</span>
 
-func NewHttpServer(conf Config) *http.Server <span class="cov10" title="15">{
+func NewHttpServer(conf Config) *http.Server <span class="cov10" title="17">{
         r := http.NewServeMux()
         r.Handle("/metrics", promhttp.Handler())
         return &amp;http.Server{
@@ -4032,11 +4032,11 @@ func (d *Dialer) GetDialer() *kafka.Dialer <span class="cov3" title="3">{
 }</span>
 
 // Close закрывает соединение с Kafka
-func (d *Dialer) Close() error <span class="cov9" title="26">{
+func (d *Dialer) Close() error <span class="cov9" title="23">{
         if d.closed </span><span class="cov1" title="1">{
                 return nil
         }</span>
-        <span class="cov9" title="25">d.closed = true
+        <span class="cov9" title="22">d.closed = true
         d.logger.Info("Kafka dialer closed")
         return nil</span>
 }
@@ -4538,22 +4538,22 @@ var tracer = otel.Tracer("github.com/pure-golang/adapters/queue/kafka")
 type headersCarrier map[string]string
 
 // Get возвращает значение заголовка по ключу
-func (c headersCarrier) Get(key string) string <span class="cov10" title="8">{
+func (c headersCarrier) Get(key string) string <span class="cov10" title="4">{
         return c[key]
 }</span>
 
 // Set устанавливает значение заголовка
-func (c headersCarrier) Set(key, value string) <span class="cov4" title="2">{
+func (c headersCarrier) Set(key, value string) <span class="cov5" title="2">{
         c[key] = value
 }</span>
 
 // Keys возвращает список всех ключей заголовков
-func (c headersCarrier) Keys() []string <span class="cov5" title="3">{
+func (c headersCarrier) Keys() []string <span class="cov5" title="2">{
         keys := make([]string, 0, len(c))
-        for k := range c </span><span class="cov4" title="2">{
+        for k := range c </span><span class="cov5" title="2">{
                 keys = append(keys, k)
         }</span>
-        <span class="cov5" title="3">return keys</span>
+        <span class="cov5" title="2">return keys</span>
 }
 </pre>
 		
@@ -4645,6 +4645,7 @@ type Dialer struct {
         conn    *amqp.Connection
         options *DialerOptions
         mx      sync.Mutex
+        closed  bool
 }
 
 // RetryPolicy of dialer reconnection.
@@ -4681,14 +4682,14 @@ func NewDialer(uri string, options *DialerOptions) *Dialer <span class="cov9" ti
         }</span>
 }
 
-func (d *Dialer) Connect() (err error) <span class="cov9" title="36">{
+func (d *Dialer) Connect() (err error) <span class="cov8" title="28">{
         d.options.Logger.Debug("Dialing...")
 
         d.mx.Lock()
         defer d.mx.Unlock()
 
         conn, err := amqp.DialConfig(d.uri, amqp.Config{})
-        if err != nil </span><span class="cov5" title="8">{
+        if err != nil </span><span class="cov0" title="0">{
                 return errors.Wrap(err, "failed to dial")
         }</span>
 
@@ -4718,6 +4719,7 @@ func (d *Dialer) Close() error <span class="cov9" title="29">{
         d.mx.Lock()
         defer d.mx.Unlock()
 
+        d.closed = true
         if d.conn == nil </span><span class="cov3" title="3">{
                 return nil
         }</span>
@@ -4736,20 +4738,27 @@ func (d *Dialer) handleReconnect(ch chan *amqp.Error) <span class="cov8" title="
                 return
         }</span>
 
-        <span class="cov2" title="2">d.options.Logger.With("error", err.Error()).Warn("Disconnected")
+        <span class="cov2" title="2">d.mx.Lock()
+        closed := d.closed
+        d.mx.Unlock()
+        if closed </span><span class="cov2" title="2">{
+                return
+        }</span>
 
-        for i := 0; ; i++ </span><span class="cov5" title="8">{
+        <span class="cov0" title="0">d.options.Logger.With("error", err.Error()).Warn("Disconnected")
+
+        for i := 0; ; i++ </span><span class="cov0" title="0">{
                 err := d.Connect()
                 if err == nil </span><span class="cov0" title="0">{
                         return
                 }</span>
 
-                <span class="cov5" title="8">sleepDuration, stop := d.options.RetryPolicy.TryNum(i)
+                <span class="cov0" title="0">sleepDuration, stop := d.options.RetryPolicy.TryNum(i)
                 if stop </span><span class="cov0" title="0">{
                         d.options.Logger.With("error", err.Error()).Error("Cannot to connect to rabbitmq. Time is out")
                         return
                 }</span>
-                <span class="cov5" title="8">d.options.Logger.With("error", err.Error()).Error("Failed to connect")
+                <span class="cov0" title="0">d.options.Logger.With("error", err.Error()).Error("Failed to connect")
 
                 time.Sleep(sleepDuration)</span>
         }
@@ -4810,13 +4819,13 @@ type MaxInterval struct {
 }
 
 // TryNum for use in for loop. tryNum int is number of iteration.
-func (interval *MaxInterval) TryNum(tryNum int) (time.Duration, bool) <span class="cov6" title="11">{
+func (interval *MaxInterval) TryNum(tryNum int) (time.Duration, bool) <span class="cov3" title="3">{
         retryInterval := interval.base * time.Duration(tryNum*interval.multiplicator)
         if retryInterval &gt; interval.max </span><span class="cov1" title="1">{
                 return 0, true
         }</span>
 
-        <span class="cov6" title="10">return retryInterval, false</span>
+        <span class="cov2" title="2">return retryInterval, false</span>
 }
 </pre>
 		
@@ -5635,7 +5644,7 @@ func WithLogger(logger *slog.Logger) Option <span class="cov4" title="4">{
 }
 
 // NewClient creates a new S3-compatible storage client.
-func NewClient(cfg Config, opts ...Option) (*Client, error) <span class="cov9" title="22">{
+func NewClient(cfg Config, opts ...Option) (*Client, error) <span class="cov10" title="25">{
         c := &amp;Client{
                 cfg: cfg,
         }
@@ -5646,12 +5655,12 @@ func NewClient(cfg Config, opts ...Option) (*Client, error) <span class="cov9" t
         }</span>
 
         // Устанавливаем значения по умолчанию
-        <span class="cov9" title="22">if c.logger == nil </span><span class="cov9" title="19">{
+        <span class="cov10" title="25">if c.logger == nil </span><span class="cov9" title="22">{
                 c.logger = slog.Default().WithGroup("s3")
         }</span>
 
         // Initialize minio client with static credentials
-        <span class="cov9" title="22">creds := credentials.NewStaticV4(cfg.AccessKey, cfg.SecretKey, "")
+        <span class="cov10" title="25">creds := credentials.NewStaticV4(cfg.AccessKey, cfg.SecretKey, "")
 
         endpoint := cfg.GetEndpoint()
 
@@ -5661,7 +5670,7 @@ func NewClient(cfg Config, opts ...Option) (*Client, error) <span class="cov9" t
                 secure = false
         }</span>
 
-        <span class="cov9" title="22">minioOpts := &amp;minio.Options{
+        <span class="cov10" title="25">minioOpts := &amp;minio.Options{
                 Creds:  creds,
                 Region: cfg.Region,
                 Secure: secure,
@@ -5672,14 +5681,14 @@ func NewClient(cfg Config, opts ...Option) (*Client, error) <span class="cov9" t
                 return nil, errors.Wrap(err, "failed to create S3 client")
         }</span>
 
-        <span class="cov9" title="22">c.client = client
+        <span class="cov10" title="25">c.client = client
 
         // Verify connection by listing buckets
         timeout := time.Duration(cfg.Timeout) * time.Second
-        if timeout == 0 </span><span class="cov8" title="17">{
+        if timeout == 0 </span><span class="cov9" title="20">{
                 timeout = 30 * time.Second
         }</span>
-        <span class="cov9" title="22">ctx, cancel := context.WithTimeout(context.Background(), timeout)
+        <span class="cov10" title="25">ctx, cancel := context.WithTimeout(context.Background(), timeout)
         defer cancel()
 
         _, err = client.ListBuckets(ctx)
@@ -5687,7 +5696,7 @@ func NewClient(cfg Config, opts ...Option) (*Client, error) <span class="cov9" t
                 return nil, errors.Wrap(err, "failed to connect to S3 storage")
         }</span>
 
-        <span class="cov0" title="0">c.logger.Info("S3 client initialized", "endpoint", endpoint, "region", cfg.Region)
+        <span class="cov4" title="3">c.logger.Info("S3 client initialized", "endpoint", endpoint, "region", cfg.Region)
 
         return c, nil</span>
 }
@@ -5698,12 +5707,12 @@ func NewDefaultClient(cfg Config) (*Client, error) <span class="cov5" title="5">
 }</span>
 
 // GetMinioClient returns the underlying minio.Client.
-func (c *Client) GetMinioClient() *minio.Client <span class="cov4" title="3">{
+func (c *Client) GetMinioClient() *minio.Client <span class="cov4" title="4">{
         return c.client
 }</span>
 
 // Close closes the S3 client connection.
-func (c *Client) Close() error <span class="cov9" title="19">{
+func (c *Client) Close() error <span class="cov9" title="22">{
         c.mu.Lock()
         defer c.mu.Unlock()
 
@@ -5711,7 +5720,7 @@ func (c *Client) Close() error <span class="cov9" title="19">{
                 return nil
         }</span>
 
-        <span class="cov8" title="14">c.closed = true
+        <span class="cov8" title="17">c.closed = true
         c.logger.Info("S3 client closed")
         return nil</span>
 }
@@ -5733,17 +5742,17 @@ import (
 )
 
 // toStorageError converts minio errors to storage errors.
-func toStorageError(err error, bucket, key string) error <span class="cov10" title="26">{
-        if err == nil </span><span class="cov4" title="3">{
+func toStorageError(err error, bucket, key string) error <span class="cov10" title="30">{
+        if err == nil </span><span class="cov3" title="3">{
                 return nil
         }</span>
 
-        <span class="cov9" title="23">errMsg := err.Error()
+        <span class="cov9" title="27">errMsg := err.Error()
 
         // Check for specific S3 error types by error message
         // Order matters: check for more specific patterns first
         switch </span>{
-        case strings.Contains(errMsg, "NoSuchBucket"):<span class="cov4" title="3">
+        case strings.Contains(errMsg, "NoSuchBucket"):<span class="cov3" title="3">
                 return &amp;storage.StorageError{
                         Code:    storage.CodeBucketNotFound,
                         Message: "bucket not found",
@@ -5751,7 +5760,7 @@ func toStorageError(err error, bucket, key string) error <span class="cov10" tit
                         Bucket:  bucket,
                         Key:     key,
                 }</span>
-        case strings.Contains(errMsg, "bucket") &amp;&amp; (strings.Contains(errMsg, "not found") || strings.Contains(errMsg, "does not exist")):<span class="cov2" title="2">
+        case strings.Contains(errMsg, "bucket") &amp;&amp; (strings.Contains(errMsg, "not found") || strings.Contains(errMsg, "does not exist")):<span class="cov3" title="3">
                 // Error mentions both bucket and not found/does not exist
                 return &amp;storage.StorageError{
                         Code:    storage.CodeBucketNotFound,
@@ -5770,7 +5779,7 @@ func toStorageError(err error, bucket, key string) error <span class="cov10" tit
                         Key:     key,
                 }</span>
         case strings.Contains(errMsg, "not found") ||
-                strings.Contains(errMsg, "does not exist"):<span class="cov4" title="4">
+                strings.Contains(errMsg, "does not exist"):<span class="cov6" title="7">
                 return &amp;storage.StorageError{
                         Code:    storage.CodeNotFound,
                         Message: "object not found",
@@ -5800,12 +5809,12 @@ func toStorageError(err error, bucket, key string) error <span class="cov10" tit
 }
 
 // isNotFoundError checks if error is a "not found" type error.
-func isNotFoundError(err error) bool <span class="cov8" title="14">{
+func isNotFoundError(err error) bool <span class="cov8" title="17">{
         if err == nil </span><span class="cov2" title="2">{
                 return false
         }</span>
 
-        <span class="cov7" title="12">errMsg := err.Error()
+        <span class="cov8" title="15">errMsg := err.Error()
         return strings.Contains(errMsg, "NoSuchKey") ||
                 strings.Contains(errMsg, "NotFound") ||
                 strings.Contains(errMsg, "not found") ||
@@ -5835,8 +5844,8 @@ type Config struct {
 
 // GetEndpoint returns the endpoint to use, defaulting to Yandex Cloud if not set.
 // For local MinIO, you should explicitly set Endpoint to "localhost:9000".
-func (c *Config) GetEndpoint() string <span class="cov10" title="28">{
-        if c.Endpoint != "" </span><span class="cov9" title="24">{
+func (c *Config) GetEndpoint() string <span class="cov10" title="31">{
+        if c.Endpoint != "" </span><span class="cov9" title="27">{
                 return c.Endpoint
         }</span>
         <span class="cov4" title="4">return DefaultYandexEndpoint</span>
@@ -5861,12 +5870,12 @@ import (
 )
 
 // core returns the minio.Core client for low-level operations.
-func (s *Storage) core() *minio.Core <span class="cov2" title="3">{
+func (s *Storage) core() *minio.Core <span class="cov3" title="13">{
         return &amp;minio.Core{Client: s.client.client}
 }</span>
 
 // CreateMultipartUpload initiates a multipart upload.
-func (s *Storage) CreateMultipartUpload(ctx context.Context, bucket, key string, opts *storage.PutOptions) (*storage.MultipartUpload, error) <span class="cov5" title="68">{
+func (s *Storage) CreateMultipartUpload(ctx context.Context, bucket, key string, opts *storage.PutOptions) (*storage.MultipartUpload, error) <span class="cov5" title="71">{
         ctx, span := tracer.Start(ctx, "S3.CreateMultipartUpload", trace.WithSpanKind(trace.SpanKindClient))
         defer span.End()
 
@@ -5874,11 +5883,11 @@ func (s *Storage) CreateMultipartUpload(ctx context.Context, bucket, key string,
                 bucket = s.cfg.DefaultBucket
         }</span>
 
-        <span class="cov5" title="68">if opts == nil </span><span class="cov4" title="59">{
+        <span class="cov5" title="71">if opts == nil </span><span class="cov5" title="61">{
                 opts = &amp;storage.PutOptions{}
         }</span>
 
-        <span class="cov5" title="68">span.SetAttributes(
+        <span class="cov5" title="71">span.SetAttributes(
                 attribute.String("bucket", bucket),
                 attribute.String("key", key),
         )
@@ -5891,7 +5900,7 @@ func (s *Storage) CreateMultipartUpload(ctx context.Context, bucket, key string,
         }</span>
 
         // Create multipart upload
-        <span class="cov0" title="0">minioOpts := minio.PutObjectOptions{
+        <span class="cov2" title="3">minioOpts := minio.PutObjectOptions{
                 ContentType:  opts.ContentType,
                 UserMetadata: opts.Metadata,
         }
@@ -5903,7 +5912,7 @@ func (s *Storage) CreateMultipartUpload(ctx context.Context, bucket, key string,
                 return nil, errors.Wrapf(err, "failed to create multipart upload %s/%s", bucket, key)
         }</span>
 
-        <span class="cov0" title="0">result := &amp;storage.MultipartUpload{
+        <span class="cov2" title="3">result := &amp;storage.MultipartUpload{
                 UploadID:  uploadID,
                 Key:       key,
                 Bucket:    bucket,
@@ -5920,7 +5929,7 @@ func (s *Storage) CreateMultipartUpload(ctx context.Context, bucket, key string,
 }
 
 // UploadPart uploads a part in a multipart upload.
-func (s *Storage) UploadPart(ctx context.Context, bucket, key, uploadID string, partNumber int32, reader io.Reader) (*storage.UploadedPart, error) <span class="cov5" title="63">{
+func (s *Storage) UploadPart(ctx context.Context, bucket, key, uploadID string, partNumber int32, reader io.Reader) (*storage.UploadedPart, error) <span class="cov5" title="67">{
         ctx, span := tracer.Start(ctx, "S3.UploadPart", trace.WithSpanKind(trace.SpanKindClient))
         defer span.End()
 
@@ -5928,7 +5937,7 @@ func (s *Storage) UploadPart(ctx context.Context, bucket, key, uploadID string, 
                 bucket = s.cfg.DefaultBucket
         }</span>
 
-        <span class="cov5" title="63">span.SetAttributes(
+        <span class="cov5" title="67">span.SetAttributes(
                 attribute.String("bucket", bucket),
                 attribute.String("key", key),
                 attribute.String("upload_id", uploadID),
@@ -5940,7 +5949,7 @@ func (s *Storage) UploadPart(ctx context.Context, bucket, key, uploadID string, 
         type sizer interface {
                 Size() int64
         }
-        if sz, ok := reader.(sizer); ok </span><span class="cov5" title="63">{
+        if sz, ok := reader.(sizer); ok </span><span class="cov5" title="67">{
                 size = sz.Size()
         }</span> else<span class="cov0" title="0"> {
                 // Read into buffer to get size
@@ -5955,14 +5964,14 @@ func (s *Storage) UploadPart(ctx context.Context, bucket, key, uploadID string, 
         }
 
         // Validate client is initialized
-        <span class="cov5" title="63">if _, err := s.getClient(); err != nil </span><span class="cov5" title="63">{
+        <span class="cov5" title="67">if _, err := s.getClient(); err != nil </span><span class="cov5" title="63">{
                 span.RecordError(err)
                 span.SetStatus(codes.Error, err.Error())
                 return nil, err
         }</span>
 
         // Upload the part using Core.PutObjectPart
-        <span class="cov0" title="0">putOpts := minio.PutObjectPartOptions{}
+        <span class="cov2" title="4">putOpts := minio.PutObjectPartOptions{}
         info, err := s.core().PutObjectPart(ctx, bucket, key, uploadID, int(partNumber), reader, size, putOpts)
         if err != nil </span><span class="cov0" title="0">{
                 span.RecordError(err)
@@ -5970,7 +5979,7 @@ func (s *Storage) UploadPart(ctx context.Context, bucket, key, uploadID string, 
                 return nil, errors.Wrapf(err, "failed to upload part %d of %s/%s", partNumber, bucket, key)
         }</span>
 
-        <span class="cov0" title="0">result := &amp;storage.UploadedPart{
+        <span class="cov2" title="4">result := &amp;storage.UploadedPart{
                 PartNumber: partNumber,
                 ETag:       info.ETag,
                 Size:       info.Size,
@@ -5987,7 +5996,7 @@ func (s *Storage) UploadPart(ctx context.Context, bucket, key, uploadID string, 
 }
 
 // CompleteMultipartUpload completes a multipart upload.
-func (s *Storage) CompleteMultipartUpload(ctx context.Context, bucket, key, uploadID string, opts *storage.CompleteMultipartUploadOptions) (*storage.ObjectInfo, error) <span class="cov4" title="55">{
+func (s *Storage) CompleteMultipartUpload(ctx context.Context, bucket, key, uploadID string, opts *storage.CompleteMultipartUploadOptions) (*storage.ObjectInfo, error) <span class="cov4" title="56">{
         ctx, span := tracer.Start(ctx, "S3.CompleteMultipartUpload", trace.WithSpanKind(trace.SpanKindClient))
         defer span.End()
 
@@ -5995,7 +6004,7 @@ func (s *Storage) CompleteMultipartUpload(ctx context.Context, bucket, key, uplo
                 bucket = s.cfg.DefaultBucket
         }</span>
 
-        <span class="cov4" title="55">span.SetAttributes(
+        <span class="cov4" title="56">span.SetAttributes(
                 attribute.String("bucket", bucket),
                 attribute.String("key", key),
                 attribute.String("upload_id", uploadID),
@@ -6004,7 +6013,7 @@ func (s *Storage) CompleteMultipartUpload(ctx context.Context, bucket, key, uplo
 
         // Convert parts to minio format
         minioParts := make([]minio.CompletePart, len(opts.Parts))
-        for i, p := range opts.Parts </span><span class="cov10" title="10019">{
+        for i, p := range opts.Parts </span><span class="cov10" title="10021">{
                 minioParts[i] = minio.CompletePart{
                         PartNumber: int(p.PartNumber),
                         ETag:       p.ETag,
@@ -6012,14 +6021,14 @@ func (s *Storage) CompleteMultipartUpload(ctx context.Context, bucket, key, uplo
         }</span>
 
         // Validate client is initialized
-        <span class="cov4" title="55">if _, err := s.getClient(); err != nil </span><span class="cov4" title="55">{
+        <span class="cov4" title="56">if _, err := s.getClient(); err != nil </span><span class="cov4" title="55">{
                 span.RecordError(err)
                 span.SetStatus(codes.Error, err.Error())
                 return nil, err
         }</span>
 
         // Complete the upload using Core.CompleteMultipartUpload
-        <span class="cov0" title="0">minioOpts := minio.PutObjectOptions{}
+        <span class="cov1" title="1">minioOpts := minio.PutObjectOptions{}
         info, err := s.core().CompleteMultipartUpload(ctx, bucket, key, uploadID, minioParts, minioOpts)
         if err != nil </span><span class="cov0" title="0">{
                 span.RecordError(err)
@@ -6028,18 +6037,18 @@ func (s *Storage) CompleteMultipartUpload(ctx context.Context, bucket, key, uplo
         }</span>
 
         // Calculate total size from uploaded parts since info.Size might be 0
-        <span class="cov0" title="0">var totalSize int64
-        for _, p := range opts.Parts </span><span class="cov0" title="0">{
+        <span class="cov1" title="1">var totalSize int64
+        for _, p := range opts.Parts </span><span class="cov1" title="2">{
                 totalSize += p.Size
         }</span>
 
         // If calculated size is 0 or info.Size is non-zero, use info.Size
-        <span class="cov0" title="0">if totalSize == 0 &amp;&amp; info.Size &gt; 0 </span><span class="cov0" title="0">{
+        <span class="cov1" title="1">if totalSize == 0 &amp;&amp; info.Size &gt; 0 </span><span class="cov0" title="0">{
                 totalSize = info.Size
         }</span>
 
         // Get object stat to fetch accurate metadata
-        <span class="cov0" title="0">client, err := s.getClient()
+        <span class="cov1" title="1">client, err := s.getClient()
         if err != nil </span><span class="cov0" title="0">{
                 // If client validation fails, return the info we have
                 result := &amp;storage.ObjectInfo{
@@ -6058,7 +6067,7 @@ func (s *Storage) CompleteMultipartUpload(ctx context.Context, bucket, key, uplo
                 return result, nil
         }</span>
 
-        <span class="cov0" title="0">stat, err := client.StatObject(ctx, bucket, key, minio.StatObjectOptions{})
+        <span class="cov1" title="1">stat, err := client.StatObject(ctx, bucket, key, minio.StatObjectOptions{})
         if err != nil </span><span class="cov0" title="0">{
                 // If stat fails, use the info we have
                 result := &amp;storage.ObjectInfo{
@@ -6077,7 +6086,7 @@ func (s *Storage) CompleteMultipartUpload(ctx context.Context, bucket, key, uplo
                 return result, nil
         }</span>
 
-        <span class="cov0" title="0">result := &amp;storage.ObjectInfo{
+        <span class="cov1" title="1">result := &amp;storage.ObjectInfo{
                 Key:          key,
                 Size:         stat.Size,
                 ETag:         stat.ETag,
@@ -6097,7 +6106,7 @@ func (s *Storage) CompleteMultipartUpload(ctx context.Context, bucket, key, uplo
 }
 
 // AbortMultipartUpload aborts a multipart upload.
-func (s *Storage) AbortMultipartUpload(ctx context.Context, bucket, key, uploadID string) error <span class="cov4" title="54">{
+func (s *Storage) AbortMultipartUpload(ctx context.Context, bucket, key, uploadID string) error <span class="cov4" title="56">{
         ctx, span := tracer.Start(ctx, "S3.AbortMultipartUpload", trace.WithSpanKind(trace.SpanKindClient))
         defer span.End()
 
@@ -6105,7 +6114,7 @@ func (s *Storage) AbortMultipartUpload(ctx context.Context, bucket, key, uploadI
                 bucket = s.cfg.DefaultBucket
         }</span>
 
-        <span class="cov4" title="54">span.SetAttributes(
+        <span class="cov4" title="56">span.SetAttributes(
                 attribute.String("bucket", bucket),
                 attribute.String("key", key),
                 attribute.String("upload_id", uploadID),
@@ -6118,28 +6127,28 @@ func (s *Storage) AbortMultipartUpload(ctx context.Context, bucket, key, uploadI
                 return err
         }</span>
 
-        <span class="cov0" title="0">err := s.core().AbortMultipartUpload(ctx, bucket, key, uploadID)
+        <span class="cov1" title="2">err := s.core().AbortMultipartUpload(ctx, bucket, key, uploadID)
         if err != nil </span><span class="cov0" title="0">{
                 span.RecordError(err)
                 span.SetStatus(codes.Error, err.Error())
                 return errors.Wrapf(err, "failed to abort multipart upload %s/%s", bucket, key)
         }</span>
 
-        <span class="cov0" title="0">span.SetStatus(codes.Ok, "")
+        <span class="cov1" title="2">span.SetStatus(codes.Ok, "")
         s.logger.Debug("Multipart upload aborted", "bucket", bucket, "key", key, "upload_id", uploadID)
         return nil</span>
 }
 
 // ListMultipartUploads lists active multipart uploads.
-func (s *Storage) ListMultipartUploads(ctx context.Context, bucket string) ([]storage.MultipartUpload, error) <span class="cov0" title="0">{
+func (s *Storage) ListMultipartUploads(ctx context.Context, bucket string) ([]storage.MultipartUpload, error) <span class="cov2" title="3">{
         ctx, span := tracer.Start(ctx, "S3.ListMultipartUploads", trace.WithSpanKind(trace.SpanKindClient))
         defer span.End()
 
-        if bucket == "" </span><span class="cov0" title="0">{
+        if bucket == "" </span><span class="cov1" title="1">{
                 bucket = s.cfg.DefaultBucket
         }</span>
 
-        <span class="cov0" title="0">span.SetAttributes(
+        <span class="cov2" title="3">span.SetAttributes(
                 attribute.String("bucket", bucket),
         )
 
@@ -6148,14 +6157,14 @@ func (s *Storage) ListMultipartUploads(ctx context.Context, bucket string) ([]st
         ch := s.client.client.ListIncompleteUploads(ctx, bucket, "", true)
 
         var uploads []storage.MultipartUpload
-        for upload := range ch </span><span class="cov0" title="0">{
+        for upload := range ch </span><span class="cov1" title="1">{
                 if upload.Err != nil </span><span class="cov0" title="0">{
                         span.RecordError(upload.Err)
                         span.SetStatus(codes.Error, upload.Err.Error())
                         return nil, errors.Wrap(upload.Err, "failed to list multipart uploads")
                 }</span>
 
-                <span class="cov0" title="0">uploads = append(uploads, storage.MultipartUpload{
+                <span class="cov1" title="1">uploads = append(uploads, storage.MultipartUpload{
                         UploadID:  upload.UploadID,
                         Key:       upload.Key,
                         Bucket:    bucket,
@@ -6163,7 +6172,7 @@ func (s *Storage) ListMultipartUploads(ctx context.Context, bucket string) ([]st
                 })</span>
         }
 
-        <span class="cov0" title="0">s.logger.Debug("ListMultipartUploads result", "bucket", bucket, "upload_count", len(uploads))
+        <span class="cov2" title="3">s.logger.Debug("ListMultipartUploads result", "bucket", bucket, "upload_count", len(uploads))
 
         span.SetAttributes(
                 attribute.Int("upload_count", len(uploads)),
@@ -6190,7 +6199,7 @@ import (
 )
 
 // GetPresignedURL generates a presigned URL for S3 object access.
-func (s *Storage) GetPresignedURL(ctx context.Context, bucket, key string, opts *storage.PresignedURLOptions) (string, error) <span class="cov10" title="66">{
+func (s *Storage) GetPresignedURL(ctx context.Context, bucket, key string, opts *storage.PresignedURLOptions) (string, error) <span class="cov10" title="68">{
         ctx, span := tracer.Start(ctx, "S3.GetPresignedURL", trace.WithSpanKind(trace.SpanKindClient))
         defer span.End()
 
@@ -6198,14 +6207,14 @@ func (s *Storage) GetPresignedURL(ctx context.Context, bucket, key string, opts 
                 bucket = s.cfg.DefaultBucket
         }</span>
 
-        <span class="cov10" title="66">if opts == nil </span><span class="cov1" title="1">{
+        <span class="cov10" title="68">if opts == nil </span><span class="cov1" title="1">{
                 opts = &amp;storage.PresignedURLOptions{
                         Method: "GET",
                         Expiry: 15 * time.Minute,
                 }
         }</span>
 
-        <span class="cov10" title="66">span.SetAttributes(
+        <span class="cov10" title="68">span.SetAttributes(
                 attribute.String("bucket", bucket),
                 attribute.String("key", key),
                 attribute.String("method", opts.Method),
@@ -6218,11 +6227,11 @@ func (s *Storage) GetPresignedURL(ctx context.Context, bucket, key string, opts 
         }</span>
 
         // Set default method
-        <span class="cov10" title="66">if opts.Method == "" </span><span class="cov2" title="2">{
+        <span class="cov10" title="68">if opts.Method == "" </span><span class="cov2" title="2">{
                 opts.Method = "GET"
         }</span>
 
-        <span class="cov10" title="66">var presignedURL *url.URL
+        <span class="cov10" title="68">var presignedURL *url.URL
         var err error
 
         // Validate method first (before client validation)
@@ -6234,27 +6243,27 @@ func (s *Storage) GetPresignedURL(ctx context.Context, bucket, key string, opts 
         }</span>
 
         // Validate client is initialized before generating presigned URL
-        <span class="cov9" title="51">client, clientErr := s.getClient()
+        <span class="cov9" title="53">client, clientErr := s.getClient()
         if clientErr != nil </span><span class="cov9" title="51">{
                 span.RecordError(clientErr)
                 span.SetStatus(codes.Error, clientErr.Error())
                 return "", clientErr
         }</span>
 
-        <span class="cov0" title="0">switch opts.Method </span>{
-        case "GET":<span class="cov0" title="0">
+        <span class="cov2" title="2">switch opts.Method </span>{
+        case "GET":<span class="cov1" title="1">
                 presignedURL, err = client.PresignedGetObject(ctx, bucket, key, opts.Expiry, nil)</span>
-        case "PUT":<span class="cov0" title="0">
+        case "PUT":<span class="cov1" title="1">
                 presignedURL, err = client.PresignedPutObject(ctx, bucket, key, opts.Expiry)</span>
         }
 
-        <span class="cov0" title="0">if err != nil </span><span class="cov0" title="0">{
+        <span class="cov2" title="2">if err != nil </span><span class="cov0" title="0">{
                 span.RecordError(err)
                 span.SetStatus(codes.Error, err.Error())
                 return "", errors.Wrapf(err, "failed to generate presigned URL for %s/%s", bucket, key)
         }</span>
 
-        <span class="cov0" title="0">span.SetStatus(codes.Ok, "")
+        <span class="cov2" title="2">span.SetStatus(codes.Ok, "")
         s.logger.Debug("Presigned URL generated", "bucket", bucket, "key", key, "method", opts.Method, "expiry", opts.Expiry)
 
         return presignedURL.String(), nil</span>
@@ -6297,15 +6306,15 @@ type StorageOptions struct {
 }
 
 // NewStorage creates a new S3 Storage instance.
-func NewStorage(client *Client, opts *StorageOptions) *Storage <span class="cov7" title="124">{
-        if opts == nil </span><span class="cov7" title="120">{
+func NewStorage(client *Client, opts *StorageOptions) *Storage <span class="cov7" title="127">{
+        if opts == nil </span><span class="cov7" title="123">{
                 opts = &amp;StorageOptions{}
         }</span>
-        <span class="cov7" title="124">if opts.Logger == nil </span><span class="cov7" title="122">{
+        <span class="cov7" title="127">if opts.Logger == nil </span><span class="cov7" title="125">{
                 opts.Logger = slog.Default()
         }</span>
 
-        <span class="cov7" title="124">return &amp;Storage{
+        <span class="cov7" title="127">return &amp;Storage{
                 client: client,
                 cfg:    client.cfg,
                 logger: opts.Logger.WithGroup("storage").With("backend", "s3"),
@@ -6322,31 +6331,31 @@ func NewDefault(cfg Config) (*Storage, error) <span class="cov1" title="2">{
 }
 
 // getClient returns the underlying minio client with validation.
-func (s *Storage) getClient() (*minio.Client, error) <span class="cov10" title="580">{
+func (s *Storage) getClient() (*minio.Client, error) <span class="cov10" title="627">{
         if s.client == nil || s.client.client == nil </span><span class="cov9" title="579">{
                 return nil, &amp;storage.StorageError{
                         Code:    storage.CodeInternalError,
                         Message: "minio client is not initialized",
                 }
         }</span>
-        <span class="cov1" title="1">return s.client.client, nil</span>
+        <span class="cov6" title="48">return s.client.client, nil</span>
 }
 
 // Put stores an object in S3-compatible storage.
-func (s *Storage) Put(ctx context.Context, bucket, key string, reader io.Reader, opts *storage.PutOptions) error <span class="cov7" title="92">{
+func (s *Storage) Put(ctx context.Context, bucket, key string, reader io.Reader, opts *storage.PutOptions) error <span class="cov7" title="105">{
         ctx, span := tracer.Start(ctx, "S3.Put", trace.WithSpanKind(trace.SpanKindClient))
         defer span.End()
 
-        if opts == nil </span><span class="cov7" title="70">{
+        if opts == nil </span><span class="cov7" title="79">{
                 opts = &amp;storage.PutOptions{}
         }</span>
 
         // Set default bucket if not specified
-        <span class="cov7" title="92">if bucket == "" </span><span class="cov2" title="3">{
+        <span class="cov7" title="105">if bucket == "" </span><span class="cov2" title="4">{
                 bucket = s.cfg.DefaultBucket
         }</span>
 
-        <span class="cov7" title="92">span.SetAttributes(
+        <span class="cov7" title="105">span.SetAttributes(
                 attribute.String("bucket", bucket),
                 attribute.String("key", key),
                 attribute.String("content_type", opts.ContentType),
@@ -6367,14 +6376,14 @@ func (s *Storage) Put(ctx context.Context, bucket, key string, reader io.Reader,
         }</span>
 
         // Upload the object
-        <span class="cov0" title="0">info, err := client.PutObject(ctx, bucket, key, reader, -1, minioOpts)
+        <span class="cov4" title="13">info, err := client.PutObject(ctx, bucket, key, reader, -1, minioOpts)
         if err != nil </span><span class="cov0" title="0">{
                 span.RecordError(err)
                 span.SetStatus(codes.Error, err.Error())
                 return errors.Wrapf(err, "failed to put object %s/%s", bucket, key)
         }</span>
 
-        <span class="cov0" title="0">span.SetAttributes(
+        <span class="cov4" title="13">span.SetAttributes(
                 attribute.Int64("size", info.Size),
                 attribute.String("etag", info.ETag),
         )
@@ -6385,15 +6394,15 @@ func (s *Storage) Put(ctx context.Context, bucket, key string, reader io.Reader,
 }
 
 // Get retrieves an object from S3-compatible storage.
-func (s *Storage) Get(ctx context.Context, bucket, key string) (io.ReadCloser, *storage.ObjectInfo, error) <span class="cov6" title="68">{
+func (s *Storage) Get(ctx context.Context, bucket, key string) (io.ReadCloser, *storage.ObjectInfo, error) <span class="cov7" title="74">{
         ctx, span := tracer.Start(ctx, "S3.Get", trace.WithSpanKind(trace.SpanKindClient))
         defer span.End()
 
-        if bucket == "" </span><span class="cov2" title="4">{
+        if bucket == "" </span><span class="cov3" title="5">{
                 bucket = s.cfg.DefaultBucket
         }</span>
 
-        <span class="cov6" title="68">span.SetAttributes(
+        <span class="cov7" title="74">span.SetAttributes(
                 attribute.String("bucket", bucket),
                 attribute.String("key", key),
         )
@@ -6407,7 +6416,7 @@ func (s *Storage) Get(ctx context.Context, bucket, key string) (io.ReadCloser, *
         }</span>
 
         // Get the object
-        <span class="cov0" title="0">obj, err := client.GetObject(ctx, bucket, key, minio.GetObjectOptions{})
+        <span class="cov3" title="6">obj, err := client.GetObject(ctx, bucket, key, minio.GetObjectOptions{})
         if err != nil </span><span class="cov0" title="0">{
                 span.RecordError(err)
                 span.SetStatus(codes.Error, err.Error())
@@ -6415,18 +6424,18 @@ func (s *Storage) Get(ctx context.Context, bucket, key string) (io.ReadCloser, *
         }</span>
 
         // Get object info to return metadata
-        <span class="cov0" title="0">stat, err := obj.Stat()
-        if err != nil </span><span class="cov0" title="0">{
+        <span class="cov3" title="6">stat, err := obj.Stat()
+        if err != nil </span><span class="cov2" title="3">{
                 closeErr := obj.Close()
                 if closeErr != nil </span><span class="cov0" title="0">{
                         s.logger.With("error", closeErr).Error("failed to close object after stat error")
                 }</span>
-                <span class="cov0" title="0">span.RecordError(err)
+                <span class="cov2" title="3">span.RecordError(err)
                 span.SetStatus(codes.Error, err.Error())
                 return nil, nil, toStorageError(err, bucket, key)</span>
         }
 
-        <span class="cov0" title="0">info := &amp;storage.ObjectInfo{
+        <span class="cov2" title="3">info := &amp;storage.ObjectInfo{
                 Key:          key,
                 Size:         stat.Size,
                 LastModified: stat.LastModified,
@@ -6445,15 +6454,15 @@ func (s *Storage) Get(ctx context.Context, bucket, key string) (io.ReadCloser, *
 }
 
 // Delete removes an object from S3-compatible storage.
-func (s *Storage) Delete(ctx context.Context, bucket, key string) error <span class="cov6" title="41">{
+func (s *Storage) Delete(ctx context.Context, bucket, key string) error <span class="cov6" title="44">{
         ctx, span := tracer.Start(ctx, "S3.Delete", trace.WithSpanKind(trace.SpanKindClient))
         defer span.End()
 
-        if bucket == "" </span><span class="cov2" title="3">{
+        if bucket == "" </span><span class="cov2" title="4">{
                 bucket = s.cfg.DefaultBucket
         }</span>
 
-        <span class="cov6" title="41">span.SetAttributes(
+        <span class="cov6" title="44">span.SetAttributes(
                 attribute.String("bucket", bucket),
                 attribute.String("key", key),
         )
@@ -6466,28 +6475,28 @@ func (s *Storage) Delete(ctx context.Context, bucket, key string) error <span cl
                 return err
         }</span>
 
-        <span class="cov0" title="0">err = client.RemoveObject(ctx, bucket, key, minio.RemoveObjectOptions{})
+        <span class="cov2" title="3">err = client.RemoveObject(ctx, bucket, key, minio.RemoveObjectOptions{})
         if err != nil </span><span class="cov0" title="0">{
                 span.RecordError(err)
                 span.SetStatus(codes.Error, err.Error())
                 return toStorageError(err, bucket, key)
         }</span>
 
-        <span class="cov0" title="0">span.SetStatus(codes.Ok, "")
+        <span class="cov2" title="3">span.SetStatus(codes.Ok, "")
         s.logger.Debug("Object deleted", "bucket", bucket, "key", key)
         return nil</span>
 }
 
 // Exists checks if an object exists in S3-compatible storage.
-func (s *Storage) Exists(ctx context.Context, bucket, key string) (bool, error) <span class="cov6" title="54">{
+func (s *Storage) Exists(ctx context.Context, bucket, key string) (bool, error) <span class="cov6" title="60">{
         ctx, span := tracer.Start(ctx, "S3.Exists", trace.WithSpanKind(trace.SpanKindClient))
         defer span.End()
 
-        if bucket == "" </span><span class="cov2" title="4">{
+        if bucket == "" </span><span class="cov3" title="5">{
                 bucket = s.cfg.DefaultBucket
         }</span>
 
-        <span class="cov6" title="54">span.SetAttributes(
+        <span class="cov6" title="60">span.SetAttributes(
                 attribute.String("bucket", bucket),
                 attribute.String("key", key),
         )
@@ -6500,9 +6509,9 @@ func (s *Storage) Exists(ctx context.Context, bucket, key string) (bool, error) 
                 return false, err
         }</span>
 
-        <span class="cov0" title="0">_, err = client.StatObject(ctx, bucket, key, minio.StatObjectOptions{})
-        if err != nil </span><span class="cov0" title="0">{
-                if isNotFoundError(err) </span><span class="cov0" title="0">{
+        <span class="cov3" title="6">_, err = client.StatObject(ctx, bucket, key, minio.StatObjectOptions{})
+        if err != nil </span><span class="cov2" title="3">{
+                if isNotFoundError(err) </span><span class="cov2" title="3">{
                         span.SetStatus(codes.Ok, "")
                         return false, nil
                 }</span>
@@ -6511,12 +6520,12 @@ func (s *Storage) Exists(ctx context.Context, bucket, key string) (bool, error) 
                 return false, toStorageError(err, bucket, key)</span>
         }
 
-        <span class="cov0" title="0">span.SetStatus(codes.Ok, "")
+        <span class="cov2" title="3">span.SetStatus(codes.Ok, "")
         return true, nil</span>
 }
 
 // List lists objects in the specified bucket.
-func (s *Storage) List(ctx context.Context, bucket string, opts *storage.ListOptions) (*storage.ListResult, error) <span class="cov5" title="30">{
+func (s *Storage) List(ctx context.Context, bucket string, opts *storage.ListOptions) (*storage.ListResult, error) <span class="cov5" title="33">{
         ctx, span := tracer.Start(ctx, "S3.List", trace.WithSpanKind(trace.SpanKindClient))
         defer span.End()
 
@@ -6524,11 +6533,11 @@ func (s *Storage) List(ctx context.Context, bucket string, opts *storage.ListOpt
                 bucket = s.cfg.DefaultBucket
         }</span>
 
-        <span class="cov5" title="30">if opts == nil </span><span class="cov4" title="9">{
+        <span class="cov5" title="33">if opts == nil </span><span class="cov4" title="9">{
                 opts = &amp;storage.ListOptions{}
         }</span>
 
-        <span class="cov5" title="30">span.SetAttributes(
+        <span class="cov5" title="33">span.SetAttributes(
                 attribute.String("bucket", bucket),
                 attribute.String("prefix", opts.Prefix),
                 attribute.Bool("recursive", opts.Recursive),
@@ -6551,11 +6560,11 @@ func (s *Storage) List(ctx context.Context, bucket string, opts *storage.ListOpt
         }</span>
 
         // List objects
-        <span class="cov0" title="0">objectCh := client.ListObjects(ctx, bucket, minioOpts)
+        <span class="cov2" title="3">objectCh := client.ListObjects(ctx, bucket, minioOpts)
 
         var objects []storage.ObjectInfo
 
-        for object := range objectCh </span><span class="cov0" title="0">{
+        for object := range objectCh </span><span class="cov4" title="17">{
                 if object.Err != nil </span><span class="cov0" title="0">{
                         span.RecordError(object.Err)
                         span.SetStatus(codes.Error, object.Err.Error())
@@ -6563,11 +6572,11 @@ func (s *Storage) List(ctx context.Context, bucket string, opts *storage.ListOpt
                 }</span>
 
                 // Skip directory markers (objects ending with "/" with size 0)
-                <span class="cov0" title="0">if strings.HasSuffix(object.Key, "/") &amp;&amp; object.Size == 0 </span><span class="cov0" title="0">{
+                <span class="cov4" title="17">if strings.HasSuffix(object.Key, "/") &amp;&amp; object.Size == 0 </span><span class="cov0" title="0">{
                         continue</span>
                 }
 
-                <span class="cov0" title="0">objects = append(objects, storage.ObjectInfo{
+                <span class="cov4" title="17">objects = append(objects, storage.ObjectInfo{
                         Key:          object.Key,
                         Size:         object.Size,
                         LastModified: object.LastModified,
@@ -6577,7 +6586,7 @@ func (s *Storage) List(ctx context.Context, bucket string, opts *storage.ListOpt
                 })</span>
         }
 
-        <span class="cov0" title="0">result := &amp;storage.ListResult{
+        <span class="cov2" title="3">result := &amp;storage.ListResult{
                 Objects:     objects,
                 IsTruncated: false, // minio-go v7 doesn't provide this info directly
         }
@@ -6591,7 +6600,7 @@ func (s *Storage) List(ctx context.Context, bucket string, opts *storage.ListOpt
 }
 
 // GetFileHeader retrieves the first 4096 bytes of an object from S3-compatible storage.
-func (s *Storage) GetFileHeader(ctx context.Context, bucket, key string) ([]byte, error) <span class="cov1" title="1">{
+func (s *Storage) GetFileHeader(ctx context.Context, bucket, key string) ([]byte, error) <span class="cov2" title="4">{
         ctx, span := tracer.Start(ctx, "S3.GetFileHeader", trace.WithSpanKind(trace.SpanKindClient))
         defer span.End()
 
@@ -6599,7 +6608,7 @@ func (s *Storage) GetFileHeader(ctx context.Context, bucket, key string) ([]byte
                 bucket = s.cfg.DefaultBucket
         }</span>
 
-        <span class="cov1" title="1">span.SetAttributes(
+        <span class="cov2" title="4">span.SetAttributes(
                 attribute.String("bucket", bucket),
                 attribute.String("key", key),
         )
@@ -6613,30 +6622,30 @@ func (s *Storage) GetFileHeader(ctx context.Context, bucket, key string) ([]byte
         }</span>
 
         // Prepare range options to read first 4096 bytes (bytes 0-4095 inclusive)
-        <span class="cov0" title="0">opts := minio.GetObjectOptions{}
+        <span class="cov2" title="3">opts := minio.GetObjectOptions{}
         if err := opts.SetRange(0, 4095); err != nil </span><span class="cov0" title="0">{ // 4096 bytes: 0..4095 in inclusive range
                 span.RecordError(err)
                 span.SetStatus(codes.Error, err.Error())
                 return nil, err
         }</span>
 
-        <span class="cov0" title="0">obj, err := client.GetObject(ctx, bucket, key, opts)
+        <span class="cov2" title="3">obj, err := client.GetObject(ctx, bucket, key, opts)
         if err != nil </span><span class="cov0" title="0">{
                 span.RecordError(err)
                 span.SetStatus(codes.Error, err.Error())
                 return nil, toStorageError(err, bucket, key)
         }</span>
-        <span class="cov0" title="0">defer obj.Close()
+        <span class="cov2" title="3">defer obj.Close()
 
         head := make([]byte, 4096)
         n, err := io.ReadFull(obj, head)
-        if err != nil &amp;&amp; err != io.EOF &amp;&amp; err != io.ErrUnexpectedEOF </span><span class="cov0" title="0">{
+        if err != nil &amp;&amp; err != io.EOF &amp;&amp; err != io.ErrUnexpectedEOF </span><span class="cov1" title="1">{
                 span.RecordError(err)
                 span.SetStatus(codes.Error, err.Error())
-                return nil, errors.Wrapf(err, "failed to read object header %s/%s", bucket, key)
+                return nil, toStorageError(err, bucket, key)
         }</span>
 
-        <span class="cov0" title="0">span.SetAttributes(
+        <span class="cov1" title="2">span.SetAttributes(
                 attribute.Int("bytes_read", n),
         )
         span.SetStatus(codes.Ok, "")
