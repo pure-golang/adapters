@@ -1,11 +1,8 @@
 ---
 name: "executor_cli"
 description: "Паттерн CLI Executor: запуск внешних команд с контекстом, логированием и трейсингом"
-modes: [Code, Ask]
 ---
-# Skill: CLI Executor
-
-## Tactical Instructions
+# CLI Executor
 
 ```go
 // Create CLI executor
@@ -28,7 +25,7 @@ if err != nil {
 }
 ```
 
-### Notes
+## Notes
 - Uses `os/exec` standard library internally
 - Implements `Executor` interface
 - Supports context cancellation

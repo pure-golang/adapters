@@ -1,11 +1,8 @@
 ---
 name: "doc_go"
 description: "Требования к doc.go: формат, обязательные секции, синхронизация с кодом"
-modes: [Code, Review]
 ---
-# Skill: doc.go Requirements
-
-## Tactical Instructions
+# doc.go Requirements
 
 Every package and sub-package **must** have a `doc.go` with a package-level comment containing:
 
@@ -14,7 +11,7 @@ Every package and sub-package **must** have a `doc.go` with a package-level comm
 3. **Env variables** — list with defaults
 4. **Constraints** — thread-safety, required `Close()`, ordering requirements, etc.
 
-### Template
+## Template
 ```go
 // Package {name} implements the {parent}.{Interface} interface for {Service}.
 //
@@ -36,7 +33,7 @@ Every package and sub-package **must** have a `doc.go` with a package-level comm
 package {name}
 ```
 
-### Real Example
+## Real Example
 ```go
 // Package redis implements the kv.Store interface for Redis.
 //
@@ -52,7 +49,7 @@ package {name}
 package redis
 ```
 
-### Rules
+## Rules
 - `doc.go` is the **package contract** — must be kept in sync with code
 - Reviewed on every PR
 - **When working in a package directory, read its `doc.go` first** to optimize inference context

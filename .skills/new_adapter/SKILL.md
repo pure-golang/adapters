@@ -1,13 +1,10 @@
 ---
 name: "new_adapter"
 description: "Чеклист добавления нового адаптера: структура, doc.go, Config, интерфейс, тесты"
-modes: [Architect, Code, Orchestrator]
 ---
-# Skill: Adding a New Adapter
+# Adding a New Adapter
 
-## Tactical Instructions
-
-### Checklist (execute in order)
+## Checklist (execute in order)
 
 1. **Directory structure**: `{adapter_type}/{adapter_name}/`
    - Examples: `queue/nats/`, `db/pg/pgxpool/`, `storage/gcs/`

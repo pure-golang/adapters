@@ -1,13 +1,10 @@
 ---
 name: "go_commands"
 description: "Команды для запуска тестов, сборки и управления зависимостями Go-модуля"
-modes: [Code, Debug, Orchestrator]
 ---
-# Skill: Go Commands
+# Go Commands
 
-## Tactical Instructions
-
-### Testing
+## Testing
 ```bash
 # Run all tests
 go test .
@@ -27,7 +24,7 @@ go test -v ./...
 go test -run TestFunctionName ./path/to/pkg
 ```
 
-### Build
+## Build
 ```bash
 # Build the module
 go build ./...
@@ -37,7 +34,7 @@ go mod tidy
 go mod verify
 ```
 
-### Dependencies
+## Dependencies
 ```bash
 # Download dependencies
 go mod download
@@ -46,7 +43,7 @@ go mod download
 go get -u ./...
 ```
 
-### Docker for Integration Tests
+## Docker for Integration Tests
 Integration tests use `github.com/testcontainers/testcontainers-go`.
 
 **Docker must be running** for integration tests to pass:

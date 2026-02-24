@@ -1,13 +1,10 @@
 ---
 name: "storage_s3"
 description: "Паттерны S3-совместимого хранилища (MinIO, Yandex Cloud, AWS S3): CRUD, range, presigned URLs, multipart"
-modes: [Code, Ask]
 ---
-# Skill: S3/MinIO Storage Patterns
+# S3/MinIO Storage Patterns
 
-## Tactical Instructions
-
-### Basic Operations
+## Basic Operations
 ```go
 cfg := minio.Config{
     Endpoint:  "localhost:9000",
@@ -35,7 +32,7 @@ exists, err := storage.Exists(ctx, "my-bucket", "my-key")
 err = storage.Delete(ctx, "my-bucket", "my-key")
 ```
 
-### Range Requests (partial reads)
+## Range Requests (partial reads)
 ```go
 // GetFileHeader retrieves first 4096 bytes using range request (opts.SetRange(0, 4095))
 // Useful for file type detection without downloading entire file
@@ -47,7 +44,7 @@ if err != nil {
 fileType := http.DetectContentType(header)
 ```
 
-### Presigned URLs
+## Presigned URLs
 ```go
 // Generate temporary URL for direct client access (bypasses your server)
 url, err := storage.GetPresignedURL(ctx, "my-bucket", "my-key", &storage.PresignedURLOptions{
@@ -56,7 +53,7 @@ url, err := storage.GetPresignedURL(ctx, "my-bucket", "my-key", &storage.Presign
 })
 ```
 
-### Multipart Upload (files > 5MB)
+## Multipart Upload (files > 5MB)
 ```go
 upload, err := storage.CreateMultipartUpload(ctx, "bucket", "large-file.bin", nil)
 
@@ -75,7 +72,7 @@ info, err := storage.CompleteMultipartUpload(ctx, "bucket", "large-file.bin",
     upload.UploadID, &storage.CompleteMultipartUploadOptions{Parts: parts})
 ```
 
-### List Objects
+## List Objects
 ```go
 result, err := storage.List(ctx, "my-bucket", &storage.ListOptions{
     Prefix:    "photos/2024/",
@@ -88,7 +85,7 @@ for _, obj := range result.Objects {
 }
 ```
 
-### Notes
+## Notes
 - Span naming pattern: `S3.operation` (e.g., `S3.GetFileHeader`, `S3.Put`, `S3.Get`)
 - All operations support context cancellation and OpenTelemetry tracing
 - Multipart upload recommended for files > 5MB

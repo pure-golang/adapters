@@ -1,13 +1,10 @@
 ---
 name: "testing_conventions"
 description: "Соглашения по тестам: маркеры unit/integration, AAA-паттерн, assertions, t.Parallel, t.Cleanup"
-modes: [Code, Review]
 ---
-# Skill: Testing Conventions
+# Testing Conventions
 
-## Tactical Instructions
-
-### Test Type Markers
+## Test Type Markers
 
 **Unit tests** — use `t.Parallel()` at the beginning:
 ```go
@@ -27,7 +24,7 @@ func TestSomethingIntegration(t *testing.T) {
 }
 ```
 
-### AAA Pattern (Arrange, Act, Assert)
+## AAA Pattern (Arrange, Act, Assert)
 ```go
 func TestConnection_Exec(t *testing.T) {
     if testing.Short() {
@@ -50,7 +47,7 @@ func TestConnection_Exec(t *testing.T) {
 }
 ```
 
-### Assertions (testify)
+## Assertions (testify)
 ```go
 // Fail immediately on error
 require.NoError(t, err)
@@ -66,7 +63,7 @@ assert.ErrorIs(t, err, expectedErr)
 
 **Rule**: Use `require` for setup/preconditions. Use `assert` for multiple independent checks.
 
-### Resource Cleanup
+## Resource Cleanup
 Prefer `t.Cleanup()` over `defer` in tests:
 ```go
 func TestDB(t *testing.T) {
@@ -77,7 +74,7 @@ func TestDB(t *testing.T) {
 }
 ```
 
-### Test Organization
+## Test Organization
 - Unit tests: Standard `*_test.go` files in the same package
 - Integration tests: Use `testify/suite` for complex setups with containers
 - Suites: `SetupSuite()` / `TearDownSuite()` for container lifecycle

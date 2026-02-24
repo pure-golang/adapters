@@ -1,13 +1,10 @@
 ---
 name: "integration_testing"
 description: "Паттерн интеграционных тестов с testcontainers-go: setup, teardown, skip-флаг, context timeout"
-modes: [Code, Debug]
 ---
-# Skill: Integration Testing
+# Integration Testing
 
-## Tactical Instructions
-
-### testcontainers-go Suite Pattern
+## testcontainers-go Suite Pattern
 ```go
 type MySuite struct {
     suite.Suite
@@ -53,7 +50,7 @@ func (s *MySuite) TearDownSuite() {
 }
 ```
 
-### RabbitMQ Container
+## RabbitMQ Container
 ```go
 ContainerRequest: testcontainers.ContainerRequest{
     Image:        "rabbitmq:management-alpine",
@@ -63,7 +60,7 @@ ContainerRequest: testcontainers.ContainerRequest{
 },
 ```
 
-### Skip Marker (Required for all integration tests)
+## Skip Marker (Required for all integration tests)
 ```go
 func TestMyIntegration(t *testing.T) {
     if testing.Short() {
@@ -73,14 +70,14 @@ func TestMyIntegration(t *testing.T) {
 }
 ```
 
-### Context Timeout in Integration Tests
+## Context Timeout in Integration Tests
 Use `context.WithTimeout` instead of plain `context.Background()`:
 ```go
 ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 defer cancel()
 ```
 
-### Readiness Strategies
+## Readiness Strategies
 ```go
 // Wait for log message
 wait.ForLog("ready to accept connections").WithOccurrence(2)

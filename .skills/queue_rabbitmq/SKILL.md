@@ -1,13 +1,10 @@
 ---
 name: "queue_rabbitmq"
 description: "Паттерны RabbitMQ: Topology/Definitions, Publisher, Subscriber (retry via x-death), MultiQueueSubscriber"
-modes: [Code, Ask, Debug]
 ---
-# Skill: Queue Patterns (RabbitMQ)
+# Queue Patterns (RabbitMQ)
 
-## Tactical Instructions
-
-### Topology (Definitions)
+## Topology (Definitions)
 
 `Definitions` mirrors the RabbitMQ management API JSON format:
 - `.JSON()` → `rabbitmq_definitions.json` for docker-compose `load_definitions` / `rabbitmqctl import_definitions`
@@ -15,7 +12,7 @@ modes: [Code, Ask, Debug]
 
 See `queue/rabbitmq/README.md` for full DLX topology example.
 
-### Publisher
+## Publisher
 
 Constructor signature:
 ```go
@@ -28,7 +25,7 @@ NewPublisher(dialer, PublisherConfig{
 })
 ```
 
-### Subscriber (single queue)
+## Subscriber (single queue)
 
 Retry logic via `x-death` header (survives process restarts):
 
@@ -51,7 +48,7 @@ NewSubscriber(dialer, SubscriberConfig{
 })
 ```
 
-### MultiQueueSubscriber (multiple queues, single channel)
+## MultiQueueSubscriber (multiple queues, single channel)
 
 - Single channel with `Qos(N, global=true)` — prefetch limit across all consumers
 - Single handler goroutine (fan-in pattern)

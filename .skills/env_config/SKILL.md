@@ -1,13 +1,10 @@
 ---
 name: "env_config"
 description: "Паттерн конфигурации через env: envconfig-теги, InitConfig, .env файл"
-modes: [Code, Ask]
 ---
-# Skill: Environment Configuration
+# Environment Configuration
 
-## Tactical Instructions
-
-### Config Struct Pattern
+## Config Struct Pattern
 ```go
 type Config struct {
     Host           string        `envconfig:"SERVICE_HOST"    default:"localhost"`
@@ -23,7 +20,7 @@ Tag reference:
 - `required:"true"` — fail if not set
 - `default:"value"` — fallback value
 
-### Loading Config
+## Loading Config
 ```go
 var cfg Config
 if err := env.InitConfig(&cfg); err != nil {
@@ -33,7 +30,7 @@ if err := env.InitConfig(&cfg); err != nil {
 
 `env.InitConfig` loads `.env` file from the project root (via `godotenv`) and then parses env variables via `envconfig`.
 
-### .env File Example
+## .env File Example
 ```bash
 # PostgreSQL
 POSTGRES_HOST=localhost

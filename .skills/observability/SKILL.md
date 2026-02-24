@@ -1,13 +1,10 @@
 ---
 name: "observability"
 description: "Трейсинг (OpenTelemetry), логирование (slog), метрики (Prometheus), порядок middleware"
-modes: [Code, Ask, Review]
 ---
-# Skill: Observability
+# Observability
 
-## Tactical Instructions
-
-### Tracing (OpenTelemetry)
+## Tracing (OpenTelemetry)
 
 Initialize tracer as package variable:
 ```go
@@ -32,7 +29,7 @@ span.SetAttributes(
 )
 ```
 
-### Logging (slog)
+## Logging (slog)
 
 Three logger implementations:
 | Package | Use case |
@@ -58,12 +55,12 @@ slog.Debug("message", "key", value)
 
 Error logging automatically includes stack traces for errors implementing `StackTrace()` (from `github.com/pkg/errors`).
 
-### Metrics (Prometheus)
+## Metrics (Prometheus)
 
 Prometheus metrics are integrated via `metrics/prometheus.go`.
 Standard Go runtime metrics are exposed automatically when the adapter is initialized.
 
-### Middleware Order (gRPC / HTTP)
+## Middleware Order (gRPC / HTTP)
 
 Apply middleware in this order (outermost first):
 1. **Recovery** — catch panics before anything else

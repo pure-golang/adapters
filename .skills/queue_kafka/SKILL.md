@@ -1,11 +1,8 @@
 ---
 name: "queue_kafka"
 description: "Паттерны Kafka: dialer, publisher, subscriber с retry и backoff"
-modes: [Code, Ask]
 ---
-# Skill: Queue Patterns (Kafka)
-
-## Tactical Instructions
+# Queue Patterns (Kafka)
 
 ```go
 // Create Kafka dialer
@@ -43,7 +40,7 @@ go sub.Listen(func(ctx context.Context, msg queue.Delivery) (bool, error) {
 })
 ```
 
-### Handler Return Values
+## Handler Return Values
 - `false, nil` — success, commit offset
 - `true, err` — retry (up to `MaxTryNum` times with `Backoff` delay)
 - `false, err` — skip message (no retry), log error

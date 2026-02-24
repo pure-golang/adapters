@@ -1,13 +1,10 @@
 ---
 name: "database_patterns"
 description: "Паттерны работы с PostgreSQL: подключение, транзакции, named queries, выбор драйвера"
-modes: [Code, Ask, Review]
 ---
-# Skill: Database Patterns
+# Database Patterns
 
-## Tactical Instructions
-
-### Connection (sqlx)
+## Connection (sqlx)
 ```go
 cfg := sqlx.Config{
     Host:           "localhost",
@@ -24,7 +21,7 @@ db, err := sqlx.Connect(context.Background(), cfg)
 defer db.Close()
 ```
 
-### Transactions
+## Transactions
 ```go
 err := db.RunTx(ctx, nil, func(ctx context.Context, tx *sqlx.Tx) error {
     _, err := tx.Exec(ctx, "UPDATE accounts SET balance = balance - $1 WHERE id = $2", 100, 1)
@@ -36,7 +33,7 @@ err := db.RunTx(ctx, nil, func(ctx context.Context, tx *sqlx.Tx) error {
 })
 ```
 
-### Transaction Isolation Levels
+## Transaction Isolation Levels
 ```go
 opts := &sqlx.TxOptions{
     Isolation: sql.LevelRepeatableRead,
@@ -48,7 +45,7 @@ err := db.RunTx(ctx, opts, func(ctx context.Context, tx *sqlx.Tx) error {
 })
 ```
 
-### Named Queries (sqlx)
+## Named Queries (sqlx)
 ```go
 type User struct {
     ID   int    `db:"id"`
@@ -62,7 +59,7 @@ result, err := db.NamedExec(ctx,
     user)
 ```
 
-### Constraint Violation Helpers
+## Constraint Violation Helpers
 ```go
 // PostgreSQL constraint checks
 IsUniqueViolation(err)
@@ -72,7 +69,7 @@ IsNotNullViolation(err)
 IsConstraintViolation(err)
 ```
 
-### Driver Selection
+## Driver Selection
 | Adapter | Driver | Use when |
 |---------|--------|----------|
 | `db/pg/sqlx` | `lib/pq` | Traditional projects, simple queries |
@@ -80,12 +77,12 @@ IsConstraintViolation(err)
 
 **pgx is recommended for new projects.**
 
-### Query Timeout
+## Query Timeout
 - Applied via context wrapping (`WithTimeout()`)
 - Default timeout configured in `Config.QueryTimeout`
 - SQL queries include timeout automatically through the wrapper
 
-### Transaction Rollback Notes
+## Transaction Rollback Notes
 - `RunTx()` automatically rolls back on error or panic
 - Manual `Rollback()` must check for `sql.ErrTxDone` (already committed/rolled back)
 - Transactions use defer-based rollback pattern internally
