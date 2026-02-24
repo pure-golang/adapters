@@ -28,8 +28,8 @@ description: "Чеклист добавления нового адаптера:
    }
    ```
 
-5. **Constructor**: Expose `New(cfg Config)` returning the parent interface
-   - If connection required at construction: `NewDefault(cfg Config) (Interface, error)`
+5. **Constructor**: Expose `New(cfg Config)` returning the concrete type (never error)
+   - Connection/initialization errors are deferred to `Start()` or `Connect()` methods
 
 6. **OpenTelemetry tracing**: Add spans for all operations
    ```go
