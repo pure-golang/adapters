@@ -22,6 +22,7 @@ L1 - Драйвера сервисов:
 ```bash
 make
 task test
+task claude
 ```
 
 ### Настройка автодополнения для task

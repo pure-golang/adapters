@@ -16,6 +16,8 @@
 
 SUMMARY.md
 IMPROVE*.md
-/plans
+plans/
+.claude/
+.kilocode/
 
 .gitlab-ci.yml

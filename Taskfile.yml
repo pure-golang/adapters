@@ -69,3 +69,11 @@ tasks:
     desc: "Run short tests"
     cmds:
       - go test -v -race -short -failfast -count=1 ./...
+
+  claude:
+    desc: "Setup Claude Code"
+    cmds:
+      - mkdir -p .claude
+      - ln -sf ../AGENTS.md .claude/CLAUDE.md
+      - rm -rf .claude/skills 
+      - ln -sf ../.skills .claude/skills
