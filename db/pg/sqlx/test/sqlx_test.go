@@ -27,7 +27,7 @@ func TestMain(m *testing.M) {
 	flag.Parse()
 
 	if testing.Short() {
-		fmt.Println("Skipping integration tests in short mode")
+		fmt.Println("integration test")
 		os.Exit(0)
 	}
 
