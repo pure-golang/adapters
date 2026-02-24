@@ -93,9 +93,7 @@ github.com/pure-golang/adapters/httpserver/std/server.go:42:			New				100.0%
 github.com/pure-golang/adapters/httpserver/std/server.go:54:			Start				87.5%
 github.com/pure-golang/adapters/httpserver/std/server.go:70:			Close				85.7%
 github.com/pure-golang/adapters/httpserver/std/server.go:83:			Run				100.0%
-github.com/pure-golang/adapters/kv/kv.go:77:					NewDefault			100.0%
-github.com/pure-golang/adapters/kv/kv.go:104:					InitDefault			100.0%
-github.com/pure-golang/adapters/kv/noop/noop.go:12:				NewStore			100.0%
+github.com/pure-golang/adapters/kv/noop/noop.go:12:				New				100.0%
 github.com/pure-golang/adapters/kv/noop/noop.go:17:				Get				100.0%
 github.com/pure-golang/adapters/kv/noop/noop.go:22:				Set				100.0%
 github.com/pure-golang/adapters/kv/noop/noop.go:27:				Delete				100.0%
@@ -147,7 +145,7 @@ github.com/pure-golang/adapters/kv/redis/config.go:23:				NewDefault			94.1%
 github.com/pure-golang/adapters/kv/redis/errors.go:17:				Error				100.0%
 github.com/pure-golang/adapters/kv/redis/errors.go:22:				IsNil				100.0%
 github.com/pure-golang/adapters/kv/redis/logger.go:8:				newLogger			100.0%
-github.com/pure-golang/adapters/kv/redis/tracing.go:15:				startSpan			100.0%
+github.com/pure-golang/adapters/kv/redis/tracing.go:15:				startSpan			83.3%
 github.com/pure-golang/adapters/kv/redis/tracing.go:29:				recordError			75.0%
 github.com/pure-golang/adapters/logger/devslog/devslog.go:10:			NewDefault			100.0%
 github.com/pure-golang/adapters/logger/logger.go:38:				NewDefault			100.0%
@@ -234,9 +232,7 @@ github.com/pure-golang/adapters/queue/rabbitmq/subscriber.go:89:		listen				66.7
 github.com/pure-golang/adapters/queue/rabbitmq/subscriber.go:124:		handleDelivery			69.7%
 github.com/pure-golang/adapters/queue/rabbitmq/subscriber.go:190:		deathCount			100.0%
 github.com/pure-golang/adapters/queue/rabbitmq/subscriber.go:206:		newDelivery			100.0%
-github.com/pure-golang/adapters/queue/rabbitmq/topology.go:69:			JSON				100.0%
-github.com/pure-golang/adapters/queue/rabbitmq/topology.go:76:			Apply				76.9%
-github.com/pure-golang/adapters/queue/rabbitmq/topology.go:108:			toTable				100.0%
+github.com/pure-golang/adapters/queue/rabbitmq/topology.go:66:			JSON				100.0%
 github.com/pure-golang/adapters/queue/rabbitmq/tracing.go:15:			Get				100.0%
 github.com/pure-golang/adapters/queue/rabbitmq/tracing.go:19:			Set				100.0%
 github.com/pure-golang/adapters/queue/rabbitmq/tracing.go:23:			Keys				100.0%
@@ -275,4 +271,4 @@ github.com/pure-golang/adapters/tracing/jaeger/jaeger.go:30:			Close				50.0%
 github.com/pure-golang/adapters/tracing/jaeger/jaeger.go:45:			NewProviderBuilder		90.0%
 github.com/pure-golang/adapters/tracing/tracing.go:21:				Init				100.0%
 github.com/pure-golang/adapters/tracing/tracing.go:36:				Close				100.0%
-total:										(statements)			79.9%
+total:										(statements)			79.8%
