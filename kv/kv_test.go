@@ -1,31 +1,23 @@
-package kv
+package kv_test
 
 import (
 	"context"
-	"os"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/pure-golang/adapters/kv/noop"
-	"github.com/pure-golang/adapters/kv/redis"
+	"github.com/pure-golang/adapters/kv"
+	kvnoop "github.com/pure-golang/adapters/kv/noop"
+	kvredis "github.com/pure-golang/adapters/kv/redis"
 )
 
-func TestNewDefault_NoopProvider(t *testing.T) {
-	// Set environment variable for noop provider
-	t.Setenv("KV_PROVIDER", "noop")
-
-	store, err := NewDefault()
-	require.NoError(t, err)
+func TestNoop_Store(t *testing.T) {
+	t.Parallel()
+	store := kvnoop.New()
 	require.NotNil(t, store)
 
-	// Verify it's a noop store by checking it implements Store interface
-	_, ok := store.(*noop.Store)
-	require.True(t, ok, "NewDefault with noop provider should return *noop.Store")
-
-	// Verify the store implements Store interface by testing basic operations
 	ctx := context.Background()
 
 	val, err := store.Get(ctx, "test")
@@ -110,83 +102,26 @@ func TestNewDefault_NoopProvider(t *testing.T) {
 	assert.NoError(t, err)
 }
 
-func TestNewDefault_RedisProvider_ConnectionError(t *testing.T) {
-	// Set environment variable for redis provider with invalid address
-	t.Setenv("KV_PROVIDER", "redis")
-	t.Setenv("REDIS_ADDR", "localhost:19999") // Non-existent Redis
-
-	store, err := NewDefault()
+func TestRedis_ConnectionError(t *testing.T) {
+	t.Parallel()
+	store, err := kvredis.NewDefault(kvredis.Config{Addr: "localhost:19999"})
 	require.Error(t, err)
 	assert.Nil(t, store)
-	// Error should contain "failed to ping redis" from redis package
 	assert.Contains(t, err.Error(), "failed to ping redis")
 }
 
-func TestNewDefault_UnknownProvider(t *testing.T) {
-	// Set environment variable for unknown provider
-	t.Setenv("KV_PROVIDER", "unknown_provider")
-
-	store, err := NewDefault()
-	require.Error(t, err)
-	assert.Nil(t, store)
-	assert.Contains(t, err.Error(), "unknown kv provider")
-	assert.Contains(t, err.Error(), "unknown_provider")
+func TestRedis_ClientImplementsStore(t *testing.T) {
+	t.Parallel()
+	var _ kv.Store = &kvredis.Client{}
 }
 
-func TestNewDefault_DefaultProvider(t *testing.T) {
-	// Unset KV_PROVIDER to test default behavior
-	// The default should be "noop" according to Config struct
-	unsetKey(t, "KV_PROVIDER")
-
-	store, err := NewDefault()
-	require.NoError(t, err)
+func TestNoop_StoreInterfaceMethods(t *testing.T) {
+	t.Parallel()
+	store := kvnoop.New()
 	require.NotNil(t, store)
 
-	// Should return noop store as default
-	_, ok := store.(*noop.Store)
-	require.True(t, ok, "NewDefault with no provider should return *noop.Store (default)")
-}
-
-func TestInitDefault_AliasForNewDefault(t *testing.T) {
-	t.Setenv("KV_PROVIDER", "noop")
-
-	// Test that InitDefault returns same result as NewDefault
-	store1, err1 := NewDefault()
-	store2, err2 := InitDefault()
-
-	assert.Equal(t, err1, err2)
-	assert.Equal(t, store1 != nil, store2 != nil)
-
-	// Both should be noop stores
-	noopStore1, ok1 := store1.(*noop.Store)
-	noopStore2, ok2 := store2.(*noop.Store)
-	assert.True(t, ok1)
-	assert.True(t, ok2)
-	assert.Equal(t, noopStore1, noopStore2)
-}
-
-func TestInitDefault_UnknownProvider(t *testing.T) {
-	t.Setenv("KV_PROVIDER", "invalid_provider")
-
-	store, err := InitDefault()
-	require.Error(t, err)
-	assert.Nil(t, store)
-	assert.Contains(t, err.Error(), "unknown kv provider")
-}
-
-func TestStore_InterfaceImplementation(t *testing.T) {
-	// Test that noop.Store implements Store interface
-	t.Setenv("KV_PROVIDER", "noop")
-
-	store, err := NewDefault()
-	require.NoError(t, err)
-	require.NotNil(t, store)
-
-	// Verify it implements the interface by checking type
-	var _ = store
 	ctx := context.Background()
 
-	// Test all interface methods are implemented
 	_, _ = store.Get(ctx, "key")
 	_ = store.Set(ctx, "key", "value", 0)
 	_ = store.Delete(ctx, "key")
@@ -210,95 +145,4 @@ func TestStore_InterfaceImplementation(t *testing.T) {
 	_ = store.SRem(ctx, "set", "member")
 	_ = store.Ping(ctx)
 	_ = store.Close()
-}
-
-func TestProvider_Constants(t *testing.T) {
-	t.Parallel()
-	// Test provider constants
-	assert.Equal(t, Provider("redis"), ProviderRedis)
-	assert.Equal(t, Provider("noop"), ProviderNoop)
-}
-
-func TestConfig_DefaultValues(t *testing.T) {
-	// Before parsing, default values are set by env.InitConfig
-	// After initialization with no env vars, defaults should apply:
-	// Provider defaults to "noop"
-	// RedisAddr defaults to "localhost:6379"
-	// RedisDB defaults to 0
-	// RedisMaxRetries defaults to 3
-	// RedisDialTimeout defaults to "5s"
-	// RedisReadTimeout defaults to "3s"
-	// RedisWriteTimeout defaults to "3s"
-	// RedisPoolSize defaults to 10
-
-	// Clear environment and test defaults
-	unsetKey(t, "KV_PROVIDER")
-	unsetKey(t, "REDIS_ADDR")
-	unsetKey(t, "REDIS_DB")
-	unsetKey(t, "REDIS_MAX_RETRIES")
-	unsetKey(t, "REDIS_DIAL_TIMEOUT")
-	unsetKey(t, "REDIS_READ_TIMEOUT")
-	unsetKey(t, "REDIS_WRITE_TIMEOUT")
-	unsetKey(t, "REDIS_POOL_SIZE")
-
-	store, err := NewDefault()
-	require.NoError(t, err)
-	assert.NotNil(t, store)
-
-	// Store should be noop (default)
-	_, ok := store.(*noop.Store)
-	assert.True(t, ok)
-
-	// Close the store
-	_ = store.Close()
-}
-
-// Test that redis.Client would implement Store interface if connected
-func TestRedis_ClientImplementsStore(t *testing.T) {
-	t.Parallel()
-	// This is a compile-time check that redis.Client implements Store
-	var _ Store = &redis.Client{}
-}
-
-func TestConfig_WithRedisSettings(t *testing.T) {
-	// Test that config can be created with custom Redis settings
-	t.Setenv("KV_PROVIDER", "redis")
-	t.Setenv("REDIS_ADDR", "custom-host:6380")
-	t.Setenv("REDIS_DB", "2")
-	t.Setenv("REDIS_MAX_RETRIES", "5")
-	t.Setenv("REDIS_POOL_SIZE", "20")
-
-	// This will fail to connect (no Redis running), but we can check
-	// the config is parsed correctly by checking the error message
-	store, err := NewDefault()
-	assert.Error(t, err)
-	assert.Nil(t, store)
-}
-
-// unsetKey unsets an environment variable and returns a function to restore it
-func unsetKey(t *testing.T, key string) {
-	t.Helper()
-	original, existed := os.LookupEnv(key)
-	err := os.Unsetenv(key)
-	require.NoError(t, err)
-
-	t.Cleanup(func() {
-		if existed {
-			err := os.Setenv(key, original)
-			require.NoError(t, err)
-		}
-	})
-}
-
-func TestNewDefault_EnvInitError(t *testing.T) {
-	// Test the error path when env.InitConfig fails
-	// This happens when we set an invalid environment variable value
-	// For example, a non-integer value for REDIS_DB
-	t.Setenv("KV_PROVIDER", "redis")
-	t.Setenv("REDIS_DB", "not-a-number")
-
-	store, err := NewDefault()
-	require.Error(t, err)
-	assert.Nil(t, store)
-	assert.Contains(t, err.Error(), "failed to init config")
 }

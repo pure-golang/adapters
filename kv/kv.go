@@ -3,35 +3,7 @@ package kv
 import (
 	"context"
 	"time"
-
-	"github.com/pkg/errors"
-
-	"github.com/pure-golang/adapters/env"
-	"github.com/pure-golang/adapters/kv/noop"
-	"github.com/pure-golang/adapters/kv/redis"
 )
-
-// Provider определяет тип key-value хранилища
-type Provider string
-
-const (
-	ProviderRedis Provider = "redis" // Redis хранилище
-	ProviderNoop  Provider = "noop"  // No-op реализация для тестов
-)
-
-// Config содержит конфигурацию для key-value хранилища
-type Config struct {
-	Provider Provider `envconfig:"KV_PROVIDER" default:"noop"`
-	// Redis конфигурация (используется когда ProviderRedis)
-	RedisAddr         string        `envconfig:"REDIS_ADDR" default:"localhost:6379"`
-	RedisPassword     string        `envconfig:"REDIS_PASSWORD"`
-	RedisDB           int           `envconfig:"REDIS_DB" default:"0"`
-	RedisMaxRetries   int           `envconfig:"REDIS_MAX_RETRIES" default:"3"`
-	RedisDialTimeout  time.Duration `envconfig:"REDIS_DIAL_TIMEOUT" default:"5s"`
-	RedisReadTimeout  time.Duration `envconfig:"REDIS_READ_TIMEOUT" default:"3s"`
-	RedisWriteTimeout time.Duration `envconfig:"REDIS_WRITE_TIMEOUT" default:"3s"`
-	RedisPoolSize     int           `envconfig:"REDIS_POOL_SIZE" default:"10"`
-}
 
 // Store определяет интерфейс key-value хранилища
 type Store interface {
@@ -71,36 +43,4 @@ type Store interface {
 	// Подключение
 	Ping(ctx context.Context) error
 	Close() error
-}
-
-// NewDefault создаёт инстанс Store, читая конфигурацию из переменных окружения
-func NewDefault() (Store, error) {
-	var cfg Config
-	if err := env.InitConfig(&cfg); err != nil {
-		return nil, errors.Wrap(err, "failed to init config")
-	}
-
-	switch cfg.Provider {
-	case ProviderRedis:
-		redisCfg := redis.Config{
-			Addr:         cfg.RedisAddr,
-			Password:     cfg.RedisPassword,
-			DB:           cfg.RedisDB,
-			MaxRetries:   cfg.RedisMaxRetries,
-			DialTimeout:  cfg.RedisDialTimeout,
-			ReadTimeout:  cfg.RedisReadTimeout,
-			WriteTimeout: cfg.RedisWriteTimeout,
-			PoolSize:     cfg.RedisPoolSize,
-		}
-		return redis.NewDefault(redisCfg)
-	case ProviderNoop:
-		return noop.NewStore(), nil
-	default:
-		return nil, errors.Errorf("unknown kv provider: %s", cfg.Provider)
-	}
-}
-
-// InitDefault создаёт и возвращает Store (для использования в main)
-func InitDefault() (Store, error) {
-	return NewDefault()
 }

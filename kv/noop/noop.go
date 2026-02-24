@@ -8,8 +8,8 @@ import (
 // Store представляет no-op реализацию key-value хранилища для тестов
 type Store struct{}
 
-// NewStore создаёт новый no-op Store
-func NewStore() *Store {
+// New создаёт новый no-op Store
+func New() *Store {
 	return &Store{}
 }
 

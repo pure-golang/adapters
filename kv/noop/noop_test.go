@@ -9,7 +9,7 @@ import (
 func TestStoreMethods(t *testing.T) {
 	t.Parallel()
 	ctx := context.Background()
-	s := NewStore()
+	s := New()
 
 	// Get
 	val, err := s.Get(ctx, "test")

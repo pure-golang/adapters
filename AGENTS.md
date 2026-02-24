@@ -481,19 +481,49 @@ LOG_PROVIDER=std_json
 LOG_LEVEL=info
 ```
 
+## doc.go
+
+Each package and sub-package **must** have a `doc.go` with a package-level comment containing:
+
+1. **What interface it implements** and from which parent package
+2. **Entry point** — which constructor to use
+3. **Env variables** — list with defaults
+4. **Constraints** — thread-safety, required `Close()`, ordering requirements, etc.
+
+```go
+// Package redis implements the kv.Store interface for Redis.
+//
+// Usage:
+//
+//	store := redis.New(cfg)
+//
+// Configuration:
+//
+//	REDIS_ADDR     — server address (default: localhost:6379)
+//	REDIS_PASSWORD — password
+//	REDIS_DB       — database number (default: 0)
+package redis
+```
+
+> `doc.go` is the package contract. Must be kept in sync with code and reviewed on every PR.
+
+**When working in a package directory, read its `doc.go` first to optimize inference context.**
+
 ## Adding New Adapters
 
 When adding a new adapter:
 
 1. Follow the directory structure: `adapter_type/adapter_name/`
-2. Create a `Config` struct with `envconfig` tags
-3. Implement `Provider` interface (or `RunableProvider` if it runs indefinitely)
-4. Add OpenTelemetry tracing spans for operations
-5. Add error wrapping with context
-6. Create a `README.md` with usage examples (in Russian)
-7. Add unit tests for core functionality
-8. Add integration tests with `testcontainers-go` (if external service)
-9. Add to this AGENTS.md if new patterns introduced
+2. Create a `doc.go` (see section above)
+3. Create a `Config` struct with `envconfig` tags
+4. Implement `Provider` interface (or `RunableProvider` if it runs indefinitely)
+5. Expose `New(cfg Config)` constructor returning the parent interface
+6. Add OpenTelemetry tracing spans for operations
+7. Add error wrapping with context
+8. Create a `README.md` with usage examples (in Russian)
+9. Add unit tests for core functionality
+10. Add integration tests with `testcontainers-go` (if external service)
+11. Add to this AGENTS.md if new patterns introduced
 
 ## Storage Patterns (S3/MinIO)
 
