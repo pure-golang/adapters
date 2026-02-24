@@ -8,9 +8,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/pkg/errors"
-
 	"git.korputeam.ru/newbackend/adapters/httpserver"
+	"github.com/pkg/errors"
 )
 
 const ShutdownTimeout = 15 * time.Second

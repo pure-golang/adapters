@@ -179,7 +179,7 @@ func (rl *RateLimiter) getWindowStartAt(t time.Time) int64 {
 	windowDuration := rl.config.Window
 	if windowDuration < time.Second {
 		// For sub-second windows, use milliseconds
-		windowMs := int64(windowDuration.Milliseconds())
+		windowMs := windowDuration.Milliseconds()
 		return (t.UnixMilli() / windowMs) * windowMs
 	}
 	// For windows >= 1 second, use seconds
@@ -211,7 +211,7 @@ func (rl *RateLimiter) cleanup() {
 func (rl *RateLimiter) removeStaleEntries() {
 	currentWindowStart := rl.getWindowStart()
 
-	rl.clients.Range(func(key, value interface{}) bool {
+	rl.clients.Range(func(key, value any) bool {
 		tracker := value.(*clientTracker)
 
 		tracker.mu.RLock()

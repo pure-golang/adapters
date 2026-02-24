@@ -927,10 +927,8 @@ func TestNewPusher_Real(t *testing.T) {
 				if tt.errMsg != "" && err.Error() != tt.errMsg && len(err.Error()) >= len(tt.errMsg) && err.Error()[:len(tt.errMsg)] != tt.errMsg {
 					t.Logf("NewPusher() error = %v, want substring %q", err, tt.errMsg)
 				}
-			} else {
-				if err != nil {
-					t.Errorf("NewPusher() unexpected error = %v", err)
-				}
+			} else if err != nil {
+				t.Errorf("NewPusher() unexpected error = %v", err)
 			}
 		})
 	}

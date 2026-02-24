@@ -138,11 +138,12 @@ func TestRateLimit_ConcurrentRequests(t *testing.T) {
 
 			handler.ServeHTTP(rr, req)
 
-			if rr.Code == http.StatusOK {
+			switch rr.Code {
+			case http.StatusOK:
 				successCount.Add(1)
-			} else if rr.Code == http.StatusTooManyRequests {
+			case http.StatusTooManyRequests:
 				limitCount.Add(1)
-			} else {
+			default:
 				otherCount.Add(1)
 			}
 		}()

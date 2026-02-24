@@ -13,7 +13,7 @@ import (
 func TestChain_NoMiddleware(t *testing.T) {
 	originalHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("original"))
+		_, _ = w.Write([]byte("original"))
 	})
 
 	// Chain with no middlewares
@@ -32,7 +32,7 @@ func TestChain_NoMiddleware(t *testing.T) {
 func TestChain_SingleMiddleware(t *testing.T) {
 	originalHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("handler"))
+		_, _ = w.Write([]byte("handler"))
 	})
 
 	// Middleware that adds a header
@@ -59,7 +59,7 @@ func TestChain_SingleMiddleware(t *testing.T) {
 func TestChain_MultipleMiddlewares(t *testing.T) {
 	originalHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("handler"))
+		_, _ = w.Write([]byte("handler"))
 	})
 
 	// Middleware 1
@@ -229,7 +229,7 @@ func TestChain_MiddlewareCanModifyRequest(t *testing.T) {
 // TestChain_MiddlewareCanModifyResponse tests middleware modifying the response
 func TestChain_MiddlewareCanModifyResponse(t *testing.T) {
 	originalHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("original body"))
+		_, _ = w.Write([]byte("original body"))
 	})
 
 	middleware := func(next http.Handler) http.Handler {
@@ -259,7 +259,7 @@ func TestChain_MiddlewareCanModifyResponse(t *testing.T) {
 func TestChain_EmptyMiddlewareSlice(t *testing.T) {
 	originalHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusCreated)
-		w.Write([]byte("created"))
+		_, _ = w.Write([]byte("created"))
 	})
 
 	// Chain with empty middleware slice
@@ -303,11 +303,16 @@ func TestChain_WithRecoveryMiddleware(t *testing.T) {
 	assert.Equal(t, "yes", rr.Header().Get("X-Before-Recovery"))
 }
 
+// contextKey is a custom type for context keys to avoid collisions
+type contextKey string
+
 // TestChain_MiddlewareContextPassing tests that middleware can modify request context
 func TestChain_MiddlewareContextPassing(t *testing.T) {
+	const testKey contextKey = "test-key"
+
 	originalHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Verify context value was set by middleware
-		val := r.Context().Value("test-key")
+		val := r.Context().Value(testKey)
 		assert.NotNil(t, val, "Context value should be available in handler")
 		assert.Equal(t, "test-value", val)
 		w.WriteHeader(http.StatusOK)
@@ -316,7 +321,7 @@ func TestChain_MiddlewareContextPassing(t *testing.T) {
 	middleware := func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			// Add value to context using context.WithValue
-			ctx := context.WithValue(r.Context(), "test-key", "test-value")
+			ctx := context.WithValue(r.Context(), testKey, "test-value")
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})
 	}
@@ -431,7 +436,7 @@ func TestChain_MultipleHandlersInChain(t *testing.T) {
 func TestChain_ChainOfChains(t *testing.T) {
 	baseHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("base"))
+		_, _ = w.Write([]byte("base"))
 	})
 
 	middlewareA := func(next http.Handler) http.Handler {
@@ -516,7 +521,6 @@ func TestChain_LargeNumberOfMiddlewares(t *testing.T) {
 	// Create 10 middlewares
 	var middlewares []func(http.Handler) http.Handler
 	for i := 0; i < 10; i++ {
-		i := i // Capture loop variable
 		middlewares = append(middlewares, func(next http.Handler) http.Handler {
 			return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				w.Header().Set("X-Middleware-"+string(rune('0'+i)), "applied")

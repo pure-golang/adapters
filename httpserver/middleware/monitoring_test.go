@@ -9,12 +9,11 @@ import (
 	"strings"
 	"testing"
 
+	"git.korputeam.ru/newbackend/adapters/logger"
+	"git.korputeam.ru/newbackend/adapters/logger/noop"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.opentelemetry.io/otel/trace"
-
-	"git.korputeam.ru/newbackend/adapters/logger"
-	"git.korputeam.ru/newbackend/adapters/logger/noop"
 )
 
 func init() {

@@ -8,10 +8,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
-
 	"git.korputeam.ru/newbackend/adapters/logger"
 	"git.korputeam.ru/newbackend/adapters/logger/noop"
+	"github.com/stretchr/testify/assert"
 )
 
 func init() {

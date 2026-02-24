@@ -6,10 +6,9 @@ import (
 	"testing"
 	"time"
 
+	"git.korputeam.ru/newbackend/adapters/logger"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-
-	"git.korputeam.ru/newbackend/adapters/logger"
 )
 
 func init() {

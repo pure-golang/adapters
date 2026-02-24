@@ -5,11 +5,11 @@ import (
 	"testing"
 
 	"github.com/google/uuid"
+	amqp "github.com/rabbitmq/amqp091-go"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/pure-golang/adapters/queue/rabbitmq"
-	amqp "github.com/rabbitmq/amqp091-go"
 )
 
 // applyDefinitions объявляет все обменники, очереди и привязки через AMQP.

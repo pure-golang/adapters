@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"git.korputeam.ru/newbackend/adapters/logger"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
@@ -16,8 +17,6 @@ import (
 	"go.opentelemetry.io/otel/propagation"
 	semconv "go.opentelemetry.io/otel/semconv/v1.12.0"
 	"go.opentelemetry.io/otel/trace"
-
-	"git.korputeam.ru/newbackend/adapters/logger"
 )
 
 var (

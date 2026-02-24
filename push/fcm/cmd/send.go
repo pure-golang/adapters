@@ -21,11 +21,6 @@ func main() {
 		credsPath = os.Args[1]
 	}
 
-	// Make path relative to adapters/push/fcm directory
-	if !strings.HasPrefix(credsPath, "/") {
-		// Assume relative to current directory
-	}
-
 	pusher, err := fcm.NewPusher(ctx, fcm.Config{
 		CredentialsFile: credsPath,
 		ProjectID:       "", // Will be inferred from credentials
@@ -33,7 +28,16 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to create pusher: %v", err)
 	}
-	defer pusher.Close()
+
+	if err := run(pusher); err != nil {
+		_ = pusher.Close()
+		os.Exit(1)
+	}
+	_ = pusher.Close()
+}
+
+func run(pusher *fcm.Pusher) error {
+	ctx := context.Background()
 
 	fmt.Println("=== FCM Test Program ===")
 	fmt.Println()
@@ -42,15 +46,17 @@ func main() {
 
 	fmt.Print("Enter FCM Token: ")
 	if !scanner.Scan() {
-		log.Fatal("No token provided")
+		fmt.Fprintln(os.Stderr, "No token provided")
+		return fmt.Errorf("no token provided")
 	}
 
 	token := strings.TrimSpace(scanner.Text())
 	if token == "" {
-		log.Fatal("Token cannot be empty")
+		fmt.Fprintln(os.Stderr, "Token cannot be empty")
+		return fmt.Errorf("token cannot be empty")
 	}
 
-	fmt.Printf("\nToken: %s...\n", token[:min(50, len(token))])
+	fmt.Printf("\nToken: %s...\n", token[:min(50, len(token))]) //nolint:revive // min is built-in in Go 1.21+
 
 	// Get notification type
 	fmt.Println("\nSelect notification type:")
@@ -61,7 +67,8 @@ func main() {
 	fmt.Print("Choice (1-4): ")
 
 	if !scanner.Scan() {
-		log.Fatal("No choice provided")
+		fmt.Fprintln(os.Stderr, "No choice provided")
+		return fmt.Errorf("no choice provided")
 	}
 
 	choice := strings.TrimSpace(scanner.Text())
@@ -107,12 +114,13 @@ func main() {
 			IOSCategory: "UNIFIED",
 		}
 	default:
-		log.Fatal("Invalid choice")
+		fmt.Fprintln(os.Stderr, "Invalid choice")
+		return fmt.Errorf("invalid choice")
 	}
 
 	fmt.Println("\n📤 Sending notification...")
 
-	err = pusher.Push(ctx, notif)
+	err := pusher.Push(ctx, notif)
 
 	if err != nil {
 		log.Fatalf("Failed to send: %v", err)
@@ -125,11 +133,5 @@ func main() {
 	fmt.Println("  - Allow notifications in browser")
 	fmt.Println("  - Check browser console (F12) for errors")
 	fmt.Println("  - Try getting a new token from the web page")
-}
-
-func min(a, b int) int {
-	if a < b {
-		return a
-	}
-	return b
+	return nil
 }

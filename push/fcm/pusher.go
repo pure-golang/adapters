@@ -118,9 +118,9 @@ func NewPusherWithFactory(ctx context.Context, cfg Config, factory firebaseAppFa
 
 	var opts []option.ClientOption
 	if cfg.CredentialsFile != "" {
-		opts = append(opts, option.WithCredentialsFile(cfg.CredentialsFile))
+		opts = append(opts, option.WithCredentialsFile(cfg.CredentialsFile)) //nolint:staticcheck // Deprecated but still functional
 	} else if len(cfg.CredentialsJSON) > 0 {
-		opts = append(opts, option.WithCredentialsJSON(cfg.CredentialsJSON))
+		opts = append(opts, option.WithCredentialsJSON(cfg.CredentialsJSON)) //nolint:staticcheck // Deprecated but still functional
 	}
 
 	// Initialize Firebase app
