@@ -2,11 +2,17 @@
 
 [![coverage](https://img.shields.io/badge/coverage-84.7%25-brightgreen)](https://htmlpreview.github.io/?https://github.com/pure-golang/adapters/blob/main/.coverage/.html)
 
-Первый уровень каталога - поставляемая услуга (интерфейс), второй - поставщик-услуги. Например:
+## Содержимое
+
+### Организация пакетов
+
+Первый уровень каталога - поставляемая услуга (интерфейс), второй - поставщик услуги. Например:
 - queue/rabbitmq
 - storage/pg
 - storage/redis
 - log/std
+
+### Уровни архитектуры
 
 L0 - Мониторинг:
 - Logger
