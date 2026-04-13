@@ -22,7 +22,7 @@ This will:
 ```go
 import (
     "context"
-    fcm "git.korputeam.ru/newbackend/adapters/push/fcm"
+    fcm "github.com/pure-golang/adapters/push/fcm"
 )
 
 pusher, err := fcm.NewPusher(ctx, fcm.Config{

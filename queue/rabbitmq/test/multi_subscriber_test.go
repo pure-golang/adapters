@@ -49,7 +49,7 @@ func (s *RabbitMQSuite) TestMultiQueueSubscriber_Listen_TwoQueues() {
 	}
 
 	ctx, cancel := context.WithCancel(context.Background())
-	sub := rabbitmq.NewMultiQueueSubscriber(dialer, rabbitmq.MultiQueueOptions{MaxRetries: 3})
+	sub := rabbitmq.NewMultiQueueSubscriber2(rabbitmq.MultiQueueConfig{MaxRetries: 3}, dialer)
 	go func() {
 		_ = sub.Listen(ctx,
 			rabbitmq.QueueHandler{QueueName: q1, Handler: makeHandler("q1")},
@@ -114,10 +114,10 @@ func (s *RabbitMQSuite) TestMultiQueueSubscriber_SingleGoroutineSequential() {
 	}
 
 	ctx, cancel := context.WithCancel(context.Background())
-	sub := rabbitmq.NewMultiQueueSubscriber(dialer, rabbitmq.MultiQueueOptions{
+	sub := rabbitmq.NewMultiQueueSubscriber2(rabbitmq.MultiQueueConfig{
 		PrefetchCount: 1,
 		MaxRetries:    3,
-	})
+	}, dialer)
 	go func() {
 		_ = sub.Listen(ctx,
 			rabbitmq.QueueHandler{QueueName: q1, Handler: handler},
@@ -169,9 +169,9 @@ func (s *RabbitMQSuite) TestMultiQueueSubscriber_Retry() {
 	}
 
 	ctx, cancel := context.WithCancel(context.Background())
-	sub := rabbitmq.NewMultiQueueSubscriber(dialer, rabbitmq.MultiQueueOptions{
+	sub := rabbitmq.NewMultiQueueSubscriber2(rabbitmq.MultiQueueConfig{
 		MaxRetries: 3,
-	})
+	}, dialer)
 	go func() {
 		_ = sub.Listen(ctx, rabbitmq.QueueHandler{
 			QueueName:      qName,
@@ -209,7 +209,7 @@ func (s *RabbitMQSuite) TestMultiQueueSubscriber_GracefulShutdown() {
 	require.NoError(t, err)
 
 	ctx, cancel := context.WithCancel(context.Background())
-	sub := rabbitmq.NewMultiQueueSubscriber(dialer, rabbitmq.MultiQueueOptions{MaxRetries: 3})
+	sub := rabbitmq.NewMultiQueueSubscriber2(rabbitmq.MultiQueueConfig{MaxRetries: 3}, dialer)
 
 	done := make(chan struct{})
 	go func() {

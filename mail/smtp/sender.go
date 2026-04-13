@@ -369,44 +369,44 @@ func (s *Sender) buildMessage(email *mail.Email) []byte {
 	var msg strings.Builder
 
 	// Headers
-	msg.WriteString(fmt.Sprintf("From: %s\r\n", s.formatAddress(email.From)))
+	fmt.Fprintf(&msg, "From: %s\r\n", s.formatAddress(email.From))
 
 	if len(email.To) > 0 {
-		msg.WriteString(fmt.Sprintf("To: %s\r\n", s.formatAddressList(email.To)))
+		fmt.Fprintf(&msg, "To: %s\r\n", s.formatAddressList(email.To))
 	}
 
 	if len(email.Cc) > 0 {
-		msg.WriteString(fmt.Sprintf("Cc: %s\r\n", s.formatAddressList(email.Cc)))
+		fmt.Fprintf(&msg, "Cc: %s\r\n", s.formatAddressList(email.Cc))
 	}
 
-	msg.WriteString(fmt.Sprintf("Subject: %s\r\n", email.Subject))
+	fmt.Fprintf(&msg, "Subject: %s\r\n", email.Subject)
 	msg.WriteString("MIME-Version: 1.0\r\n")
-	msg.WriteString(fmt.Sprintf("Date: %s\r\n", time.Now().Format(time.RFC1123Z)))
+	fmt.Fprintf(&msg, "Date: %s\r\n", time.Now().Format(time.RFC1123Z))
 
 	// Add custom headers
 	for k, v := range email.Headers {
-		msg.WriteString(fmt.Sprintf("%s: %s\r\n", k, v))
+		fmt.Fprintf(&msg, "%s: %s\r\n", k, v)
 	}
 
 	// Build body
 	if email.HTML != "" {
 		boundary := fmt.Sprintf("boundary_%d", time.Now().UnixNano())
-		msg.WriteString(fmt.Sprintf("Content-Type: multipart/alternative; boundary=%s\r\n", boundary))
+		fmt.Fprintf(&msg, "Content-Type: multipart/alternative; boundary=%s\r\n", boundary)
 		msg.WriteString("\r\n")
 
 		// Plain text part
-		msg.WriteString(fmt.Sprintf("--%s\r\n", boundary))
+		fmt.Fprintf(&msg, "--%s\r\n", boundary)
 		msg.WriteString("Content-Type: text/plain; charset=UTF-8\r\n\r\n")
 		msg.WriteString(email.Body)
 		msg.WriteString("\r\n")
 
 		// HTML part
-		msg.WriteString(fmt.Sprintf("--%s\r\n", boundary))
+		fmt.Fprintf(&msg, "--%s\r\n", boundary)
 		msg.WriteString("Content-Type: text/html; charset=UTF-8\r\n\r\n")
 		msg.WriteString(email.HTML)
 		msg.WriteString("\r\n")
 
-		msg.WriteString(fmt.Sprintf("--%s--\r\n", boundary))
+		fmt.Fprintf(&msg, "--%s--\r\n", boundary)
 	} else {
 		msg.WriteString("Content-Type: text/plain; charset=UTF-8\r\n\r\n")
 		msg.WriteString(email.Body)

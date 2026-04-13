@@ -58,7 +58,6 @@ func TestNew_ValidConfig(t *testing.T) {
 	assert.Empty(t, s.interceptors, "custom interceptors should be empty")
 	assert.Empty(t, s.streamInterceptors, "custom stream interceptors should be empty")
 	assert.Empty(t, s.serverOpts, "custom server options should be empty")
-	assert.Nil(t, s.GetListener(), "listener should be nil before Start")
 	// Note: monitoringOpts is only set when WithMonitoringOptions is used
 	// Otherwise, DefaultMonitoringOptions is used internally but not stored
 }
@@ -394,8 +393,8 @@ func TestServer_Run_StartsInGoroutine(t *testing.T) {
 	s := New(c, func(srv *grpc.Server) {})
 	require.NotNil(t, s)
 
-	// Run should start server in background
-	s.Run()
+	// Run блокирующий — запускаем в горутине
+	go s.Run()
 
 	// Give goroutine time to try starting (will likely fail on address in use)
 	time.Sleep(100 * time.Millisecond)
@@ -612,8 +611,8 @@ func TestServer_Run_Panics(t *testing.T) {
 
 	s := New(c, func(srv *grpc.Server) {})
 
-	// Run should not panic even if Start fails
-	s.Run()
+	// Run блокирующий — запускаем в горутине
+	go s.Run()
 
 	// Give it time
 	time.Sleep(50 * time.Millisecond)

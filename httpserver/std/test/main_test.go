@@ -1,7 +1,7 @@
 package std_test
 
 import (
-	"git.korputeam.ru/newbackend/adapters/logger"
+	"github.com/pure-golang/adapters/logger"
 )
 
 func init() {

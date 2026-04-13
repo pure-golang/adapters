@@ -8,16 +8,22 @@
 //
 // Использование:
 //
-//	import "git.korputeam.ru/newbackend/adapters/httpserver/middleware"
+//	import amiddleware "github.com/pure-golang/adapters/httpserver/middleware"
 //
-//	mux := http.NewServeMux()
-//	mux.HandleFunc("/api", handler)
+//	handler := amiddleware.Chain(
+//	    mux,
+//	    amiddleware.Monitoring("/webhooks/livekit"),
+//	    amiddleware.Recovery,
+//	    authMiddleware,
+//	)
 //
-//	// Обёртка с мониторингом
-//	handler := middleware.Monitoring(mux)
+// Порядок middleware (от внешнего к внутреннему):
+//  1. Monitoring — трейсинг, метрики, логирование (видит все ответы, включая 500 от Recovery).
+//  2. Recovery — перехват паник, возврат 500.
+//  3. Auth / прикладные middleware.
+//  4. Обработчик приложения.
 //
-//	// Recovery middleware отдельно
-//	handler = middleware.Recovery(handler, logger)
+// Monitoring ПЕРЕД Recovery: паника → Recovery отдаёт 500 → Monitoring фиксирует его в метриках и трейсах.
 //
 // Метрики:
 //   - http.request_count — счётчик запросов

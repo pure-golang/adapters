@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log"
 
-	"git.korputeam.ru/newbackend/adapters/push/fcm"
+	"github.com/pure-golang/adapters/push/fcm"
 )
 
 // Example_usage demonstrates how to use the FCM pusher with unified messaging.

@@ -9,7 +9,7 @@ const (
 // Works with MinIO, Yandex Cloud Storage, AWS S3, and other S3-compatible providers.
 type Config struct {
 	Endpoint           string `envconfig:"S3_ENDPOINT"`                             // S3 endpoint (e.g., "localhost:9000" for MinIO, "storage.yandexcloud.net" for Yandex)
-	AccessKey          string `envconfig:"S3_ACCESS_KEY" required:"true"`           // Access key ID
+	AccessKey          string `envconfig:"S3_ACCESS_KEY" required:"true"`           //nolint:gosec // Access key ID
 	SecretKey          string `envconfig:"S3_SECRET_KEY" required:"true"`           // Secret access key
 	Region             string `envconfig:"S3_REGION" default:"us-east-1"`           // Region name
 	DefaultBucket      string `envconfig:"S3_BUCKET"`                               // Default bucket name

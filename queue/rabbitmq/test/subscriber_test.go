@@ -33,7 +33,7 @@ func (s *RabbitMQSuite) TestSubscriber_Listen_Ack() {
 	_, err = ch.QueueDeclare(qName, false, false, false, false, nil)
 	require.NoError(t, err)
 
-	pub := rabbitmq.NewPublisher(dialer, rabbitmq.PublisherConfig{RoutingKey: qName, Encoder: encoders.Text{}})
+	pub := rabbitmq.NewPublisher2(rabbitmq.PublisherConfig{RoutingKey: qName, Encoder: encoders.Text{}}, dialer)
 
 	received := make(chan struct{}, 1)
 	handler := func(_ context.Context, _ queue.Delivery) (bool, error) {
@@ -42,7 +42,7 @@ func (s *RabbitMQSuite) TestSubscriber_Listen_Ack() {
 	}
 
 	ctx, cancel := context.WithCancel(context.Background())
-	sub := rabbitmq.NewSubscriber(dialer, qName, rabbitmq.SubscriberOptions{MaxRetries: 3})
+	sub := rabbitmq.NewSubscriber2(rabbitmq.SubscriberConfig{QueueName: qName, MaxRetries: 3}, dialer)
 	done := make(chan struct{})
 	go func() {
 		defer close(done)
@@ -116,10 +116,11 @@ func (s *RabbitMQSuite) TestSubscriber_Listen_DLQ() {
 	}
 
 	ctx, cancel := context.WithCancel(context.Background())
-	sub := rabbitmq.NewSubscriber(dialer, qName, rabbitmq.SubscriberOptions{
+	sub := rabbitmq.NewSubscriber2(rabbitmq.SubscriberConfig{
+		QueueName:      qName,
 		MaxRetries:     maxRetries,
 		RetryQueueName: qRetry,
-	})
+	}, dialer)
 	done := make(chan struct{})
 	go func() {
 		defer close(done)
@@ -171,10 +172,11 @@ func (s *RabbitMQSuite) TestSubscriber_Listen_RetryQueue() {
 	}
 
 	ctx, cancel := context.WithCancel(context.Background())
-	sub := rabbitmq.NewSubscriber(dialer, qName, rabbitmq.SubscriberOptions{
+	sub := rabbitmq.NewSubscriber2(rabbitmq.SubscriberConfig{
+		QueueName:      qName,
 		MaxRetries:     3,
 		RetryQueueName: qRetry,
-	})
+	}, dialer)
 	done := make(chan struct{})
 	go func() {
 		defer close(done)
@@ -213,7 +215,7 @@ func (s *RabbitMQSuite) TestSubscriber_Listen_GracefulShutdown() {
 	require.NoError(t, err)
 
 	ctx, cancel := context.WithCancel(context.Background())
-	sub := rabbitmq.NewSubscriber(dialer, qName, rabbitmq.SubscriberOptions{MaxRetries: 3})
+	sub := rabbitmq.NewSubscriber2(rabbitmq.SubscriberConfig{QueueName: qName, MaxRetries: 3}, dialer)
 
 	done := make(chan struct{})
 	go func() {
@@ -250,7 +252,7 @@ func (s *RabbitMQSuite) TestSubscriber_MessageTimeout() {
 	_, err = ch.QueueDeclare(qName, false, false, false, false, nil)
 	require.NoError(t, err)
 
-	pub := rabbitmq.NewPublisher(dialer, rabbitmq.PublisherConfig{RoutingKey: qName, Encoder: encoders.Text{}})
+	pub := rabbitmq.NewPublisher2(rabbitmq.PublisherConfig{RoutingKey: qName, Encoder: encoders.Text{}}, dialer)
 	require.NoError(t, pub.Publish(context.Background(), queue.Message{Body: "timeout-test"}))
 
 	ctxReceived := make(chan context.Context, 1)
@@ -260,10 +262,11 @@ func (s *RabbitMQSuite) TestSubscriber_MessageTimeout() {
 	}
 
 	ctx, cancel := context.WithCancel(context.Background())
-	sub := rabbitmq.NewSubscriber(dialer, qName, rabbitmq.SubscriberOptions{
+	sub := rabbitmq.NewSubscriber2(rabbitmq.SubscriberConfig{
+		QueueName:      qName,
 		MaxRetries:     3,
 		MessageTimeout: 10 * time.Second,
-	})
+	}, dialer)
 	done := make(chan struct{})
 	go func() {
 		defer close(done)

@@ -413,7 +413,7 @@ func TestNewPusher(t *testing.T) {
 	}{
 		{
 			name: "success with credentials file",
-			cfg: Config{
+			cfg: Config{ //nolint:gosec
 				CredentialsFile: "/path/to/credentials.json",
 				ProjectID:       "test-project",
 			},
@@ -448,7 +448,7 @@ func TestNewPusher(t *testing.T) {
 		},
 		{
 			name: "error - factory returns error",
-			cfg: Config{
+			cfg: Config{ //nolint:gosec
 				CredentialsFile: "/path/to/credentials.json",
 			},
 			setupMocks: func(factory *MockFirebaseAppFactory, app *MockFirebaseApp, client *MockMessagingClient) {
@@ -459,7 +459,7 @@ func TestNewPusher(t *testing.T) {
 		},
 		{
 			name: "error - messaging client error",
-			cfg: Config{
+			cfg: Config{ //nolint:gosec
 				CredentialsFile: "/path/to/credentials.json",
 			},
 			setupMocks: func(factory *MockFirebaseAppFactory, app *MockFirebaseApp, client *MockMessagingClient) {

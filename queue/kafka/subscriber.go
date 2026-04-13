@@ -90,14 +90,24 @@ func NewSubscriber(dialer *Dialer, topic string, cfg SubscriberConfig) *Subscrib
 }
 
 // Listen начинает слушать сообщения из Kafka
-func (s *Subscriber) Listen(handler queue.Handler) {
+func (s *Subscriber) Listen(ctx context.Context, handler queue.Handler) {
 	s.wg.Add(1)
 	defer s.wg.Done()
+
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
+	go func() {
+		select {
+		case <-s.close:
+			cancel()
+		case <-ctx.Done():
+		}
+	}()
 
 	s.logger.Info("listening...")
 
 	for {
-		needRestart, err := s.listen(handler)
+		needRestart, err := s.listen(ctx, handler)
 		if !needRestart {
 			return
 		}
@@ -106,12 +116,16 @@ func (s *Subscriber) Listen(handler queue.Handler) {
 			s.logger.With("error", err.Error()).Error("listen error")
 		}
 
-		time.Sleep(ConsumeRetryInterval)
+		select {
+		case <-ctx.Done():
+			return
+		case <-time.After(ConsumeRetryInterval):
+		}
 	}
 }
 
 // listen обрабатывает сообщения из одной сессии чтения
-func (s *Subscriber) listen(handler queue.Handler) (bool, error) {
+func (s *Subscriber) listen(ctx context.Context, handler queue.Handler) (bool, error) {
 	reader, err := s.getReader(s.topic)
 	if err != nil {
 		return true, errors.Wrap(err, "failed to create reader")
@@ -124,7 +138,7 @@ func (s *Subscriber) listen(handler queue.Handler) (bool, error) {
 
 	for {
 		select {
-		case <-s.close:
+		case <-ctx.Done():
 			return false, nil
 
 		case <-time.After(s.lastMessageTimeout):
@@ -134,26 +148,20 @@ func (s *Subscriber) listen(handler queue.Handler) (bool, error) {
 			}
 
 		default:
-			// Используем context с timeout для операций чтения
-			ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-			msg, err := s.reader.ReadMessage(ctx)
+			readCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
+			msg, err := s.reader.ReadMessage(readCtx)
 			cancel()
 
 			if err != nil {
-				// Проверяем, была ли ошибка связана с закрытием
-				select {
-				case <-s.close:
+				if ctx.Err() != nil {
 					return false, nil
-				default:
-					return true, errors.Wrap(err, "failed to read message")
 				}
+				return true, errors.Wrap(err, "failed to read message")
 			}
 
 			s.lastMessageTime = time.Now()
 
-			// Обрабатываем сообщение с retry внутри этой сессии
-			if err := s.handleMessageWithRetry(&msg, handler); err != nil {
-				// При ошибке в retry возвращаем true для перезапуска
+			if err := s.handleMessageWithRetry(ctx, &msg, handler); err != nil {
 				return true, err
 			}
 		}
@@ -161,7 +169,7 @@ func (s *Subscriber) listen(handler queue.Handler) (bool, error) {
 }
 
 // handleMessageWithRetry обрабатывает одно сообщение с retry в рамках одной сессии
-func (s *Subscriber) handleMessageWithRetry(msg *kafka.Message, handler queue.Handler) error {
+func (s *Subscriber) handleMessageWithRetry(ctx context.Context, msg *kafka.Message, handler queue.Handler) error {
 	var lastErr error
 	maxAttempts := s.cfg.MaxTryNum
 
@@ -178,7 +186,7 @@ func (s *Subscriber) handleMessageWithRetry(msg *kafka.Message, handler queue.Ha
 
 	for attempt := 1; attempt <= maxAttempts; attempt++ {
 		// Извлекаем контекст трейсинга из заголовков
-		ctx := otel.GetTextMapPropagator().Extract(context.Background(), headersCarrier(headers))
+		ctx := otel.GetTextMapPropagator().Extract(ctx, headersCarrier(headers))
 		ctx, span := tracer.Start(ctx, fmt.Sprintf("Kafka.Consume.%s", msg.Topic), trace.WithSpanKind(trace.SpanKindConsumer))
 
 		if attempt > 1 {
@@ -225,7 +233,7 @@ func (s *Subscriber) handleMessageWithRetry(msg *kafka.Message, handler queue.Ha
 
 		// Ждем перед следующей попыткой
 		select {
-		case <-s.close:
+		case <-ctx.Done():
 			return errors.New("subscriber closed during retry")
 		case <-time.After(s.cfg.Backoff):
 		}

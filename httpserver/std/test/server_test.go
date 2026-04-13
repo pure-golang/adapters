@@ -41,29 +41,18 @@ func TestServer_Start_ListenAndServe(t *testing.T) {
 	port, addr := freePort(t)
 	server := std.New(std.Config{Host: "127.0.0.1", Port: port}, handler)
 
-	startErrChan := make(chan error, 1)
-	go func() {
-		startErrChan <- server.Start()
-	}()
+	require.NoError(t, server.Start())
+	t.Cleanup(func() { server.Close() })
 
 	time.Sleep(100 * time.Millisecond)
 
-	// Act
 	resp, err := http.Get("http://" + addr + "/") //nolint:noctx
 	require.NoError(t, err, "should be able to connect to server")
 	t.Cleanup(func() { resp.Body.Close() })
 
-	// Assert
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 
 	require.NoError(t, server.Close())
-
-	select {
-	case err := <-startErrChan:
-		assert.NoError(t, err, "Start should return nil after graceful shutdown")
-	case <-time.After(6 * time.Second):
-		t.Fatal("Start should have returned after shutdown")
-	}
 }
 
 // TestServer_Start_ErrServerClosed проверяет, что Start возвращает nil при штатном завершении.
@@ -79,21 +68,9 @@ func TestServer_Start_ErrServerClosed(t *testing.T) {
 	port, _ := freePort(t)
 	server := std.New(std.Config{Host: "127.0.0.1", Port: port}, handler)
 
-	startErrChan := make(chan error, 1)
-	go func() {
-		startErrChan <- server.Start()
-	}()
-
-	time.Sleep(100 * time.Millisecond)
+	require.NoError(t, server.Start())
 
 	require.NoError(t, server.Close())
-
-	select {
-	case err := <-startErrChan:
-		assert.NoError(t, err, "Start должен вернуть nil при ErrServerClosed")
-	case <-time.After(6 * time.Second):
-		t.Fatal("Start should have returned after shutdown")
-	}
 }
 
 // TestServer_Start_AddressInUse проверяет, что Start возвращает ошибку при занятом адресе.
@@ -122,8 +99,8 @@ func TestServer_Start_AddressInUse(t *testing.T) {
 	assert.Error(t, err, "Start should return error when address is in use")
 }
 
-// TestServer_Run_StartsInBackground проверяет, что Run запускает сервер в фоне и сразу возвращает управление.
-func TestServer_Run_StartsInBackground(t *testing.T) {
+// TestServer_Run_AcceptsConnections проверяет, что Run запускает сервер и принимает соединения.
+func TestServer_Run_AcceptsConnections(t *testing.T) {
 	if testing.Short() {
 		t.Skip("integration test")
 	}
@@ -140,33 +117,22 @@ func TestServer_Run_StartsInBackground(t *testing.T) {
 	port, addr := freePort(t)
 	server := std.New(std.Config{Host: "127.0.0.1", Port: port}, handler)
 
-	runComplete := make(chan struct{})
-	go func() {
-		server.Run()
-		close(runComplete)
-	}()
-
-	// Run должен вернуться немедленно
-	select {
-	case <-runComplete:
-	case <-time.After(1 * time.Second):
-		t.Fatal("Run should return immediately after starting server in background")
-	}
+	// Run блокирующий — запускаем в горутине
+	go server.Run()
+	t.Cleanup(func() { server.Close() })
 
 	time.Sleep(100 * time.Millisecond)
 
-	// Проверяем, что сервер принимает соединения
 	client := &http.Client{Timeout: 500 * time.Millisecond}
 	resp, err := client.Get("http://" + addr + "/") //nolint:noctx
-	if err == nil {
-		t.Cleanup(func() { resp.Body.Close() })
-		select {
-		case <-handlerCalled:
-		case <-time.After(500 * time.Millisecond):
-		}
-	}
+	require.NoError(t, err)
+	t.Cleanup(func() { resp.Body.Close() })
 
-	t.Cleanup(func() { server.Close() })
+	select {
+	case <-handlerCalled:
+	case <-time.After(500 * time.Millisecond):
+		t.Fatal("handler should have been called")
+	}
 }
 
 // TestServer_Close_TimeoutExceeded проверяет поведение Close при наличии активных соединений.

@@ -15,9 +15,14 @@
 //
 //	provider, err := tracing.Init(jaeger.NewProviderBuilder(cfg))
 //	if err != nil {
-//	    // fallback на NoopProvider
+//	    log.Warn("tracing unavailable", "error", err) // только предупреждение
 //	}
 //	defer provider.Close()
+//
+// Важно: ошибка инициализации не должна останавливать приложение.
+// Init всегда возвращает рабочий провайдер (NoopProvider при ошибке).
+// Вызывающий код обязан обработать ошибку как warn, но не как fatal —
+// мониторинг не должен влиять на доступность сервиса.
 //
 // Особенности:
 //   - При ошибке инициализации возвращает NoopProvider

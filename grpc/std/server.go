@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log/slog"
 	"net"
-	"sync"
 	"time"
 
 	"github.com/pkg/errors"
@@ -37,8 +36,6 @@ type Server struct {
 	logger             *slog.Logger
 	server             *grpc.Server
 	config             Config
-	listener           net.Listener
-	listenerMu         sync.RWMutex
 	interceptors       []grpc.UnaryServerInterceptor
 	streamInterceptors []grpc.StreamServerInterceptor
 	serverOpts         []grpc.ServerOption
@@ -140,29 +137,46 @@ func New(c Config, registrationFunc func(*grpc.Server), opts ...ServerOption) *S
 	return s
 }
 
-func (s *Server) Start() error {
+func (s *Server) listen() (net.Listener, error) {
 	addr := fmt.Sprintf("%s:%d", s.config.Host, s.config.Port)
+	s.logger.Info("gRPC server starting", slog.String("addr", addr))
+	ln, err := net.Listen("tcp", addr)
+	return ln, errors.Wrap(err, "failed to listen")
+}
 
-	lis, err := net.Listen("tcp", addr)
+func (s *Server) serve(ln net.Listener) error {
+	err := s.server.Serve(ln)
+	if err == nil || errors.Is(err, net.ErrClosed) {
+		return nil
+	}
+	return errors.Wrap(err, "serve failed")
+}
+
+func (s *Server) Start() error {
+	ln, err := s.listen()
 	if err != nil {
-		return errors.Wrapf(err, "failed to listen on %s", addr)
+		return err
 	}
-
-	s.listenerMu.Lock()
-	s.listener = lis
-	s.listenerMu.Unlock()
-
-	s.logger.Info("gRPC server starting", "addr", addr)
-
-	err = s.server.Serve(lis)
-	if err != nil && !errors.Is(err, net.ErrClosed) {
-		return errors.Wrap(err, "failed to serve gRPC")
-	}
-
+	go func() {
+		if err := s.serve(ln); err != nil {
+			s.logger.With("error", err).Error("gRPC server crashed")
+		}
+	}()
 	return nil
 }
 
-func (s *Server) Close() error {
+func (s *Server) Run() {
+	ln, err := s.listen()
+	if err != nil {
+		s.logger.With("error", err).Error("gRPC server failed to run")
+		return
+	}
+	if err := s.serve(ln); err != nil {
+		s.logger.With("error", err).Error("gRPC server crashed")
+	}
+}
+
+func (s *Server) Shutdown() error {
 	stopped := make(chan struct{})
 
 	go func() {
@@ -181,33 +195,9 @@ func (s *Server) Close() error {
 		s.server.Stop()
 	}
 
-	s.listenerMu.RLock()
-	listener := s.listener
-	s.listenerMu.RUnlock()
-
-	if listener != nil {
-		err := listener.Close()
-		if err != nil {
-			return errors.Wrap(err, "failed to close listener")
-		}
-	}
-
 	return nil
 }
 
-func (s *Server) Run() {
-	go func() {
-		err := s.Start()
-		if err != nil {
-			s.logger.With("error", err).Error("gRPC server crashed")
-		}
-	}()
-}
-
-// GetListener returns the server's listener in a thread-safe manner.
-// This is primarily used in tests to check if the listener has been set.
-func (s *Server) GetListener() net.Listener {
-	s.listenerMu.RLock()
-	defer s.listenerMu.RUnlock()
-	return s.listener
+func (s *Server) Close() error {
+	return s.Shutdown()
 }

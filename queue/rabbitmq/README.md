@@ -45,6 +45,7 @@ defer dialer.Close()
 | `DeliveryMode` | `DeliveryMode` | `Transient` или `Persistent` (по умолчанию `Persistent`) |
 | `Encoder` | `queue.Encoder` | Кодировщик сообщений. По умолчанию JSON |
 | `MessageTTL` | `time.Duration` | TTL для всех сообщений (точность до миллисекунд) |
+| `PublisherConfirms` | `int` | Размер батча broker-подтверждений. `0` — выключено (по умолчанию), `1` — confirm на каждое сообщение, `N` — батч из N сообщений |
 
 ```go
 publisher := rabbitmq.NewPublisher(dialer, rabbitmq.PublisherConfig{
@@ -55,6 +56,28 @@ publisher := rabbitmq.NewPublisher(dialer, rabbitmq.PublisherConfig{
 
 err := publisher.Publish(ctx, queue.Message{
     Value: MyEvent{ID: 42, Name: "test"},
+})
+```
+
+### Publisher Confirms
+
+По умолчанию (`PublisherConfirms: 0`) публикация работает в режиме fire-and-forget: сообщение передаётся брокеру без ожидания подтверждения.
+
+При включённом confirm mode каждый опубликованный батч ждёт Ack от брокера. Это добавляет 1 RTT на батч:
+
+| Режим | Стоимость | Когда использовать |
+|---|---|---|
+| `0` (default) | нет | максимальный throughput, потеря сообщений при сбое брокера допустима |
+| `1` | 1 RTT/сообщение | надёжная доставка, низкий трафик (< 200 msg/s при сети ~5 ms) |
+| `N > 1` | 1 RTT/N сообщений | надёжная доставка с батчевой оптимизацией |
+
+> **Subscriber и confirm mode.** `PublisherConfirms` — конфиг Publisher, к Subscriber он не относится. Subscriber включает confirm mode на своём канале безусловно (всегда). При успешной обработке (`handler → nil`) это никак не ощущается: `Ack` отправляется напрямую без ожидания confirms. Confirm ждётся только на пути retry — перед тем как подтвердить (`Ack`) оригинальное сообщение, Subscriber убеждается, что retry-очередь приняла его копию. Итого: штатный путь обработки — нулевая цена; подтверждение retry — +1 RTT, но retry и так редкий путь.
+
+```go
+// Батч по 10 сообщений: публикует 10, ждёт 10 Ack, публикует следующие 10…
+publisher := rabbitmq.NewPublisher(dialer, rabbitmq.PublisherConfig{
+    RoutingKey:        "my-queue",
+    PublisherConfirms: 10,
 })
 ```
 

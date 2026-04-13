@@ -13,7 +13,7 @@ type Publisher interface {
 
 // Subscriber listens messages from topic of message broker.
 type Subscriber interface {
-	Listen(h Handler)
+	Listen(ctx context.Context, h Handler)
 	io.Closer
 }
 
@@ -44,6 +44,7 @@ func (m *Message) EncodeValue(enc Encoder) ([]byte, error) {
 
 // Delivery is used to consume messages from message broker.
 type Delivery struct {
-	Headers map[string]string
-	Body    []byte
+	Headers    map[string]string
+	Body       []byte
+	DeathCount int // суммарное число dead-letter циклов (из x-death)
 }

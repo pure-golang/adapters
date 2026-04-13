@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 	"net/http/httptest"
+	"strconv"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -523,7 +524,7 @@ func TestChain_LargeNumberOfMiddlewares(t *testing.T) {
 	for i := 0; i < 10; i++ {
 		middlewares = append(middlewares, func(next http.Handler) http.Handler {
 			return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				w.Header().Set("X-Middleware-"+string(rune('0'+i)), "applied")
+				w.Header().Set("X-Middleware-"+strconv.Itoa(i), "applied")
 				next.ServeHTTP(w, r)
 			})
 		})

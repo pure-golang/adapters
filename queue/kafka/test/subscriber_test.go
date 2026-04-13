@@ -73,7 +73,7 @@ func (s *KafkaSuite) TestSubscriber_Listen() {
 	// Запускаем subscriber в отдельной горутине
 	go func() {
 		defer wg.Done()
-		sub.Listen(handler)
+		sub.Listen(ctx, handler)
 	}()
 
 	s.T().Cleanup(func() {
@@ -158,7 +158,7 @@ func (s *KafkaSuite) TestSubscriber_WithRetryableError() {
 	// Запускаем subscriber в отдельной горутине
 	go func() {
 		defer wg.Done()
-		sub.Listen(handler)
+		sub.Listen(ctx, handler)
 	}()
 
 	s.T().Cleanup(func() {
@@ -211,7 +211,7 @@ func (s *KafkaSuite) TestSubscriber_WithNonRetryableError() {
 	// Запускаем subscriber в отдельной горутине
 	go func() {
 		defer wg.Done()
-		sub.Listen(handler)
+		sub.Listen(ctx, handler)
 	}()
 
 	s.T().Cleanup(func() {

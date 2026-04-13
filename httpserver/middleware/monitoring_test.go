@@ -9,11 +9,12 @@ import (
 	"strings"
 	"testing"
 
-	"git.korputeam.ru/newbackend/adapters/logger"
-	"git.korputeam.ru/newbackend/adapters/logger/noop"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.opentelemetry.io/otel/trace"
+
+	"github.com/pure-golang/adapters/logger"
+	"github.com/pure-golang/adapters/logger/noop"
 )
 
 func init() {
@@ -39,7 +40,7 @@ func TestMonitoring_MiddlewareCreatesSpan(t *testing.T) {
 		_, _ = w.Write([]byte("OK"))
 	})
 
-	handler := Monitoring(nextHandler)
+	handler := Monitoring()(nextHandler)
 
 	req := httptest.NewRequest("GET", "/test/path", nil)
 	rr := httptest.NewRecorder()
@@ -57,7 +58,7 @@ func TestMonitoring_MiddlewareAddsTraceIDHeader(t *testing.T) {
 		w.WriteHeader(http.StatusOK)
 	})
 
-	handler := Monitoring(nextHandler)
+	handler := Monitoring()(nextHandler)
 
 	req := httptest.NewRequest("GET", "/test", nil)
 	rr := httptest.NewRecorder()
@@ -87,7 +88,7 @@ func TestMonitoring_MiddlewareWithRequestBody(t *testing.T) {
 		w.WriteHeader(http.StatusOK)
 	})
 
-	handler := Monitoring(nextHandler)
+	handler := Monitoring()(nextHandler)
 
 	req := httptest.NewRequest("POST", "/test", strings.NewReader(requestBody))
 	req.Header.Set("Content-Type", "application/json")
@@ -106,7 +107,7 @@ func TestMonitoring_MiddlewareWithResponseBody(t *testing.T) {
 		_, _ = w.Write([]byte(responseBody))
 	})
 
-	handler := Monitoring(nextHandler)
+	handler := Monitoring()(nextHandler)
 
 	req := httptest.NewRequest("GET", "/test", nil)
 	rr := httptest.NewRecorder()
@@ -262,7 +263,7 @@ func TestMonitoring_MiddlewareRecordsMetrics(t *testing.T) {
 		w.WriteHeader(http.StatusOK)
 	})
 
-	handler := Monitoring(nextHandler)
+	handler := Monitoring()(nextHandler)
 
 	req := httptest.NewRequest("GET", "/api/v1/resource", nil)
 	rr := httptest.NewRecorder()
@@ -281,7 +282,7 @@ func TestMonitoring_MiddlewareWithErrorStatus(t *testing.T) {
 		w.WriteHeader(http.StatusInternalServerError)
 	})
 
-	handler := Monitoring(nextHandler)
+	handler := Monitoring()(nextHandler)
 
 	req := httptest.NewRequest("GET", "/error", nil)
 	rr := httptest.NewRecorder()
@@ -297,7 +298,7 @@ func TestMonitoring_MiddlewareWithHeaders(t *testing.T) {
 		w.WriteHeader(http.StatusOK)
 	})
 
-	handler := Monitoring(nextHandler)
+	handler := Monitoring()(nextHandler)
 
 	req := httptest.NewRequest("GET", "/test", nil)
 	req.Header.Set("Authorization", "Bearer token123")
@@ -317,7 +318,7 @@ func TestMonitoring_RequestURIWithoutParameters(t *testing.T) {
 		w.WriteHeader(http.StatusOK)
 	})
 
-	handler := Monitoring(nextHandler)
+	handler := Monitoring()(nextHandler)
 
 	req := httptest.NewRequest("GET", "/test?param1=value1&param2=value2", nil)
 	rr := httptest.NewRecorder()
@@ -335,7 +336,7 @@ func TestMonitoring_ContextWithLogger(t *testing.T) {
 		w.WriteHeader(http.StatusOK)
 	})
 
-	handler := Monitoring(nextHandler)
+	handler := Monitoring()(nextHandler)
 
 	req := httptest.NewRequest("GET", "/test", nil)
 	rr := httptest.NewRecorder()
@@ -361,7 +362,7 @@ func TestMonitoring_MiddlewareChain(t *testing.T) {
 	})
 
 	// Chain: middleware1 -> monitoring -> handler
-	handler := middleware1(Monitoring(nextHandler))
+	handler := middleware1(Monitoring()(nextHandler))
 
 	req := httptest.NewRequest("GET", "/test", nil)
 	rr := httptest.NewRecorder()
@@ -385,7 +386,7 @@ func TestMonitoring_VariousHTTPMethods(t *testing.T) {
 				w.WriteHeader(http.StatusOK)
 			})
 
-			handler := Monitoring(nextHandler)
+			handler := Monitoring()(nextHandler)
 
 			req := httptest.NewRequest(method, "/test", nil)
 			rr := httptest.NewRecorder()
@@ -418,7 +419,7 @@ func TestMonitoring_VariousStatusCodes(t *testing.T) {
 				w.WriteHeader(status)
 			})
 
-			handler := Monitoring(nextHandler)
+			handler := Monitoring()(nextHandler)
 
 			req := httptest.NewRequest("GET", "/test", nil)
 			rr := httptest.NewRecorder()
@@ -438,7 +439,7 @@ func TestMonitoring_RequestBodyReadError(t *testing.T) {
 		w.WriteHeader(http.StatusOK)
 	})
 
-	handler := Monitoring(nextHandler)
+	handler := Monitoring()(nextHandler)
 
 	req := httptest.NewRequest("POST", "/test", errorReader)
 	rr := httptest.NewRecorder()
@@ -462,7 +463,7 @@ func TestMonitoring_EmptyRequestBody(t *testing.T) {
 		w.WriteHeader(http.StatusOK)
 	})
 
-	handler := Monitoring(nextHandler)
+	handler := Monitoring()(nextHandler)
 
 	req := httptest.NewRequest("GET", "/test", nil)
 	rr := httptest.NewRecorder()
@@ -486,7 +487,7 @@ func TestMonitoring_LargeRequestBody(t *testing.T) {
 		w.WriteHeader(http.StatusOK)
 	})
 
-	handler := Monitoring(nextHandler)
+	handler := Monitoring()(nextHandler)
 
 	req := httptest.NewRequest("POST", "/test", strings.NewReader(string(largeBody)))
 	rr := httptest.NewRecorder()
@@ -508,7 +509,7 @@ func TestMonitoring_LargeResponseBody(t *testing.T) {
 		_, _ = w.Write(largeBody)
 	})
 
-	handler := Monitoring(nextHandler)
+	handler := Monitoring()(nextHandler)
 
 	req := httptest.NewRequest("GET", "/test", nil)
 	rr := httptest.NewRecorder()
@@ -530,7 +531,7 @@ func TestMonitoring_WithExistingContextLogger(t *testing.T) {
 		w.WriteHeader(http.StatusOK)
 	})
 
-	handler := Monitoring(nextHandler)
+	handler := Monitoring()(nextHandler)
 
 	req := httptest.NewRequest("GET", "/test", nil)
 	req = req.WithContext(ctx)
@@ -550,7 +551,7 @@ func TestMonitoring_TracePropagation(t *testing.T) {
 		w.WriteHeader(http.StatusOK)
 	})
 
-	handler := Monitoring(nextHandler)
+	handler := Monitoring()(nextHandler)
 
 	req := httptest.NewRequest("GET", "/test", nil)
 	rr := httptest.NewRecorder()
@@ -558,6 +559,70 @@ func TestMonitoring_TracePropagation(t *testing.T) {
 	handler.ServeHTTP(rr, req)
 
 	assert.Equal(t, http.StatusOK, rr.Code)
+}
+
+func TestMonitoring_Paths_MatchedPath(t *testing.T) {
+	t.Parallel()
+
+	nextHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	})
+	handler := Monitoring("/ready", "/webhook/*")(nextHandler)
+
+	req := httptest.NewRequest("GET", "/ready", nil)
+	rr := httptest.NewRecorder()
+	handler.ServeHTTP(rr, req)
+
+	assert.Equal(t, http.StatusOK, rr.Code)
+	assert.NotEmpty(t, rr.Header().Get("X-Trace-Id"))
+}
+
+func TestMonitoring_Paths_WildcardMatch(t *testing.T) {
+	t.Parallel()
+
+	nextHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	})
+	handler := Monitoring("/webhook/*")(nextHandler)
+
+	req := httptest.NewRequest("POST", "/webhook/livekit", nil)
+	rr := httptest.NewRecorder()
+	handler.ServeHTTP(rr, req)
+
+	assert.Equal(t, http.StatusOK, rr.Code)
+	assert.NotEmpty(t, rr.Header().Get("X-Trace-Id"))
+}
+
+func TestMonitoring_Paths_UnmatchedPath(t *testing.T) {
+	t.Parallel()
+
+	nextHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	})
+	handler := Monitoring("/ready", "/webhook/*")(nextHandler)
+
+	req := httptest.NewRequest("POST", "/graphql", nil)
+	rr := httptest.NewRecorder()
+	handler.ServeHTTP(rr, req)
+
+	assert.Equal(t, http.StatusOK, rr.Code)
+	assert.Empty(t, rr.Header().Get("X-Trace-Id"))
+}
+
+func TestMonitoring_Paths_NoPaths(t *testing.T) {
+	t.Parallel()
+
+	nextHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	})
+	handler := Monitoring()(nextHandler)
+
+	req := httptest.NewRequest("GET", "/anything", nil)
+	rr := httptest.NewRecorder()
+	handler.ServeHTTP(rr, req)
+
+	assert.Equal(t, http.StatusOK, rr.Code)
+	assert.NotEmpty(t, rr.Header().Get("X-Trace-Id"))
 }
 
 // flushableResponseWriter is a test helper that implements http.Flusher

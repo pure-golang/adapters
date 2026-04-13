@@ -7,10 +7,10 @@ import (
 
 type Config struct {
 	User            string `envconfig:"POSTGRES_USER" required:"true"`
-	Password        string `envconfig:"POSTGRES_PASSWORD" required:"true"`
+	Password        string `envconfig:"POSTGRES_PASSWORD" required:"true"` //nolint:gosec
 	Host            string `envconfig:"POSTGRES_HOST" required:"true"`
 	Port            int    `envconfig:"POSTGRES_PORT" default:"5432"`
-	Name            string `envconfig:"POSTGRES_DB_NAME" required:"true"`
+	Name            string `envconfig:"POSTGRES_DB" required:"true"`
 	CertPath        string `envconfig:"POSTGRES_SSL_CERT_PATH"`
 	MaxOpenConns    int32  `envconfig:"POSTGRES_MAX_OPEN_CONNECTIONS" default:"20"`
 	MaxConnLifeTime int32  `envconfig:"POSTGRES_MAX_CONNECTIONS_LIFETIME" default:"5"`

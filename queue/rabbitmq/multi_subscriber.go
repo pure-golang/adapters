@@ -28,7 +28,27 @@ type QueueHandler struct {
 	Handler queue.Handler
 }
 
-// MultiQueueOptions настраивает MultiQueueSubscriber.
+// MultiQueueConfig — конфигурация MultiQueueSubscriber для [NewMultiQueueSubscriber2].
+type MultiQueueConfig struct {
+	// PrefetchCount — значение Qos prefetch, применяемое глобально ко всем
+	// консьюмерам на общем канале (global=true).
+	// Значение 1 гарантирует не более одного неподтверждённого сообщения одновременно.
+	// По умолчанию 1.
+	PrefetchCount int
+	// MaxRetries — максимальное число попыток доставки, после чего сообщение
+	// отправляется в dead-letter queue. Должно быть > 0.
+	MaxRetries int
+	// MessageTimeout ограничивает время выполнения обработчика для одного сообщения.
+	// 0 означает отсутствие таймаута.
+	MessageTimeout time.Duration
+	// ReconnectDelay — пауза между попытками переподключения при сбое соединения или канала.
+	// По умолчанию 5s.
+	ReconnectDelay time.Duration
+}
+
+// MultiQueueOptions — устаревший тип конфигурации. Используйте [MultiQueueConfig] и [NewMultiQueueSubscriber2].
+//
+// Deprecated: используйте [MultiQueueConfig].
 type MultiQueueOptions struct {
 	// PrefetchCount — значение Qos prefetch, применяемое глобально ко всем
 	// консьюмерам на общем канале (global=true).
@@ -51,28 +71,58 @@ type MultiQueueOptions struct {
 // гарантирует не более одного сообщения в обработке одновременно (при PrefetchCount=1).
 // Соответствует модели из RABBIT2.md для CPU-интенсивных задач.
 type MultiQueueSubscriber struct {
-	dialer *Dialer
-	cfg    MultiQueueOptions
 	logger *slog.Logger
+	dialer channelProvider
+	cfg    MultiQueueConfig
+	close  chan struct{}
 }
 
+// NewMultiQueueSubscriber создаёт MultiQueueSubscriber с конкретным *Dialer.
+//
+// Deprecated: используйте [NewMultiQueueSubscriber2] с [MultiQueueConfig].
 func NewMultiQueueSubscriber(dialer *Dialer, opts MultiQueueOptions) *MultiQueueSubscriber {
-	if opts.PrefetchCount <= 0 {
-		opts.PrefetchCount = 1
+	return NewMultiQueueSubscriber2(MultiQueueConfig(opts), dialer)
+}
+
+// NewMultiQueueSubscriber2 создаёт MultiQueueSubscriber, принимая зависимость через интерфейс channelProvider.
+// Предпочтительный конструктор: позволяет подменять dialer в тестах без конкретного *Dialer.
+func NewMultiQueueSubscriber2(cfg MultiQueueConfig, dialer channelProvider) *MultiQueueSubscriber {
+	if cfg.PrefetchCount <= 0 {
+		cfg.PrefetchCount = 1
 	}
-	if opts.ReconnectDelay <= 0 {
-		opts.ReconnectDelay = 5 * time.Second
+	if cfg.ReconnectDelay <= 0 {
+		cfg.ReconnectDelay = 5 * time.Second
 	}
 	return &MultiQueueSubscriber{
+		logger: dialer.Logger().With("module", "multi_subscriber"),
 		dialer: dialer,
-		cfg:    opts,
-		logger: dialer.options.Logger.With("component", "multi_subscriber"),
+		cfg:    cfg,
+		close:  make(chan struct{}),
 	}
 }
 
-// Listen запускает чтение из всех указанных очередей. Блокируется до отмены ctx.
+// Close останавливает subscriber. Можно вызывать вместо (или вместе с) отменой ctx в Listen.
+func (s *MultiQueueSubscriber) Close() error {
+	select {
+	case <-s.close:
+	default:
+		close(s.close)
+	}
+	return nil
+}
+
+// Listen запускает чтение из всех указанных очередей. Блокируется до отмены ctx или вызова Close.
 // При потере соединения или канала автоматически переподключается.
 func (s *MultiQueueSubscriber) Listen(ctx context.Context, handlers ...QueueHandler) error {
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
+	go func() {
+		select {
+		case <-s.close:
+			cancel()
+		case <-ctx.Done():
+		}
+	}()
 	// Нормализуем имена retry-очередей один раз.
 	for i := range handlers {
 		if handlers[i].RetryQueueName == "" {
@@ -113,7 +163,13 @@ func (s *MultiQueueSubscriber) connectAndConsume(ctx context.Context, handlers [
 		return fmt.Errorf("set Qos: %w", err)
 	}
 
+	if err := ch.Confirm(false); err != nil {
+		return fmt.Errorf("confirm mode: %w", err)
+	}
+	confirms := ch.NotifyPublish(make(chan amqp.Confirmation, 1))
+
 	type namedConsumer struct {
+		tag        string
 		deliveries <-chan amqp.Delivery
 		handler    QueueHandler
 	}
@@ -125,8 +181,15 @@ func (s *MultiQueueSubscriber) connectAndConsume(ctx context.Context, handlers [
 		if err != nil {
 			return fmt.Errorf("consume %q: %w", h.QueueName, err)
 		}
-		consumers = append(consumers, namedConsumer{dels, h})
+		consumers = append(consumers, namedConsumer{tag, dels, h})
 	}
+
+	// LIFO: отмена consumer-тегов выполняется перед ch.Close() (зарегистрирован ранее)
+	defer func() {
+		for _, c := range consumers {
+			_ = ch.Cancel(c.tag, false)
+		}
+	}()
 
 	notifyClose := ch.NotifyClose(make(chan *amqp.Error, 1))
 
@@ -169,12 +232,12 @@ func (s *MultiQueueSubscriber) connectAndConsume(ctx context.Context, handlers [
 			if !ok {
 				return nil
 			}
-			s.handleDelivery(ctx, ch, &td.d, td.h)
+			s.handleDelivery(ctx, ch, confirms, &td.d, td.h)
 		}
 	}
 }
 
-func (s *MultiQueueSubscriber) handleDelivery(ctx context.Context, ch *amqp.Channel, d *amqp.Delivery, h QueueHandler) {
+func (s *MultiQueueSubscriber) handleDelivery(ctx context.Context, ch *amqp.Channel, confirms <-chan amqp.Confirmation, d *amqp.Delivery, h QueueHandler) {
 	hCtx := otel.GetTextMapPropagator().Extract(ctx, tableCarrier(d.Headers))
 	hCtx, span := tracer.Start(hCtx, h.QueueName, trace.WithSpanKind(trace.SpanKindConsumer))
 	defer span.End()
@@ -223,6 +286,15 @@ func (s *MultiQueueSubscriber) handleDelivery(ctx context.Context, ch *amqp.Chan
 		// Запасной вариант: requeue, чтобы сообщение не потерялось
 		if nackErr := ch.Nack(d.DeliveryTag, false, true); nackErr != nil {
 			s.logger.With("error", nackErr.Error()).Error("nack requeue after retry-publish failure")
+		}
+		return
+	}
+
+	// Ждём подтверждения от брокера перед Ack: гарантирует что retry-очередь приняла сообщение
+	if c := <-confirms; !c.Ack {
+		span.SetStatus(codes.Error, "retry-publish nacked by broker")
+		if nackErr := ch.Nack(d.DeliveryTag, false, true); nackErr != nil {
+			s.logger.With("error", nackErr.Error()).Error("nack requeue after broker nack")
 		}
 		return
 	}

@@ -8,7 +8,7 @@ import (
 	"os"
 	"strings"
 
-	fcm "git.korputeam.ru/newbackend/adapters/push/fcm"
+	fcm "github.com/pure-golang/adapters/push/fcm"
 )
 
 // Simple FCM test program

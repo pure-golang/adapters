@@ -1,10 +1,13 @@
 package rabbitmq
 
 import (
+	"log/slog"
 	"testing"
 
 	amqp "github.com/rabbitmq/amqp091-go"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/pure-golang/adapters/queue/rabbitmq/mocks"
 )
 
 // --- unit tests (no docker) ---
@@ -36,10 +39,12 @@ func TestDeathCount_WrongType(t *testing.T) {
 	assert.Equal(t, 0, deathCount(d))
 }
 
-func TestNewSubscriber_Defaults(t *testing.T) {
+func TestNewSubscriber2_Defaults(t *testing.T) {
 	t.Parallel()
-	dialer := NewDefaultDialer("amqp://guest:guest@localhost:5672/")
-	sub := NewSubscriber(dialer, "test.queue", SubscriberOptions{MaxRetries: 3})
+	dialer := mocks.NewChannelProvider(t)
+	dialer.EXPECT().Logger().Return(slog.Default())
+
+	sub := NewSubscriber2(SubscriberConfig{QueueName: "test.queue", MaxRetries: 3}, dialer)
 
 	assert.NotEmpty(t, sub.name)
 	assert.Equal(t, "test.queue", sub.queueName)
@@ -48,13 +53,17 @@ func TestNewSubscriber_Defaults(t *testing.T) {
 	assert.Equal(t, "test.queue.retry", sub.cfg.RetryQueueName)
 }
 
-func TestNewSubscriber_CustomRetryQueue(t *testing.T) {
+func TestNewSubscriber2_CustomRetryQueue(t *testing.T) {
 	t.Parallel()
-	dialer := NewDefaultDialer("amqp://guest:guest@localhost:5672/")
-	sub := NewSubscriber(dialer, "test.queue", SubscriberOptions{
+	dialer := mocks.NewChannelProvider(t)
+	dialer.EXPECT().Logger().Return(slog.Default())
+
+	sub := NewSubscriber2(SubscriberConfig{
+		QueueName:      "test.queue",
 		MaxRetries:     5,
 		RetryQueueName: "custom.retry",
-	})
+	}, dialer)
+
 	assert.Equal(t, "custom.retry", sub.cfg.RetryQueueName)
 }
 

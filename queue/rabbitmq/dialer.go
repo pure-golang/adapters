@@ -53,6 +53,10 @@ func NewDialer(uri string, options *DialerOptions) *Dialer {
 	}
 }
 
+func (d *Dialer) Logger() *slog.Logger {
+	return d.options.Logger
+}
+
 func (d *Dialer) Connect() (err error) {
 	d.options.Logger.Debug("Dialing...")
 

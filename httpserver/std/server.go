@@ -5,11 +5,12 @@ import (
 	stdErr "errors"
 	"fmt"
 	"log/slog"
+	"net"
 	"net/http"
 	"time"
 
-	"git.korputeam.ru/newbackend/adapters/httpserver"
 	"github.com/pkg/errors"
+	"github.com/pure-golang/adapters/httpserver"
 )
 
 const ShutdownTimeout = 15 * time.Second
@@ -50,14 +51,19 @@ func New(c Config, h http.Handler /* ext: option functions */) *Server {
 	}
 }
 
-func (s *Server) Start() error {
-	var err error
+func (s *Server) listen() (net.Listener, error) {
 	s.logger.Info("server starting", slog.String("addr", s.server.Addr))
+	ln, err := net.Listen("tcp", s.server.Addr)
+	return ln, errors.Wrap(err, "failed to listen")
+}
+
+func (s *Server) serve(ln net.Listener) error {
+	var err error
 
 	if s.config.TLSCertPath == "" {
-		err = s.server.ListenAndServe()
+		err = s.server.Serve(ln)
 	} else {
-		err = s.server.ListenAndServeTLS(s.config.TLSCertPath, s.config.TLSKeyPath)
+		err = s.server.ServeTLS(ln, s.config.TLSCertPath, s.config.TLSKeyPath)
 	}
 
 	if err == nil || errors.Is(err, http.ErrServerClosed) {
@@ -66,10 +72,38 @@ func (s *Server) Start() error {
 
 	return errors.Wrapf(err, "serve failed")
 }
-func (s *Server) Close() error {
+
+func (s *Server) Start() error {
+	ln, err := s.listen()
+	if err != nil {
+		return err
+	}
+	go func() {
+		if err := s.serve(ln); err != nil {
+			s.logger.With("error", err).Error("webserver crushed")
+		}
+	}()
+	return nil
+}
+
+func (s *Server) Run() {
+	ln, err := s.listen()
+	if err != nil {
+		s.logger.With("error", err).Error("webserver failed to run")
+		return
+	}
+	if err := s.serve(ln); err != nil {
+		s.logger.With("error", err).Error("webserver crushed")
+	}
+}
+
+func (s *Server) Shutdown() error {
 	ctx, cancel := context.WithTimeout(context.Background(), ShutdownTimeout)
 	defer cancel()
 	err := s.server.Shutdown(ctx)
+	if errors.Is(err, http.ErrServerClosed) {
+		err = nil
+	}
 	if err != nil {
 		err = stdErr.Join(err, errors.Wrapf(s.server.Close(), "failed to close server"))
 	}
@@ -79,11 +113,6 @@ func (s *Server) Close() error {
 	return errors.Wrapf(err, "server shutdown failed")
 }
 
-func (s *Server) Run() {
-	go func() {
-		err := s.Start()
-		if err != nil {
-			s.logger.With("error", err).Error("webserver crushed")
-		}
-	}()
+func (s *Server) Close() error {
+	return s.Shutdown()
 }

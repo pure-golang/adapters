@@ -30,7 +30,10 @@ func (s *RabbitMQSuite) SetupSuite() {
 		ContainerRequest: testcontainers.ContainerRequest{
 			Image:        "rabbitmq:management-alpine",
 			ExposedPorts: []string{"5672/tcp"},
-			WaitingFor:   wait.ForListeningPort("5672/tcp"),
+			WaitingFor: wait.ForAll(
+				wait.ForListeningPort("5672/tcp"),
+				wait.ForLog("Server startup complete"),
+			),
 		},
 		Started: true,
 	})

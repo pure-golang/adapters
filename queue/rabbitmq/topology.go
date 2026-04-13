@@ -22,7 +22,7 @@ type VhostDef struct {
 
 type UserDef struct {
 	Name     string `json:"name"`
-	Password string `json:"password"`
+	Password string `json:"password"` //nolint:gosec
 	Tags     string `json:"tags"`
 }
 

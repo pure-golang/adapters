@@ -6,7 +6,7 @@ import (
 	"runtime/debug"
 	"strings"
 
-	"git.korputeam.ru/newbackend/adapters/logger"
+	"github.com/pure-golang/adapters/logger"
 )
 
 func Recovery(next http.Handler) http.Handler {

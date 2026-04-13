@@ -17,9 +17,9 @@ import (
 var _ tracing.Provider = (*Provider)(nil)
 
 type Config struct {
-	EndPoint    string `envconfig:"TRACING_ENDPOINT" required:"true"`
-	ServiceName string `envconfig:"SERVICE_NAME" required:"true"`
-	AppVersion  string `envconfig:"APP_VERSION" required:"true"`
+	EndPoint    string `envconfig:"TRACING_ENDPOINT" default:""`
+	ServiceName string `envconfig:"SERVICE_NAME" default:""`
+	AppVersion  string `envconfig:"APP_VERSION" default:""`
 }
 
 // Provider extends tracesdk.TraceProvider based on jaeger.Exporter

@@ -2,6 +2,7 @@ package metrics_test
 
 import (
 	"io"
+	"net"
 	"sync"
 	"testing"
 	"time"
@@ -11,6 +12,15 @@ import (
 
 	"github.com/pure-golang/adapters/metrics"
 )
+
+func freePort(t *testing.T) int {
+	t.Helper()
+	l, err := net.Listen("tcp", "127.0.0.1:0")
+	require.NoError(t, err)
+	port := l.Addr().(*net.TCPAddr).Port
+	l.Close()
+	return port
+}
 
 func TestMetrics_Start(t *testing.T) {
 	t.Run("success initializes prometheus and starts server", func(t *testing.T) {
@@ -193,7 +203,7 @@ func TestInitDefault(t *testing.T) {
 
 		config := metrics.Config{
 			Host:                  "127.0.0.1",
-			Port:                  0,
+			Port:                  freePort(t),
 			HttpServerReadTimeout: 5,
 		}
 
@@ -216,7 +226,7 @@ func TestInitDefault(t *testing.T) {
 
 		config := metrics.Config{
 			Host:                  "127.0.0.1",
-			Port:                  0,
+			Port:                  freePort(t),
 			HttpServerReadTimeout: 5,
 		}
 

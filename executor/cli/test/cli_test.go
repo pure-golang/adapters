@@ -3,6 +3,7 @@ package cli_test
 import (
 	"bytes"
 	"context"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -190,7 +191,7 @@ func TestExecutor_ConcurrentExecutionWithDifferentArgs(t *testing.T) {
 
 	for i := range numGoroutines {
 		go func(idx int) {
-			results <- executor.Execute(ctx, "test", "arg"+string(rune('0'+idx)))
+			results <- executor.Execute(ctx, "test", "arg"+strconv.Itoa(idx))
 		}(i)
 	}
 

@@ -33,7 +33,7 @@ type TestConfigWithDefaults struct {
 type TestConfigNoDefaults struct {
 	Host    string `envconfig:"HOST"`
 	Port    int    `envconfig:"PORT"`
-	APIKey  string `envconfig:"API_KEY"`
+	APIKey  string `envconfig:"API_KEY"` //nolint:gosec
 	Enabled bool   `envconfig:"ENABLED" default:"false"`
 }
 

@@ -12,8 +12,8 @@ import (
 )
 
 type Config struct {
-	Host                  string `envconfig:"METRICS_HOST" required:"true"`
-	Port                  int    `envconfig:"METRICS_PORT" required:"true"`
+	Host                  string `envconfig:"METRICS_HOST" default:""`
+	Port                  int    `envconfig:"METRICS_PORT" default:"0"`
 	HttpServerReadTimeout int    `envconfig:"METRICS_READ_TIMEOUT" default:"30"`
 }
 
@@ -24,6 +24,10 @@ type Metrics struct {
 }
 
 func InitDefault(config Config) (io.Closer, error) {
+	if config.Host == "" || config.Port == 0 {
+		return nil, errors.New("metrics config not provided")
+	}
+
 	provider := New(config)
 	if err := provider.Start(); err != nil {
 		return nil, errors.Wrap(err, "failed to start metrics server")

@@ -30,10 +30,3 @@ make
 task test
 task claude
 ```
-
-### Настройка автодополнения для task
-
-```bash
-echo 'eval "$(task --completion zsh)"' >> ~/.zshrc
-source ~/.zshrc
-```

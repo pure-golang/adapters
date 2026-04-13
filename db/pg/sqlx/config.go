@@ -7,7 +7,7 @@ type Config struct {
 	Host            string        `envconfig:"POSTGRES_HOST" required:"true"`
 	Port            int           `envconfig:"POSTGRES_PORT" default:"5432"`
 	User            string        `envconfig:"POSTGRES_USER" required:"true"`
-	Password        string        `envconfig:"POSTGRES_PASSWORD" required:"true"`
+	Password        string        `envconfig:"POSTGRES_PASSWORD" required:"true"` //nolint:gosec
 	Database        string        `envconfig:"POSTGRES_DB" required:"true"`
 	SSLMode         string        `envconfig:"POSTGRES_SSLMODE" default:"disable"`
 	ConnectTimeout  int           `envconfig:"POSTGRES_CONNECT_TIMEOUT" default:"5"`

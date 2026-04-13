@@ -2,6 +2,8 @@ package rabbitmq_test
 
 import (
 	"context"
+	"fmt"
+	"sync"
 	"testing"
 	"time"
 
@@ -30,10 +32,10 @@ func (s *RabbitMQSuite) TestPublisher_Publish() {
 	})
 
 	encoder := encoders.Text{}
-	pub := rabbitmq.NewPublisher(dialer, rabbitmq.PublisherConfig{
+	pub := rabbitmq.NewPublisher2(rabbitmq.PublisherConfig{
 		RoutingKey: queueName,
 		Encoder:    encoder,
-	})
+	}, dialer)
 	expMsg := queue.Message{
 		Body: "message",
 	}
@@ -65,10 +67,10 @@ func (s *RabbitMQSuite) TestPublisher_Publish() {
 
 	t.Run("when dialer is closed", func(t *testing.T) {
 		dialer := rabbitmq.NewDialer(s.RabbitURI, nil)
-		pub := rabbitmq.NewPublisher(dialer, rabbitmq.PublisherConfig{
+		pub := rabbitmq.NewPublisher2(rabbitmq.PublisherConfig{
 			RoutingKey: queueName,
 			Encoder:    encoders.Text{},
-		})
+		}, dialer)
 		err := pub.Publish(ctx, expMsg)
 		assert.ErrorIs(t, err, rabbitmq.ErrConnectionClosed)
 	})
@@ -96,10 +98,10 @@ func (s *RabbitMQSuite) TestPublisher_WithContextCancellation() {
 	})
 
 	encoder := encoders.Text{}
-	pub := rabbitmq.NewPublisher(dialer, rabbitmq.PublisherConfig{
+	pub := rabbitmq.NewPublisher2(rabbitmq.PublisherConfig{
 		RoutingKey: queueName,
 		Encoder:    encoder,
-	})
+	}, dialer)
 
 	// Publish before cancellation
 	msg := queue.Message{Body: "before cancel"}
@@ -113,10 +115,10 @@ func (s *RabbitMQSuite) TestPublisher_WithContextCancellation() {
 	// the publisher uses the context for tracing, not for the actual publish operation
 	msg2 := queue.Message{Body: "after cancel"}
 	err = pub.Publish(ctx, msg2)
-	// The AMQP library doesn't check context cancellation directly
-	// so this may succeed or fail depending on timing
-	// The important thing is we've tested the cancellation path
-	_ = err
+	// AMQP library не проверяет отмену контекста напрямую — результат недетерминирован.
+	if err != nil {
+		t.Logf("publish after cancel: %v", err)
+	}
 }
 
 func (s *RabbitMQSuite) TestPublisher_WithMessageHeaders() {
@@ -140,10 +142,10 @@ func (s *RabbitMQSuite) TestPublisher_WithMessageHeaders() {
 		assert.NoError(t, dialer.Close())
 	})
 
-	pub := rabbitmq.NewPublisher(dialer, rabbitmq.PublisherConfig{
+	pub := rabbitmq.NewPublisher2(rabbitmq.PublisherConfig{
 		RoutingKey: queueName,
 		Encoder:    encoders.JSON{},
-	})
+	}, dialer)
 
 	// Publish message with custom headers
 	headers := map[string]string{
@@ -196,10 +198,10 @@ func (s *RabbitMQSuite) TestPublisher_BatchMessages() {
 		assert.NoError(t, dialer.Close())
 	})
 
-	pub := rabbitmq.NewPublisher(dialer, rabbitmq.PublisherConfig{
+	pub := rabbitmq.NewPublisher2(rabbitmq.PublisherConfig{
 		RoutingKey: queueName,
 		Encoder:    encoders.JSON{},
-	})
+	}, dialer)
 
 	// Publish multiple messages in one call
 	messages := []queue.Message{
@@ -258,10 +260,10 @@ func (s *RabbitMQSuite) TestPublisher_WithTopicOverride() {
 	})
 
 	// Publisher configured with queueName1 as default routing key
-	pub := rabbitmq.NewPublisher(dialer, rabbitmq.PublisherConfig{
+	pub := rabbitmq.NewPublisher2(rabbitmq.PublisherConfig{
 		RoutingKey: queueName1,
 		Encoder:    encoders.Text{},
-	})
+	}, dialer)
 
 	// Publish without topic - should use default routing key
 	msg1 := queue.Message{Body: "to-queue-1"}
@@ -321,11 +323,11 @@ func (s *RabbitMQSuite) TestPublisher_WithMessageTTL() {
 	})
 
 	// Publisher with MessageTTL configured
-	pub := rabbitmq.NewPublisher(dialer, rabbitmq.PublisherConfig{
+	pub := rabbitmq.NewPublisher2(rabbitmq.PublisherConfig{
 		RoutingKey: queueName,
 		Encoder:    encoders.Text{},
 		MessageTTL: 10 * time.Second,
-	})
+	}, dialer)
 
 	msg := queue.Message{Body: "with-ttl"}
 	err = pub.Publish(ctx, msg)
@@ -364,10 +366,10 @@ func (s *RabbitMQSuite) TestPublisher_WithPerMessageTTL() {
 		assert.NoError(t, dialer.Close())
 	})
 
-	pub := rabbitmq.NewPublisher(dialer, rabbitmq.PublisherConfig{
+	pub := rabbitmq.NewPublisher2(rabbitmq.PublisherConfig{
 		RoutingKey: queueName,
 		Encoder:    encoders.Text{},
-	})
+	}, dialer)
 
 	// Message with individual TTL override
 	msg := queue.Message{
@@ -411,11 +413,11 @@ func (s *RabbitMQSuite) TestPublisher_TransientDeliveryMode() {
 		assert.NoError(t, dialer.Close())
 	})
 
-	pub := rabbitmq.NewPublisher(dialer, rabbitmq.PublisherConfig{
+	pub := rabbitmq.NewPublisher2(rabbitmq.PublisherConfig{
 		RoutingKey:   queueName,
 		Encoder:      encoders.Text{},
 		DeliveryMode: rabbitmq.Transient,
-	})
+	}, dialer)
 
 	msg := queue.Message{Body: "transient"}
 	err = pub.Publish(ctx, msg)
@@ -431,6 +433,122 @@ func (s *RabbitMQSuite) TestPublisher_TransientDeliveryMode() {
 	case <-time.After(5 * time.Second):
 		assert.Fail(t, "Timeout waiting for transient message")
 	}
+}
+
+func (s *RabbitMQSuite) TestPublisher_ConcurrentPublish() {
+	t := s.T()
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	t.Cleanup(cancel)
+
+	const goroutines = 10
+	queueName := uuid.NewString()
+
+	// Arrange
+	dialer := rabbitmq.NewDialer(s.RabbitURI, nil)
+	require.NoError(t, dialer.Connect())
+	t.Cleanup(func() { assert.NoError(t, dialer.Close()) })
+
+	ch, err := dialer.Channel()
+	require.NoError(t, err)
+	_, err = ch.QueueDeclare(queueName, false, false, false, false, nil)
+	require.NoError(t, err)
+
+	pub := rabbitmq.NewPublisher2(rabbitmq.PublisherConfig{
+		RoutingKey: queueName,
+		Encoder:    encoders.Text{},
+	}, dialer)
+
+	// Act: publish from N goroutines concurrently
+	var wg sync.WaitGroup
+	errs := make(chan error, goroutines)
+
+	for i := range goroutines {
+		wg.Add(1)
+		go func(i int) {
+			defer wg.Done()
+			msg := queue.Message{Body: fmt.Sprintf("msg-%d", i)}
+			if pubErr := pub.Publish(ctx, msg); pubErr != nil {
+				errs <- pubErr
+			}
+		}(i)
+	}
+
+	wg.Wait()
+	close(errs)
+
+	// Assert: no publish errors from any goroutine
+	for pubErr := range errs {
+		assert.NoError(t, pubErr)
+	}
+
+	// Assert: all messages arrived in the queue
+	deliveries, err := ch.Consume(queueName, "consumer-concurrent", false, false, false, false, nil)
+	require.NoError(t, err)
+
+	received := 0
+	timeout := time.After(10 * time.Second)
+	for received < goroutines {
+		select {
+		case <-deliveries:
+			received++
+		case <-timeout:
+			assert.Failf(t, "timeout", "received %d of %d messages", received, goroutines)
+			return
+		}
+	}
+	assert.Equal(t, goroutines, received)
+}
+
+func (s *RabbitMQSuite) TestPublisher_BatchConfirms() {
+	t := s.T()
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	t.Cleanup(cancel)
+
+	const (
+		batchSize = 3
+		total     = 7 // намеренно не кратно batchSize: батчи 3+3+1
+	)
+	queueName := uuid.NewString()
+
+	// Arrange
+	dialer := rabbitmq.NewDialer(s.RabbitURI, nil)
+	require.NoError(t, dialer.Connect())
+	t.Cleanup(func() { assert.NoError(t, dialer.Close()) })
+
+	ch, err := dialer.Channel()
+	require.NoError(t, err)
+	_, err = ch.QueueDeclare(queueName, false, false, false, false, nil)
+	require.NoError(t, err)
+
+	pub := rabbitmq.NewPublisher2(rabbitmq.PublisherConfig{
+		RoutingKey:        queueName,
+		Encoder:           encoders.Text{},
+		PublisherConfirms: batchSize,
+	}, dialer)
+
+	// Act
+	messages := make([]queue.Message, total)
+	for i := range messages {
+		messages[i] = queue.Message{Body: fmt.Sprintf("msg-%d", i)}
+	}
+	require.NoError(t, pub.Publish(ctx, messages...))
+
+	// Assert: все сообщения долетели
+	deliveries, err := ch.Consume(queueName, "consumer-batch-confirms", false, false, false, false, nil)
+	require.NoError(t, err)
+
+	received := 0
+	timeout := time.After(10 * time.Second)
+	for received < total {
+		select {
+		case <-deliveries:
+			received++
+		case <-timeout:
+			assert.Failf(t, "timeout", "received %d of %d messages", received, total)
+			return
+		}
+	}
+	assert.Equal(t, total, received)
 }
 
 func (s *RabbitMQSuite) TestPublisher_WithExchange() {
@@ -473,11 +591,11 @@ func (s *RabbitMQSuite) TestPublisher_WithExchange() {
 		assert.NoError(t, dialer.Close())
 	})
 
-	pub := rabbitmq.NewPublisher(dialer, rabbitmq.PublisherConfig{
+	pub := rabbitmq.NewPublisher2(rabbitmq.PublisherConfig{
 		Exchange:   exchangeName,
 		RoutingKey: bindingKey,
 		Encoder:    encoders.Text{},
-	})
+	}, dialer)
 
 	msg := queue.Message{Body: "via-exchange"}
 	err = pub.Publish(ctx, msg)

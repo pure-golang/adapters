@@ -2,11 +2,13 @@ package rabbitmq
 
 import (
 	"context"
+	"log/slog"
 	"strconv"
 	"sync"
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/pkg/errors"
 	amqp "github.com/rabbitmq/amqp091-go"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
@@ -20,11 +22,13 @@ import (
 var _ queue.Publisher = (*Publisher)(nil)
 
 type Publisher struct {
-	mx      sync.Mutex
-	dialer  *Dialer
-	cfg     PublisherConfig
-	channel *amqp.Channel
-	closed  <-chan *amqp.Error
+	logger   *slog.Logger
+	mx       sync.Mutex
+	dialer   channelProvider
+	cfg      PublisherConfig
+	channel  *amqp.Channel
+	closed   <-chan *amqp.Error
+	confirms <-chan amqp.Confirmation
 }
 
 type DeliveryMode uint8
@@ -40,9 +44,16 @@ type PublisherConfig struct {
 	DeliveryMode         DeliveryMode
 	Encoder              queue.Encoder
 	MessageTTL           time.Duration // precision to milliseconds
+	// PublisherConfirms задаёт размер батча broker-подтверждений.
+	// 0 (default) — confirm mode отключён, fire-and-forget.
+	// 1 — подтверждение на каждое сообщение (1 RTT/msg).
+	// N > 1 — батч: публикуется N сообщений, затем ждём N confirm'ов (1 RTT/N msg).
+	PublisherConfirms int
 }
 
-func NewPublisher(dialer *Dialer, cfg PublisherConfig) *Publisher {
+// NewPublisher2 создаёт Publisher, принимая зависимость через интерфейс channelProvider.
+// Предпочтительный конструктор: позволяет подменять dialer в тестах без конкретного *Dialer.
+func NewPublisher2(cfg PublisherConfig, dialer channelProvider) *Publisher {
 	if cfg.Encoder == nil {
 		cfg.Encoder = encoders.JSON{}
 	}
@@ -54,10 +65,19 @@ func NewPublisher(dialer *Dialer, cfg PublisherConfig) *Publisher {
 	close(closed)
 
 	return &Publisher{
+		logger: dialer.Logger().WithGroup("publisher").
+			With("exchange", cfg.Exchange).With("routing_key", cfg.RoutingKey),
 		dialer: dialer,
 		cfg:    cfg,
 		closed: closed,
 	}
+}
+
+// NewPublisher создаёт Publisher с конкретным *Dialer.
+//
+// Deprecated: используйте [NewPublisher2], который принимает интерфейс [channelProvider].
+func NewPublisher(dialer *Dialer, cfg PublisherConfig) *Publisher {
+	return NewPublisher2(cfg, dialer)
 }
 
 // Publish messages to queue. Method is sync.
@@ -67,21 +87,63 @@ func (p *Publisher) Publish(ctx context.Context, messages ...queue.Message) erro
 	case <-p.closed:
 		channel, err := p.dialer.Channel()
 		if err != nil {
-			defer p.mx.Unlock()
+			p.mx.Unlock()
+			p.logger.With("error", err).Error("failed to open channel")
 			return err
+		}
+		if p.cfg.PublisherConfirms > 0 {
+			if err := channel.Confirm(false); err != nil {
+				channel.Close()
+				p.mx.Unlock()
+				return errors.Wrap(err, "confirm mode")
+			}
+			p.confirms = channel.NotifyPublish(make(chan amqp.Confirmation, p.cfg.PublisherConfirms))
 		}
 		p.channel = channel
 		p.closed = p.channel.NotifyClose(make(chan *amqp.Error, 1))
+		p.logger.Debug("channel reconnected")
 	default:
 	}
-	p.mx.Unlock()
 
-	for _, msg := range messages {
-		if err := p.publish(ctx, msg); err != nil {
-			return err
+	if p.cfg.PublisherConfirms == 0 {
+		p.mx.Unlock()
+		for _, msg := range messages {
+			if err := p.publish(ctx, msg); err != nil {
+				return err
+			}
 		}
+		return nil
 	}
 
+	// confirms mode: mutex held for entire batch to serialize publish+confirm pairs
+	batchSize := p.cfg.PublisherConfirms
+	pending := 0
+	var publishErr error
+	for _, msg := range messages {
+		if publishErr = p.publish(ctx, msg); publishErr != nil {
+			break
+		}
+		pending++
+		if pending == batchSize {
+			if publishErr = p.drainConfirms(pending); publishErr != nil {
+				break
+			}
+			pending = 0
+		}
+	}
+	if publishErr == nil && pending > 0 {
+		publishErr = p.drainConfirms(pending)
+	}
+	p.mx.Unlock()
+	return publishErr
+}
+
+func (p *Publisher) drainConfirms(n int) error {
+	for range n {
+		if c := <-p.confirms; !c.Ack {
+			return errors.New("publish nacked by broker")
+		}
+	}
 	return nil
 }
 
@@ -119,7 +181,8 @@ func (p *Publisher) publish(ctx context.Context, msg queue.Message) error {
 		routingKey = msg.Topic
 	}
 
-	err = p.channel.Publish(
+	err = p.channel.PublishWithContext(
+		ctx,
 		p.cfg.Exchange,
 		routingKey,
 		false,
@@ -137,6 +200,7 @@ func (p *Publisher) publish(ctx context.Context, msg queue.Message) error {
 	if err != nil {
 		span.RecordError(err)
 		span.SetStatus(codes.Error, err.Error())
+		p.logger.With("error", err).Error("publish failed")
 	} else {
 		span.SetStatus(codes.Ok, "")
 	}

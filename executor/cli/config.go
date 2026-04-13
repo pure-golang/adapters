@@ -10,7 +10,7 @@ type SSHConfig struct {
 	Port     int    `envconfig:"SSH_PORT" default:"22"`
 	User     string `envconfig:"SSH_USER"`
 	KeyPath  string `envconfig:"SSH_KEY_PATH"`
-	Password string `envconfig:"SSH_PASSWORD"`
+	Password string `envconfig:"SSH_PASSWORD"` //nolint:gosec
 }
 
 // Config содержит конфигурацию CLI executor

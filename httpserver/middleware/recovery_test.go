@@ -8,9 +8,10 @@ import (
 	"strings"
 	"testing"
 
-	"git.korputeam.ru/newbackend/adapters/logger"
-	"git.korputeam.ru/newbackend/adapters/logger/noop"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/pure-golang/adapters/logger"
+	"github.com/pure-golang/adapters/logger/noop"
 )
 
 func init() {

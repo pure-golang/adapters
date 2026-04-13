@@ -11,13 +11,13 @@
 # CI cache
 .cache/
 
+# Coverage
 /coverage.txt
 /coverage.xml
 
+# LLM
 SUMMARY.md
 IMPROVE*.md
 plans/
-.claude/
-.kilocode/
 
-.gitlab-ci.yml
+.golangci.yml
