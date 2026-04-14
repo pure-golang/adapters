@@ -3,12 +3,10 @@ package sqlx
 import (
 	"context"
 	"database/sql"
-	"sync"
 	"time"
 
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
-	"go.opentelemetry.io/otel/trace"
 )
 
 // Querier определяет интерфейс для выполнения запросов к базе данных
@@ -73,11 +71,10 @@ func (c *Connection) Exec(ctx context.Context, query string, args ...any) (sql.R
 	return result, nil
 }
 
-// Query выполняет запрос и возвращает строки результата
+// Query выполняет запрос и возвращает строки результата.
+// QueryTimeout не применяется, так как rows потребляются после возврата.
+// Вызывающий управляет временем жизни контекста и должен закрыть rows через defer rows.Close().
 func (c *Connection) Query(ctx context.Context, query string, args ...any) (*sqlx.Rows, error) {
-	ctx, cancel := WithTimeout(ctx, c.cfg.QueryTimeout)
-	defer cancel()
-
 	ctx, span := c.WithTracing(ctx, "Query", query)
 	defer span.End()
 
@@ -116,51 +113,19 @@ func (c *Connection) NamedExec(ctx context.Context, query string, arg any) (sql.
 	return result, nil
 }
 
-// NamedQuery выполняет именованный запрос и возвращает строки результата
+// NamedQuery выполняет именованный запрос и возвращает строки результата.
+// QueryTimeout не применяется, так как rows потребляются после возврата.
+// Вызывающий управляет временем жизни контекста и должен закрыть rows через defer rows.Close().
 func (c *Connection) NamedQuery(ctx context.Context, query string, arg any) (*sqlx.Rows, error) {
-	// Не отменяем контекст пока rows не будут закрыты
-	// Вызывающий должен закрыть rows через defer rows.Close()
-	ctx, cancel := WithTimeout(ctx, c.cfg.QueryTimeout)
-
 	ctx, span := c.WithTracing(ctx, "NamedQuery", query)
+	defer span.End()
 
 	rows, err := c.NamedQueryContext(ctx, query, arg)
 	if err != nil {
-		cancel()
 		span.RecordError(err)
-		span.End()
 		return nil, errors.Wrap(err, "failed to execute named query")
 	}
-
-	// Wrap rows to cancel context and end span when closed
-	wrappedRows := &namedQueryRows{
-		Rows:   rows,
-		cancel: cancel,
-		span:   span,
-		closed: false,
-	}
-	return wrappedRows.Rows, nil
-}
-
-// namedQueryRows wraps sqlx.Rows to cleanup context and span
-type namedQueryRows struct {
-	*sqlx.Rows
-	cancel context.CancelFunc
-	span   trace.Span
-	closed bool
-	mu     sync.Mutex
-}
-
-func (r *namedQueryRows) Close() error {
-	r.mu.Lock()
-	defer r.mu.Unlock()
-	if r.closed {
-		return nil
-	}
-	r.closed = true
-	r.cancel()
-	r.span.End()
-	return r.Rows.Close()
+	return rows, nil
 }
 
 // WithTimeout добавляет таймаут к контексту

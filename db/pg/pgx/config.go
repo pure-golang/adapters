@@ -7,7 +7,7 @@ import (
 
 type Config struct {
 	User            string `envconfig:"POSTGRES_USER" required:"true"`
-	Password        string `envconfig:"POSTGRES_PASSWORD" required:"true"` //nolint:gosec
+	Password        string `envconfig:"POSTGRES_PASSWORD" required:"true"` //nolint:gosec // Поле описывает env-ключ пароля подключения.
 	Host            string `envconfig:"POSTGRES_HOST" required:"true"`
 	Port            int    `envconfig:"POSTGRES_PORT" default:"5432"`
 	Name            string `envconfig:"POSTGRES_DB" required:"true"`

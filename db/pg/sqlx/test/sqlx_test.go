@@ -302,7 +302,11 @@ func TestConnection_QueryTimeout(t *testing.T) {
 	shortTimeoutCfg.QueryTimeout = 100 * time.Millisecond
 	shortTimeoutDB, err := sqlx.Connect(ctx, shortTimeoutCfg)
 	require.NoError(t, err)
-	t.Cleanup(func() { shortTimeoutDB.Close() })
+	t.Cleanup(func() {
+		if closeErr := shortTimeoutDB.Close(); closeErr != nil {
+			t.Errorf("failed to close short-timeout db: %v", closeErr)
+		}
+	})
 
 	_, err = shortTimeoutDB.Exec(ctx, "SELECT test_delay()")
 	require.Error(t, err)
@@ -582,7 +586,7 @@ func TestConnection_Query(t *testing.T) {
 	rows, err := testDB.Query(ctx, "SELECT * FROM test_query ORDER BY id")
 	require.NoError(t, err)
 	require.NotNil(t, rows)
-	rows.Close()
+	require.NoError(t, rows.Close())
 
 	_, err = testDB.Query(ctx, "SELECT * FROM nonexistent_table")
 	require.Error(t, err)

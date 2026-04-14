@@ -1,6 +1,7 @@
 package pgx
 
 import (
+	"fmt"
 	"net/url"
 	"testing"
 
@@ -127,7 +128,14 @@ func TestConfig_URL_FullURLBuilding(t *testing.T) {
 	require.NotNil(t, u)
 
 	// Full URL string representation
-	expected := "postgres://dbuser:dbpassword@db.example.com:6432/production?sslmode=verify-full&sslrootcert=%2Fetc%2Fssl%2Fcerts%2Fpostgres.crt&timezone=utc"
+	expected := fmt.Sprintf(
+		"postgres://%s:%s@%s:%d/%s?sslmode=verify-full&sslrootcert=%%2Fetc%%2Fssl%%2Fcerts%%2Fpostgres.crt&timezone=utc",
+		cfg.User,
+		cfg.Password,
+		cfg.Host,
+		cfg.Port,
+		cfg.Name,
+	)
 	assert.Equal(t, expected, u.String())
 
 	// Verify all components

@@ -11,6 +11,16 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func closeTestDB(t *testing.T, db *sqlx.DB) {
+	t.Helper()
+	require.NoError(t, db.Close())
+}
+
+func rollbackTestTx(t *testing.T, tx *sqlx.Tx) {
+	t.Helper()
+	require.NoError(t, tx.Rollback())
+}
+
 // TestTx_Query_Unit tests the Query method - unit tests.
 func TestTx_Query_Unit(t *testing.T) {
 	t.Parallel()
@@ -38,7 +48,7 @@ func TestTx_Query_Unit(t *testing.T) {
 		if err != nil {
 			t.Skip("requires sqlite3 driver")
 		}
-		defer mockDB.Close()
+		defer closeTestDB(t, mockDB)
 
 		mockTx, err := mockDB.BeginTxx(context.Background(), nil)
 		require.NoError(t, err)
@@ -55,7 +65,7 @@ func TestTx_Query_Unit(t *testing.T) {
 		assert.Error(t, err)
 		assert.Nil(t, rows)
 
-		_ = mockTx.Rollback()
+		rollbackTestTx(t, mockTx)
 	})
 
 	t.Run("Query with various query types", func(t *testing.T) {
@@ -104,7 +114,7 @@ func TestTx_QueryRow_Unit(t *testing.T) {
 		if err != nil {
 			t.Skip("requires sqlite3 driver")
 		}
-		defer mockDB.Close()
+		defer closeTestDB(t, mockDB)
 
 		mockTx, err := mockDB.BeginTxx(context.Background(), nil)
 		require.NoError(t, err)
@@ -120,7 +130,7 @@ func TestTx_QueryRow_Unit(t *testing.T) {
 		row := tx.QueryRow(ctx, "SELECT 1")
 		assert.NotNil(t, row)
 
-		_ = mockTx.Rollback()
+		rollbackTestTx(t, mockTx)
 	})
 
 	t.Run("QueryRow with various queries", func(t *testing.T) {
@@ -229,7 +239,7 @@ func TestTx_QueryErrorPaths_Unit(t *testing.T) {
 		if err != nil {
 			t.Skip("requires sqlite3 driver")
 		}
-		defer mockDB.Close()
+		defer closeTestDB(t, mockDB)
 
 		mockTx, err := mockDB.BeginTxx(context.Background(), nil)
 		require.NoError(t, err)
@@ -244,7 +254,7 @@ func TestTx_QueryErrorPaths_Unit(t *testing.T) {
 		assert.Error(t, err)
 		assert.Nil(t, rows)
 
-		_ = mockTx.Rollback()
+		rollbackTestTx(t, mockTx)
 	})
 
 	t.Run("Query with context already done", func(t *testing.T) {
@@ -253,7 +263,7 @@ func TestTx_QueryErrorPaths_Unit(t *testing.T) {
 		if err != nil {
 			t.Skip("requires sqlite3 driver")
 		}
-		defer mockDB.Close()
+		defer closeTestDB(t, mockDB)
 
 		mockTx, err := mockDB.BeginTxx(context.Background(), nil)
 		require.NoError(t, err)
@@ -270,7 +280,7 @@ func TestTx_QueryErrorPaths_Unit(t *testing.T) {
 		assert.Error(t, err)
 		assert.Nil(t, rows)
 
-		_ = mockTx.Rollback()
+		rollbackTestTx(t, mockTx)
 	})
 }
 
@@ -283,7 +293,7 @@ func TestTx_QueryRowErrorPaths_Unit(t *testing.T) {
 		if err != nil {
 			t.Skip("requires sqlite3 driver")
 		}
-		defer mockDB.Close()
+		defer closeTestDB(t, mockDB)
 
 		mockTx, err := mockDB.BeginTxx(context.Background(), nil)
 		require.NoError(t, err)
@@ -302,7 +312,7 @@ func TestTx_QueryRowErrorPaths_Unit(t *testing.T) {
 		err = row.Scan(&result)
 		assert.Error(t, err)
 
-		_ = mockTx.Rollback()
+		rollbackTestTx(t, mockTx)
 	})
 }
 
@@ -366,8 +376,8 @@ func TestTx_TxFuncSignature(t *testing.T) {
 
 		// Create a sample function
 		fn := func(ctx context.Context, tx *Tx) error {
-			_, _ = tx.Query(ctx, "SELECT 1")
-			return nil
+			_, err := tx.Query(ctx, "SELECT 1")
+			return err
 		}
 
 		assert.NotNil(t, fn)
