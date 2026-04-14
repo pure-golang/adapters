@@ -93,7 +93,9 @@ func (p *Publisher) Publish(ctx context.Context, messages ...queue.Message) erro
 		}
 		if p.cfg.PublisherConfirms > 0 {
 			if err := channel.Confirm(false); err != nil {
-				channel.Close()
+				if closeErr := channel.Close(); closeErr != nil {
+					p.logger.With("error", closeErr).Warn("failed to close channel after confirm error")
+				}
 				p.mx.Unlock()
 				return errors.Wrap(err, "confirm mode")
 			}

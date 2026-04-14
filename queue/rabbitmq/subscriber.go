@@ -149,12 +149,16 @@ func (s *Subscriber) Listen(ctx context.Context, handler queue.Handler) {
 	}
 }
 
-func (s *Subscriber) listen(ctx context.Context, handler queue.Handler) error {
+func (s *Subscriber) listen(ctx context.Context, handler queue.Handler) (err error) {
 	ch, err := s.dialer.Channel()
 	if err != nil {
 		return errors.Wrap(err, "open channel")
 	}
-	defer ch.Close()
+	defer func() {
+		if closeErr := ch.Close(); closeErr != nil && err == nil {
+			err = errors.Wrap(closeErr, "close channel")
+		}
+	}()
 	defer func() { // LIFO: выполняется перед ch.Close(), брокер получает basic.cancel
 		if err := ch.Cancel(s.name, false); err != nil {
 			s.logger.With("error", err).Error("cancel consumer")

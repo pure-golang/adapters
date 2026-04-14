@@ -51,10 +51,12 @@ func (s *RabbitMQSuite) TestMultiQueueSubscriber_Listen_TwoQueues() {
 	ctx, cancel := context.WithCancel(context.Background())
 	sub := rabbitmq.NewMultiQueueSubscriber2(rabbitmq.MultiQueueConfig{MaxRetries: 3}, dialer)
 	go func() {
-		_ = sub.Listen(ctx,
+		if err := sub.Listen(ctx,
 			rabbitmq.QueueHandler{QueueName: q1, Handler: makeHandler("q1")},
 			rabbitmq.QueueHandler{QueueName: q2, Handler: makeHandler("q2")},
-		)
+		); err != nil {
+			t.Logf("subscriber listen stopped with error: %v", err)
+		}
 	}()
 
 	got := make(map[string]bool)
@@ -119,10 +121,12 @@ func (s *RabbitMQSuite) TestMultiQueueSubscriber_SingleGoroutineSequential() {
 		MaxRetries:    3,
 	}, dialer)
 	go func() {
-		_ = sub.Listen(ctx,
+		if err := sub.Listen(ctx,
 			rabbitmq.QueueHandler{QueueName: q1, Handler: handler},
 			rabbitmq.QueueHandler{QueueName: q2, Handler: handler},
-		)
+		); err != nil {
+			t.Logf("subscriber listen stopped with error: %v", err)
+		}
 	}()
 
 	timeout := time.After(10 * time.Second)
@@ -173,11 +177,13 @@ func (s *RabbitMQSuite) TestMultiQueueSubscriber_Retry() {
 		MaxRetries: 3,
 	}, dialer)
 	go func() {
-		_ = sub.Listen(ctx, rabbitmq.QueueHandler{
+		if err := sub.Listen(ctx, rabbitmq.QueueHandler{
 			QueueName:      qName,
 			RetryQueueName: qRetry,
 			Handler:        handler,
-		})
+		}); err != nil {
+			t.Logf("subscriber listen stopped with error: %v", err)
+		}
 	}()
 
 	retryDeliveries, err := ch.Consume(qRetry, "", false, false, false, false, nil)
@@ -214,12 +220,14 @@ func (s *RabbitMQSuite) TestMultiQueueSubscriber_GracefulShutdown() {
 	done := make(chan struct{})
 	go func() {
 		defer close(done)
-		_ = sub.Listen(ctx, rabbitmq.QueueHandler{
+		if err := sub.Listen(ctx, rabbitmq.QueueHandler{
 			QueueName: qName,
 			Handler: func(_ context.Context, _ queue.Delivery) (bool, error) {
 				return false, nil
 			},
-		})
+		}); err != nil {
+			t.Logf("subscriber listen stopped with error: %v", err)
+		}
 	}()
 	time.Sleep(100 * time.Millisecond)
 

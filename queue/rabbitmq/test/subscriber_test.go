@@ -29,7 +29,7 @@ func (s *RabbitMQSuite) TestSubscriber_Listen_Ack() {
 
 	ch, err := dialer.Channel()
 	require.NoError(t, err)
-	t.Cleanup(func() { _ = ch.Close() })
+	t.Cleanup(func() { require.NoError(t, ch.Close()) })
 	_, err = ch.QueueDeclare(qName, false, false, false, false, nil)
 	require.NoError(t, err)
 
@@ -95,7 +95,7 @@ func (s *RabbitMQSuite) TestSubscriber_Listen_DLQ() {
 
 	ch, err := dialer.Channel()
 	require.NoError(t, err)
-	t.Cleanup(func() { _ = ch.Close() })
+	t.Cleanup(func() { require.NoError(t, ch.Close()) })
 	require.NoError(t, applyDefinitions(ch, defs))
 
 	// Publish a message with x-death count already at MaxRetries so subscriber nacks it to DLQ immediately.
@@ -155,7 +155,7 @@ func (s *RabbitMQSuite) TestSubscriber_Listen_RetryQueue() {
 
 	ch, err := dialer.Channel()
 	require.NoError(t, err)
-	t.Cleanup(func() { _ = ch.Close() })
+	t.Cleanup(func() { require.NoError(t, ch.Close()) })
 	_, err = ch.QueueDeclare(qName, false, false, false, false, nil)
 	require.NoError(t, err)
 	_, err = ch.QueueDeclare(qRetry, false, false, false, false, nil)
@@ -210,7 +210,7 @@ func (s *RabbitMQSuite) TestSubscriber_Listen_GracefulShutdown() {
 
 	ch, err := dialer.Channel()
 	require.NoError(t, err)
-	t.Cleanup(func() { _ = ch.Close() })
+	t.Cleanup(func() { require.NoError(t, ch.Close()) })
 	_, err = ch.QueueDeclare(qName, false, false, false, false, nil)
 	require.NoError(t, err)
 
@@ -248,7 +248,7 @@ func (s *RabbitMQSuite) TestSubscriber_MessageTimeout() {
 
 	ch, err := dialer.Channel()
 	require.NoError(t, err)
-	t.Cleanup(func() { _ = ch.Close() })
+	t.Cleanup(func() { require.NoError(t, ch.Close()) })
 	_, err = ch.QueueDeclare(qName, false, false, false, false, nil)
 	require.NoError(t, err)
 

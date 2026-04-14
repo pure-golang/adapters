@@ -151,12 +151,16 @@ type taggedDelivery struct {
 	h QueueHandler
 }
 
-func (s *MultiQueueSubscriber) connectAndConsume(ctx context.Context, handlers []QueueHandler) error {
+func (s *MultiQueueSubscriber) connectAndConsume(ctx context.Context, handlers []QueueHandler) (err error) {
 	ch, err := s.dialer.Channel()
 	if err != nil {
 		return fmt.Errorf("open channel: %w", err)
 	}
-	defer ch.Close()
+	defer func() {
+		if closeErr := ch.Close(); closeErr != nil && err == nil {
+			err = fmt.Errorf("close channel: %w", closeErr)
+		}
+	}()
 
 	// global=true: лимит prefetch применяется ко всем консьюмерам на этом канале.
 	if err := ch.Qos(s.cfg.PrefetchCount, 0, true); err != nil {
@@ -187,7 +191,9 @@ func (s *MultiQueueSubscriber) connectAndConsume(ctx context.Context, handlers [
 	// LIFO: отмена consumer-тегов выполняется перед ch.Close() (зарегистрирован ранее)
 	defer func() {
 		for _, c := range consumers {
-			_ = ch.Cancel(c.tag, false)
+			if cancelErr := ch.Cancel(c.tag, false); cancelErr != nil {
+				s.logger.Warn("failed to cancel consumer", slog.String("tag", c.tag), slog.Any("err", cancelErr))
+			}
 		}
 	}()
 

@@ -23,11 +23,11 @@ func (s *RabbitMQSuite) TestConnector_WaitForExchange() {
 	// Arrange: объявляем exchange и сразу проверяем, что WaitForExchange проходит
 	dialer := rabbitmq.NewDialer(s.RabbitURI, nil)
 	require.NoError(t, dialer.Connect())
-	t.Cleanup(func() { dialer.Close() })
+	t.Cleanup(func() { require.NoError(t, dialer.Close()) })
 
 	ch, err := dialer.Channel()
 	require.NoError(t, err)
-	t.Cleanup(func() { ch.Close() })
+	t.Cleanup(func() { require.NoError(t, ch.Close()) })
 
 	require.NoError(t, ch.ExchangeDeclare(exchangeName, "topic", false, true, false, false, amqp.Table{}))
 
@@ -54,11 +54,11 @@ func (s *RabbitMQSuite) TestConnector_WaitForQueue() {
 	// Arrange: объявляем очередь и сразу проверяем, что WaitForQueue проходит
 	dialer := rabbitmq.NewDialer(s.RabbitURI, nil)
 	require.NoError(t, dialer.Connect())
-	t.Cleanup(func() { dialer.Close() })
+	t.Cleanup(func() { require.NoError(t, dialer.Close()) })
 
 	ch, err := dialer.Channel()
 	require.NoError(t, err)
-	t.Cleanup(func() { ch.Close() })
+	t.Cleanup(func() { require.NoError(t, ch.Close()) })
 
 	_, err = ch.QueueDeclare(queueName, false, true, false, false, amqp.Table{})
 	require.NoError(t, err)

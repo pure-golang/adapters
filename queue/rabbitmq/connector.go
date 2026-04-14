@@ -63,12 +63,12 @@ func (c *Connector) WaitForExchange(ctx context.Context, exchangeName string) er
 
 	c.log.Info("waiting for exchange", slog.String("exchange", exchangeName))
 	for {
-		if err := c.tryCheckExchange(exchangeName); err != nil {
-			c.log.Debug("exchange not ready", slog.String("exchange", exchangeName), slog.Any("err", err))
-		} else {
+		err := c.tryCheckExchange(exchangeName)
+		if err == nil {
 			c.log.Info("exchange is ready", slog.String("exchange", exchangeName))
 			return nil
 		}
+		c.log.Debug("exchange not ready", slog.String("exchange", exchangeName), slog.Any("err", err))
 		select {
 		case <-ctx.Done():
 			span.RecordError(ctx.Err())
@@ -87,12 +87,12 @@ func (c *Connector) WaitForQueue(ctx context.Context, queueName string) error {
 
 	c.log.Info("waiting for queue", slog.String("queue", queueName))
 	for {
-		if err := c.tryCheckQueue(queueName); err != nil {
-			c.log.Debug("queue not ready", slog.String("queue", queueName), slog.Any("err", err))
-		} else {
+		err := c.tryCheckQueue(queueName)
+		if err == nil {
 			c.log.Info("queue is ready", slog.String("queue", queueName))
 			return nil
 		}
+		c.log.Debug("queue not ready", slog.String("queue", queueName), slog.Any("err", err))
 		select {
 		case <-ctx.Done():
 			span.RecordError(ctx.Err())
@@ -106,12 +106,16 @@ func (c *Connector) WaitForQueue(ctx context.Context, queueName string) error {
 // tryCheckExchange пассивно проверяет наличие exchange.
 // Каждый вызов открывает новый канал, т.к. passive declare при ошибке NOT_FOUND
 // закрывает канал на уровне протокола.
-func (c *Connector) tryCheckExchange(exchangeName string) error {
+func (c *Connector) tryCheckExchange(exchangeName string) (err error) {
 	ch, err := c.dialer.Channel()
 	if err != nil {
 		return errors.Wrap(err, "failed to open channel")
 	}
-	defer ch.Close()
+	defer func() {
+		if closeErr := ch.Close(); closeErr != nil && err == nil {
+			err = errors.Wrap(closeErr, "failed to close channel")
+		}
+	}()
 	return errors.Wrap(
 		ch.ExchangeDeclarePassive(exchangeName, "topic", true, false, false, false, nil),
 		"failed to declare exchange passively",
@@ -120,12 +124,16 @@ func (c *Connector) tryCheckExchange(exchangeName string) error {
 
 // tryCheckQueue открывает временный канал и пассивно проверяет существование очереди.
 // Каждый вызов открывает новый канал по той же причине, что и tryCheckExchange.
-func (c *Connector) tryCheckQueue(queueName string) error {
+func (c *Connector) tryCheckQueue(queueName string) (err error) {
 	ch, err := c.dialer.Channel()
 	if err != nil {
 		return errors.Wrap(err, "failed to open channel")
 	}
-	defer ch.Close()
+	defer func() {
+		if closeErr := ch.Close(); closeErr != nil && err == nil {
+			err = errors.Wrap(closeErr, "failed to close channel")
+		}
+	}()
 	_, err = ch.QueueDeclarePassive(queueName, true, false, false, false, nil)
 	return errors.Wrap(err, "failed to declare queue passively")
 }

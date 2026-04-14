@@ -26,7 +26,7 @@ func (s *KafkaSuite) TestSubscriber_Listen() {
 		Encoder: encoders.Text{},
 	})
 	s.T().Cleanup(func() {
-		pub.Close()
+		require.NoError(s.T(), pub.Close())
 	})
 
 	// Создаем уникальную тему для этого теста, чтобы избежать конфликтов с другими тестами
@@ -132,7 +132,7 @@ func (s *KafkaSuite) TestSubscriber_WithRetryableError() {
 		Encoder: encoders.JSON{},
 	})
 	s.T().Cleanup(func() {
-		pub.Close()
+		require.NoError(s.T(), pub.Close())
 	})
 
 	// Создаем subscriber с коротким backoff для тестов
@@ -192,7 +192,7 @@ func (s *KafkaSuite) TestSubscriber_WithNonRetryableError() {
 		Encoder: encoders.JSON{},
 	})
 	s.T().Cleanup(func() {
-		pub.Close()
+		require.NoError(s.T(), pub.Close())
 	})
 
 	// Создаем subscriber

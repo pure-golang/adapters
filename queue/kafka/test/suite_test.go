@@ -7,6 +7,7 @@ import (
 
 	"github.com/google/uuid"
 	kafkago "github.com/segmentio/kafka-go"
+	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	kafkatestcontainers "github.com/testcontainers/testcontainers-go/modules/kafka"
 
@@ -97,14 +98,14 @@ func (s *KafkaSuite) createDialer() *kafka.Dialer {
 func (s *KafkaSuite) createPublisher(encoder queue.Encoder) *kafka.Publisher {
 	dialer := s.createDialer()
 	s.T().Cleanup(func() {
-		dialer.Close()
+		require.NoError(s.T(), dialer.Close())
 	})
 
 	pub := kafka.NewPublisher(dialer, kafka.PublisherConfig{
 		Encoder: encoder,
 	})
 	s.T().Cleanup(func() {
-		pub.Close()
+		require.NoError(s.T(), pub.Close())
 	})
 
 	return pub

@@ -22,7 +22,7 @@ type VhostDef struct {
 
 type UserDef struct {
 	Name     string `json:"name"`
-	Password string `json:"password"` //nolint:gosec
+	Password string `json:"password"` //nolint:gosec // Поле отражает schema management API RabbitMQ.
 	Tags     string `json:"tags"`
 }
 
