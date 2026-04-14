@@ -302,7 +302,9 @@ func TestMetricsUnaryInterceptor_Context(t *testing.T) {
 		return "success", nil
 	}
 
-	_, _ = interceptor(ctxWithValue, nil, info, handler)
+	resp, err := interceptor(ctxWithValue, nil, info, handler)
+	assert.NoError(t, err)
+	assert.Equal(t, "success", resp)
 
 	assert.Equal(t, "test_value", capturedCtx.Value(metricsUnaryCtxKey("test_key")))
 }
@@ -510,7 +512,9 @@ func TestMetricsUnaryInterceptor_WithPanic(t *testing.T) {
 
 	// The metrics interceptor doesn't catch panics - they will propagate
 	assert.Panics(t, func() {
-		_, _ = interceptor(context.Background(), nil, info, handler)
+		if _, err := interceptor(context.Background(), nil, info, handler); err != nil {
+			t.Logf("unexpected interceptor error before panic: %v", err)
+		}
 	})
 }
 
@@ -532,7 +536,9 @@ func TestMetricsStreamInterceptor_WithPanic(t *testing.T) {
 
 	// The metrics interceptor doesn't catch panics - they will propagate
 	assert.Panics(t, func() {
-		_ = interceptor(nil, ss, info, handler)
+		if err := interceptor(nil, ss, info, handler); err != nil {
+			t.Logf("unexpected interceptor error before panic: %v", err)
+		}
 	})
 }
 
@@ -651,7 +657,9 @@ func TestMetricsUnaryInterceptor_WithSpanInContext(t *testing.T) {
 	// Setup a real tracer provider for testing
 	tp := sdktrace.NewTracerProvider()
 	defer func() {
-		_ = tp.Shutdown(context.Background())
+		if err := tp.Shutdown(context.Background()); err != nil {
+			t.Errorf("failed to shutdown tracer provider: %v", err)
+		}
 	}()
 	otel.SetTracerProvider(tp)
 

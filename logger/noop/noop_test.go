@@ -306,7 +306,13 @@ func BenchmarkWriter_Write(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		_, _ = w.Write(data)
+		n, err := w.Write(data)
+		if err != nil {
+			b.Fatalf("Write() unexpected error: %v", err)
+		}
+		if n != 0 {
+			b.Fatalf("Write() = %d, want 0", n)
+		}
 	}
 }
 

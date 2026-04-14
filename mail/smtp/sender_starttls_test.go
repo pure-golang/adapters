@@ -102,14 +102,13 @@ func (s *starttlssmtpServer) run(t *testing.T) {
 }
 
 func (s *starttlssmtpServer) handleConn(t *testing.T, conn net.Conn) {
-	defer conn.Close()
+	defer closeTestConn(t, conn)
 
 	reader := bufio.NewReader(conn)
 	writer := bufio.NewWriter(conn)
 
 	// Send greeting
-	_, _ = writer.WriteString("220 localhost ESMTP Test Server\r\n")
-	writer.Flush()
+	writeSMTPResponses(t, writer, "220 localhost ESMTP Test Server\r\n")
 
 	for {
 		line, err := reader.ReadString('\n')
@@ -122,14 +121,10 @@ func (s *starttlssmtpServer) handleConn(t *testing.T, conn net.Conn) {
 		switch {
 		case strings.ToUpper(line) == "EHLO localhost" || strings.HasPrefix(strings.ToUpper(line), "EHLO"):
 			// Respond with EHLO and advertise STARTTLS
-			_, _ = writer.WriteString("250-localhost\r\n")
-			_, _ = writer.WriteString("250-STARTTLS\r\n")
-			_, _ = writer.WriteString("250 HELP\r\n")
-			writer.Flush()
+			writeSMTPResponses(t, writer, "250-localhost\r\n", "250-STARTTLS\r\n", "250 HELP\r\n")
 		case strings.ToUpper(line) == "STARTTLS":
 			// Respond to STARTTLS
-			_, _ = writer.WriteString("220 Ready to start TLS\r\n")
-			writer.Flush()
+			writeSMTPResponses(t, writer, "220 Ready to start TLS\r\n")
 
 			// Upgrade to TLS
 			tlsConfig := &tls.Config{
@@ -150,14 +145,11 @@ func (s *starttlssmtpServer) handleConn(t *testing.T, conn net.Conn) {
 			conn = tlsConn
 
 		case strings.HasPrefix(strings.ToUpper(line), "MAIL FROM:"):
-			_, _ = writer.WriteString("250 OK\r\n")
-			writer.Flush()
+			writeSMTPResponses(t, writer, "250 OK\r\n")
 		case strings.HasPrefix(strings.ToUpper(line), "RCPT TO:"):
-			_, _ = writer.WriteString("250 OK\r\n")
-			writer.Flush()
+			writeSMTPResponses(t, writer, "250 OK\r\n")
 		case line == "DATA":
-			_, _ = writer.WriteString("354 End data with <CR><LF>.<CR><LF>\r\n")
-			writer.Flush()
+			writeSMTPResponses(t, writer, "354 End data with <CR><LF>.<CR><LF>\r\n")
 
 			// Read message
 			scanner := bufio.NewScanner(reader)
@@ -167,27 +159,25 @@ func (s *starttlssmtpServer) handleConn(t *testing.T, conn net.Conn) {
 				}
 			}
 
-			_, _ = writer.WriteString("250 OK\r\n")
-			writer.Flush()
+			writeSMTPResponses(t, writer, "250 OK\r\n")
 		case strings.HasPrefix(strings.ToUpper(line), "AUTH PLAIN"):
 			// Accept AUTH
-			_, _ = writer.WriteString("235 OK\r\n")
-			writer.Flush()
+			writeSMTPResponses(t, writer, "235 OK\r\n")
 		case strings.ToUpper(line) == "QUIT":
-			_, _ = writer.WriteString("221 Bye\r\n")
-			writer.Flush()
+			writeSMTPResponses(t, writer, "221 Bye\r\n")
 			return
 		default:
 			// Unknown command - try to handle gracefully
-			_, _ = writer.WriteString("500 Syntax error\r\n")
-			writer.Flush()
+			writeSMTPResponses(t, writer, "500 Syntax error\r\n")
 		}
 	}
 }
 
 func (s *starttlssmtpServer) close() {
 	if s.listener != nil {
-		s.listener.Close()
+		if err := s.listener.Close(); err != nil {
+			return
+		}
 	}
 }
 
@@ -204,7 +194,7 @@ func TestSender_STARTTLS_Success(t *testing.T) {
 	}
 
 	sender := NewSender(cfg)
-	defer sender.Close()
+	defer closeTestSender(t, sender)
 
 	ctx := context.Background()
 	email := mail.Email{
@@ -233,7 +223,7 @@ func TestSender_STARTTLS_WithAuth(t *testing.T) {
 	}
 
 	sender := NewSender(cfg)
-	defer sender.Close()
+	defer closeTestSender(t, sender)
 
 	ctx := context.Background()
 	email := mail.Email{
@@ -260,7 +250,7 @@ func TestSender_STARTTLS_MultipleRecipients(t *testing.T) {
 	}
 
 	sender := NewSender(cfg)
-	defer sender.Close()
+	defer closeTestSender(t, sender)
 
 	ctx := context.Background()
 	email := mail.Email{
@@ -296,7 +286,7 @@ func TestSender_STARTTLS_WithHTML(t *testing.T) {
 	}
 
 	sender := NewSender(cfg)
-	defer sender.Close()
+	defer closeTestSender(t, sender)
 
 	ctx := context.Background()
 	email := mail.Email{
@@ -324,7 +314,7 @@ func TestSender_STARTTLS_ContextCancellation(t *testing.T) {
 	}
 
 	sender := NewSender(cfg)
-	defer sender.Close()
+	defer closeTestSender(t, sender)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel() // Cancel immediately
@@ -354,7 +344,7 @@ func TestSender_STARTTLS_WithDefaultFrom(t *testing.T) {
 	}
 
 	sender := NewSender(cfg)
-	defer sender.Close()
+	defer closeTestSender(t, sender)
 
 	ctx := context.Background()
 	email := mail.Email{

@@ -18,7 +18,7 @@ func freePort(t *testing.T) int {
 	l, err := net.Listen("tcp", "127.0.0.1:0")
 	require.NoError(t, err)
 	port := l.Addr().(*net.TCPAddr).Port
-	l.Close()
+	require.NoError(t, l.Close())
 	return port
 }
 
@@ -142,7 +142,7 @@ func TestMetrics_Close(t *testing.T) {
 		}
 
 		m := metrics.New(config)
-		_ = m.Start()
+		require.NoError(t, m.Start())
 
 		var closer io.Closer = m
 		err := closer.Close()
@@ -237,7 +237,7 @@ func TestInitDefault(t *testing.T) {
 		// closer already is io.Closer, no need for type assertion
 		assert.NotNil(t, closer)
 
-		closer.Close()
+		assert.NoError(t, closer.Close())
 	})
 }
 

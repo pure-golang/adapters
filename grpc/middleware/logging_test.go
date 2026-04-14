@@ -40,9 +40,9 @@ func TestLoggingInterceptor_Success(t *testing.T) {
 	t.Parallel()
 	// Create a logger that captures log output
 	var logAttrs []slog.Attr
-	logger := slog.New(&attrHandler{attrs: &logAttrs})
+	testLogger := slog.New(&attrHandler{attrs: &logAttrs})
 
-	interceptor := LoggingInterceptor(logger)
+	interceptor := LoggingInterceptor(testLogger)
 
 	handlerCalled := false
 	info := &grpc.UnaryServerInfo{
@@ -68,9 +68,9 @@ func TestLoggingInterceptor_Success(t *testing.T) {
 func TestLoggingInterceptor_WithError(t *testing.T) {
 	t.Parallel()
 	var logAttrs []slog.Attr
-	logger := slog.New(&attrHandler{attrs: &logAttrs})
+	testLogger := slog.New(&attrHandler{attrs: &logAttrs})
 
-	interceptor := LoggingInterceptor(logger)
+	interceptor := LoggingInterceptor(testLogger)
 
 	info := &grpc.UnaryServerInfo{
 		FullMethod: "/test.service/TestMethod",
@@ -104,11 +104,11 @@ func TestLoggingInterceptor_WithError(t *testing.T) {
 // TestLoggingInterceptor_WithPanic tests panic recovery via RecoveryInterceptor
 func TestLoggingInterceptor_WithPanic(t *testing.T) {
 	var logAttrs []slog.Attr
-	logger := slog.New(&attrHandler{attrs: &logAttrs})
+	testLogger := slog.New(&attrHandler{attrs: &logAttrs})
 
 	// Chain RecoveryInterceptor before LoggingInterceptor
-	recovery := RecoveryInterceptor(logger)
-	logging := LoggingInterceptor(logger)
+	recovery := RecoveryInterceptor(testLogger)
+	logging := LoggingInterceptor(testLogger)
 
 	info := &grpc.UnaryServerInfo{
 		FullMethod: "/test.service/PanicMethod",
@@ -190,9 +190,9 @@ func TestLoggingInterceptor_DifferentErrorCodes(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 			var logAttrs []slog.Attr
-			logger := slog.New(&attrHandler{attrs: &logAttrs})
+			testLogger := slog.New(&attrHandler{attrs: &logAttrs})
 
-			interceptor := LoggingInterceptor(logger)
+			interceptor := LoggingInterceptor(testLogger)
 
 			info := &grpc.UnaryServerInfo{
 				FullMethod: "/test.service/TestMethod",
@@ -214,9 +214,9 @@ func TestLoggingInterceptor_DifferentErrorCodes(t *testing.T) {
 // TestRecoveryInterceptor_CatchesPanic tests that RecoveryInterceptor catches panics
 func TestRecoveryInterceptor_CatchesPanic(t *testing.T) {
 	var logAttrs []slog.Attr
-	logger := slog.New(&attrHandler{attrs: &logAttrs})
+	testLogger := slog.New(&attrHandler{attrs: &logAttrs})
 
-	interceptor := RecoveryInterceptor(logger)
+	interceptor := RecoveryInterceptor(testLogger)
 
 	info := &grpc.UnaryServerInfo{
 		FullMethod: "/test.service/PanicMethod",
@@ -291,9 +291,9 @@ func (m *mockServerStream) Context() context.Context {
 func TestLoggingStreamInterceptor_Success(t *testing.T) {
 	t.Parallel()
 	var logAttrs []slog.Attr
-	logger := slog.New(&attrHandler{attrs: &logAttrs})
+	testLogger := slog.New(&attrHandler{attrs: &logAttrs})
 
-	interceptor := LoggingStreamInterceptor(logger)
+	interceptor := LoggingStreamInterceptor(testLogger)
 
 	info := &grpc.StreamServerInfo{
 		FullMethod:     "/test.service/TestStream",
@@ -320,9 +320,9 @@ func TestLoggingStreamInterceptor_Success(t *testing.T) {
 func TestLoggingStreamInterceptor_WithError(t *testing.T) {
 	t.Parallel()
 	var logAttrs []slog.Attr
-	logger := slog.New(&attrHandler{attrs: &logAttrs})
+	testLogger := slog.New(&attrHandler{attrs: &logAttrs})
 
-	interceptor := LoggingStreamInterceptor(logger)
+	interceptor := LoggingStreamInterceptor(testLogger)
 
 	info := &grpc.StreamServerInfo{
 		FullMethod:     "/test.service/TestStream",
@@ -349,9 +349,9 @@ func TestLoggingStreamInterceptor_WithError(t *testing.T) {
 // TestLoggingStreamInterceptor_StreamTypes tests logging with different stream types
 func TestLoggingStreamInterceptor_StreamTypes(t *testing.T) {
 	var logAttrs []slog.Attr
-	logger := slog.New(&attrHandler{attrs: &logAttrs})
+	testLogger := slog.New(&attrHandler{attrs: &logAttrs})
 
-	interceptor := LoggingStreamInterceptor(logger)
+	interceptor := LoggingStreamInterceptor(testLogger)
 
 	testCases := []struct {
 		name string
@@ -402,9 +402,9 @@ func TestLoggingStreamInterceptor_StreamTypes(t *testing.T) {
 // TestRecoveryStreamInterceptor_CatchesPanic tests that RecoveryStreamInterceptor catches panics
 func TestRecoveryStreamInterceptor_CatchesPanic(t *testing.T) {
 	var logAttrs []slog.Attr
-	logger := slog.New(&attrHandler{attrs: &logAttrs})
+	testLogger := slog.New(&attrHandler{attrs: &logAttrs})
 
-	interceptor := RecoveryStreamInterceptor(logger)
+	interceptor := RecoveryStreamInterceptor(testLogger)
 
 	info := &grpc.StreamServerInfo{
 		FullMethod: "/test.service/PanicStream",
@@ -452,8 +452,8 @@ func TestRecoveryStreamInterceptor_CatchesPanic(t *testing.T) {
 // TestLoggingInterceptor_Context tests that context is properly passed through
 func TestLoggingInterceptor_Context(t *testing.T) {
 	t.Parallel()
-	logger := noop.NewNoop().With("test", "value")
-	interceptor := LoggingInterceptor(logger)
+	testLogger := noop.NewNoop().With("test", "value")
+	interceptor := LoggingInterceptor(testLogger)
 
 	info := &grpc.UnaryServerInfo{
 		FullMethod: "/test.service/TestMethod",
@@ -468,7 +468,9 @@ func TestLoggingInterceptor_Context(t *testing.T) {
 		return "success", nil
 	}
 
-	_, _ = interceptor(ctxWithValue, "request", info, handler)
+	resp, err := interceptor(ctxWithValue, "request", info, handler)
+	assert.NoError(t, err)
+	assert.Equal(t, "success", resp)
 
 	// Verify context was passed through
 	assert.Equal(t, "test_value", capturedCtx.Value(loggingCtxKey("test_key")))
@@ -477,8 +479,8 @@ func TestLoggingInterceptor_Context(t *testing.T) {
 // TestLoggingStreamInterceptor_Context tests that context is properly passed through streams
 func TestLoggingStreamInterceptor_Context(t *testing.T) {
 	t.Parallel()
-	logger := noop.NewNoop()
-	interceptor := LoggingStreamInterceptor(logger)
+	testLogger := noop.NewNoop()
+	interceptor := LoggingStreamInterceptor(testLogger)
 
 	info := &grpc.StreamServerInfo{
 		FullMethod: "/test.service/TestStream",
@@ -495,7 +497,8 @@ func TestLoggingStreamInterceptor_Context(t *testing.T) {
 		return nil
 	}
 
-	_ = interceptor(nil, ss, info, handler)
+	err := interceptor(nil, ss, info, handler)
+	assert.NoError(t, err)
 
 	// Verify context was passed through
 	assert.Equal(t, "stream_value", capturedCtx.Value(loggingStreamCtxKey("stream_key")))
@@ -506,9 +509,9 @@ func TestLoggingInterceptor_WithTextLogger(t *testing.T) {
 	t.Parallel()
 	// Use text logger for simpler testing
 	var buf []byte
-	logger := slog.New(slog.NewTextHandler(&bufWriter{&buf}, nil))
+	testLogger := slog.New(slog.NewTextHandler(&bufWriter{&buf}, nil))
 
-	interceptor := LoggingInterceptor(logger)
+	interceptor := LoggingInterceptor(testLogger)
 
 	info := &grpc.UnaryServerInfo{
 		FullMethod: "/test.service/TestMethod",
@@ -563,8 +566,8 @@ func (h *attrHandler) WithGroup(name string) slog.Handler {
 // TestLoggingInterceptor_WithBufConn tests using buffer connection for gRPC testing
 func TestLoggingInterceptor_WithBufConn(t *testing.T) {
 	t.Parallel()
-	logger := noop.NewNoop()
-	interceptor := LoggingInterceptor(logger)
+	testLogger := noop.NewNoop()
+	interceptor := LoggingInterceptor(testLogger)
 
 	// Create a buffer listener
 	lis := bufconn.Listen(1024)
@@ -582,5 +585,5 @@ func TestLoggingInterceptor_WithBufConn(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, "bufconn_success", resp)
 
-	lis.Close() // Clean up
+	require.NoError(t, lis.Close())
 }

@@ -8,6 +8,7 @@ import (
 	"github.com/pkg/errors"
 	rclient "github.com/redis/go-redis/v9"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestIsNil(t *testing.T) {
@@ -98,7 +99,7 @@ func TestClient_Close(t *testing.T) {
 		})
 
 		// Simulate closed state
-		mockClient.Close()
+		require.NoError(t, mockClient.Close())
 
 		client := &Client{
 			Client: mockClient,

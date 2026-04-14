@@ -37,10 +37,10 @@ func TestDefaultMonitoringOptions(t *testing.T) {
 // TestSetupMonitoring_AllOptionsEnabled tests SetupMonitoring with all options enabled
 func TestSetupMonitoring_AllOptionsEnabled(t *testing.T) {
 	ctx := context.Background()
-	logger := noop.NewNoop()
+	testLogger := noop.NewNoop()
 
 	opts := &MonitoringOptions{
-		Logger:             logger,
+		Logger:             testLogger,
 		EnableTracing:      true,
 		EnableMetrics:      true,
 		EnableLogging:      true,
@@ -61,10 +61,10 @@ func TestSetupMonitoring_AllOptionsEnabled(t *testing.T) {
 // TestSetupMonitoring_TracingDisabled tests SetupMonitoring with tracing disabled
 func TestSetupMonitoring_TracingDisabled(t *testing.T) {
 	ctx := context.Background()
-	logger := noop.NewNoop()
+	testLogger := noop.NewNoop()
 
 	opts := &MonitoringOptions{
-		Logger:             logger,
+		Logger:             testLogger,
 		EnableTracing:      false,
 		EnableMetrics:      true,
 		EnableLogging:      true,
@@ -88,10 +88,10 @@ func TestSetupMonitoring_TracingDisabled(t *testing.T) {
 // TestSetupMonitoring_MetricsDisabled tests SetupMonitoring with metrics disabled
 func TestSetupMonitoring_MetricsDisabled(t *testing.T) {
 	ctx := context.Background()
-	logger := noop.NewNoop()
+	testLogger := noop.NewNoop()
 
 	opts := &MonitoringOptions{
-		Logger:             logger,
+		Logger:             testLogger,
 		EnableTracing:      true,
 		EnableMetrics:      false,
 		EnableLogging:      true,
@@ -114,10 +114,10 @@ func TestSetupMonitoring_MetricsDisabled(t *testing.T) {
 // TestSetupMonitoring_LoggingDisabled tests SetupMonitoring with logging disabled
 func TestSetupMonitoring_LoggingDisabled(t *testing.T) {
 	ctx := context.Background()
-	logger := noop.NewNoop()
+	testLogger := noop.NewNoop()
 
 	opts := &MonitoringOptions{
-		Logger:             logger,
+		Logger:             testLogger,
 		EnableTracing:      true,
 		EnableMetrics:      true,
 		EnableLogging:      false,
@@ -141,10 +141,10 @@ func TestSetupMonitoring_LoggingDisabled(t *testing.T) {
 // TestSetupMonitoring_AllDisabled tests SetupMonitoring with all features disabled
 func TestSetupMonitoring_AllDisabled(t *testing.T) {
 	ctx := context.Background()
-	logger := noop.NewNoop()
+	testLogger := noop.NewNoop()
 
 	opts := &MonitoringOptions{
-		Logger:             logger,
+		Logger:             testLogger,
 		EnableTracing:      false,
 		EnableMetrics:      false,
 		EnableLogging:      false,
@@ -161,10 +161,10 @@ func TestSetupMonitoring_AllDisabled(t *testing.T) {
 // TestSetupMonitoring_StatsHandlerDisabled tests without stats handler
 func TestSetupMonitoring_StatsHandlerDisabled(t *testing.T) {
 	ctx := context.Background()
-	logger := noop.NewNoop()
+	testLogger := noop.NewNoop()
 
 	opts := &MonitoringOptions{
-		Logger:             logger,
+		Logger:             testLogger,
 		EnableTracing:      true,
 		EnableMetrics:      true,
 		EnableLogging:      false,
@@ -181,10 +181,10 @@ func TestSetupMonitoring_StatsHandlerDisabled(t *testing.T) {
 // TestSetupMonitoring_OnlyTracing tests with only tracing enabled
 func TestSetupMonitoring_OnlyTracing(t *testing.T) {
 	ctx := context.Background()
-	logger := noop.NewNoop()
+	testLogger := noop.NewNoop()
 
 	opts := &MonitoringOptions{
-		Logger:             logger,
+		Logger:             testLogger,
 		EnableTracing:      true,
 		EnableMetrics:      false,
 		EnableLogging:      false,
@@ -201,10 +201,10 @@ func TestSetupMonitoring_OnlyTracing(t *testing.T) {
 // TestSetupMonitoring_OnlyMetrics tests with only metrics enabled
 func TestSetupMonitoring_OnlyMetrics(t *testing.T) {
 	ctx := context.Background()
-	logger := noop.NewNoop()
+	testLogger := noop.NewNoop()
 
 	opts := &MonitoringOptions{
-		Logger:             logger,
+		Logger:             testLogger,
 		EnableTracing:      false,
 		EnableMetrics:      true,
 		EnableLogging:      false,
@@ -221,10 +221,10 @@ func TestSetupMonitoring_OnlyMetrics(t *testing.T) {
 // TestSetupMonitoring_OnlyLogging tests with only logging enabled
 func TestSetupMonitoring_OnlyLogging(t *testing.T) {
 	ctx := context.Background()
-	logger := noop.NewNoop()
+	testLogger := noop.NewNoop()
 
 	opts := &MonitoringOptions{
-		Logger:             logger,
+		Logger:             testLogger,
 		EnableTracing:      false,
 		EnableMetrics:      false,
 		EnableLogging:      true,
@@ -242,9 +242,9 @@ func TestSetupMonitoring_OnlyLogging(t *testing.T) {
 // TestSetupMonitoring_InterceptorsAreFunctional tests that returned interceptors are functional
 func TestSetupMonitoring_InterceptorsAreFunctional(t *testing.T) {
 	ctx := context.Background()
-	logger := noop.NewNoop()
+	testLogger := noop.NewNoop()
 
-	opts := DefaultMonitoringOptions(logger)
+	opts := DefaultMonitoringOptions(testLogger)
 
 	unaryInterceptors, _, serverOptions := SetupMonitoring(ctx, opts)
 
@@ -312,10 +312,10 @@ func TestSetupMonitoring_NilLogger(t *testing.T) {
 // TestSetupMonitoring_TracingSetsPropagator tests that tracing setup sets the propagator
 func TestSetupMonitoring_TracingSetsPropagator(t *testing.T) {
 	ctx := context.Background()
-	logger := noop.NewNoop()
+	testLogger := noop.NewNoop()
 
 	opts := &MonitoringOptions{
-		Logger:             logger,
+		Logger:             testLogger,
 		EnableTracing:      true,
 		EnableMetrics:      false,
 		EnableLogging:      false,
@@ -338,9 +338,9 @@ func TestSetupMonitoring_TracingSetsPropagator(t *testing.T) {
 // TestSetupMonitoring_ContextIsPassed tests that context parameter is used
 func TestSetupMonitoring_Context(t *testing.T) {
 	ctx := context.Background()
-	logger := noop.NewNoop()
+	testLogger := noop.NewNoop()
 
-	opts := DefaultMonitoringOptions(logger)
+	opts := DefaultMonitoringOptions(testLogger)
 
 	// Should not panic regardless of context
 	_, _, serverOptions := SetupMonitoring(ctx, opts)
@@ -350,17 +350,17 @@ func TestSetupMonitoring_Context(t *testing.T) {
 
 // TestMonitoringOptions_StructFields tests MonitoringOptions struct
 func TestMonitoringOptions_StructFields(t *testing.T) {
-	logger := noop.NewNoop().With("component", "test")
+	testLogger := noop.NewNoop().With("component", "test")
 
 	opts := &MonitoringOptions{
-		Logger:             logger,
+		Logger:             testLogger,
 		EnableTracing:      true,
 		EnableMetrics:      true,
 		EnableLogging:      true,
 		EnableStatsHandler: true,
 	}
 
-	assert.Equal(t, logger, opts.Logger)
+	assert.Equal(t, testLogger, opts.Logger)
 	assert.True(t, opts.EnableTracing)
 	assert.True(t, opts.EnableMetrics)
 	assert.True(t, opts.EnableLogging)
@@ -370,10 +370,10 @@ func TestMonitoringOptions_StructFields(t *testing.T) {
 // TestSetupMonitoring_InterceptorsOrder tests that interceptors are added in correct order
 func TestSetupMonitoring_InterceptorsOrder(t *testing.T) {
 	ctx := context.Background()
-	logger := noop.NewNoop()
+	testLogger := noop.NewNoop()
 
 	opts := &MonitoringOptions{
-		Logger:             logger,
+		Logger:             testLogger,
 		EnableTracing:      true,
 		EnableMetrics:      true,
 		EnableLogging:      true,
@@ -399,10 +399,10 @@ func TestSetupMonitoring_InterceptorsOrder(t *testing.T) {
 // TestSetupMonitoring_StreamInterceptorsOrder tests stream interceptors order
 func TestSetupMonitoring_StreamInterceptorsOrder(t *testing.T) {
 	ctx := context.Background()
-	logger := noop.NewNoop()
+	testLogger := noop.NewNoop()
 
 	opts := &MonitoringOptions{
-		Logger:             logger,
+		Logger:             testLogger,
 		EnableTracing:      true,
 		EnableMetrics:      true,
 		EnableLogging:      true,

@@ -33,7 +33,7 @@ type TestConfigWithDefaults struct {
 type TestConfigNoDefaults struct {
 	Host    string `envconfig:"HOST"`
 	Port    int    `envconfig:"PORT"`
-	APIKey  string `envconfig:"API_KEY"` //nolint:gosec
+	APIKey  string `envconfig:"API_KEY"` //nolint:gosec // Поле имени конфигурации содержит слово key, но не хранит секрет в коде.
 	Enabled bool   `envconfig:"ENABLED" default:"false"`
 }
 
@@ -126,7 +126,9 @@ func TestInitConfig_WithDotEnvFile(t *testing.T) {
 	require.NoError(t, err)
 	err = os.Chdir(tmpDir)
 	require.NoError(t, err)
-	defer func() { _ = os.Chdir(oldWd) }()
+	defer func() {
+		require.NoError(t, os.Chdir(oldWd))
+	}()
 
 	var cfg TestConfig
 	err = InitConfig(&cfg)
@@ -145,7 +147,9 @@ func TestInitConfig_WithoutDotEnvFile(t *testing.T) {
 	require.NoError(t, err)
 	err = os.Chdir(tmpDir)
 	require.NoError(t, err)
-	defer func() { _ = os.Chdir(oldWd) }()
+	defer func() {
+		require.NoError(t, os.Chdir(oldWd))
+	}()
 
 	// Set env vars directly instead
 	t.Setenv("HOST", "direct")
@@ -174,7 +178,9 @@ func TestInitConfig_EnvVarsOverrideDotEnv(t *testing.T) {
 	require.NoError(t, err)
 	err = os.Chdir(tmpDir)
 	require.NoError(t, err)
-	defer func() { _ = os.Chdir(oldWd) }()
+	defer func() {
+		require.NoError(t, os.Chdir(oldWd))
+	}()
 
 	// Set env var that should override .env
 	t.Setenv("HOST", "override")

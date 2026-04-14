@@ -9,6 +9,11 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func closeExecutorTest(t *testing.T, executor *Executor) {
+	t.Helper()
+	require.NoError(t, executor.Close())
+}
+
 func TestBuildSSHCommand(t *testing.T) {
 	t.Parallel()
 
@@ -101,7 +106,7 @@ func TestBuildSSHCommand(t *testing.T) {
 			t.Parallel()
 
 			executor := New(tt.cfg, nil, nil)
-			defer executor.Close()
+			defer closeExecutorTest(t, executor)
 
 			gotCmd, gotArgs := executor.buildSSHCommand(tt.args...)
 			assert.Equal(t, tt.wantCmd, gotCmd)
@@ -122,7 +127,7 @@ func TestExecutor_Start_SSH(t *testing.T) {
 		}
 
 		executor := New(cfg, nil, nil)
-		defer executor.Close()
+		defer closeExecutorTest(t, executor)
 
 		err := executor.Start()
 		require.NoError(t, err)
@@ -144,7 +149,7 @@ func TestExecutor_Start_SSH(t *testing.T) {
 		}
 
 		executor := New(cfg, nil, nil)
-		defer executor.Close()
+		defer closeExecutorTest(t, executor)
 
 		err := executor.Start()
 		require.Error(t, err)
@@ -163,7 +168,7 @@ func TestNew(t *testing.T) {
 	require.NotNil(t, executor)
 
 	t.Cleanup(func() {
-		executor.Close()
+		require.NoError(t, executor.Close())
 	})
 }
 
@@ -199,7 +204,7 @@ func TestExecutor_Start(t *testing.T) {
 
 			executor := New(cfg, nil, nil)
 			t.Cleanup(func() {
-				executor.Close()
+				require.NoError(t, executor.Close())
 			})
 
 			err := executor.Start()

@@ -19,6 +19,11 @@ import (
 	smtpadapter "github.com/pure-golang/adapters/mail/smtp"
 )
 
+func closeSender(t *testing.T, sender *smtpadapter.Sender) {
+	t.Helper()
+	require.NoError(t, sender.Close())
+}
+
 func startSMTPContainer(t *testing.T) testcontainers.Container {
 	if testing.Short() {
 		t.Skip("integration test")
@@ -68,7 +73,9 @@ func waitForSMTP(t *testing.T, host string, port int) {
 	for time.Now().Before(deadline) {
 		conn, err := net.DialTimeout("tcp", addr, 2*time.Second)
 		if err == nil {
-			conn.Close()
+			if closeErr := conn.Close(); closeErr != nil {
+				t.Logf("failed to close probe connection: %v", closeErr)
+			}
 			time.Sleep(500 * time.Millisecond)
 			return
 		}
@@ -90,7 +97,7 @@ func TestSender_Extended_NoTLS(t *testing.T) {
 	}
 
 	sender := smtpadapter.NewSender(cfg)
-	defer sender.Close()
+	defer closeSender(t, sender)
 
 	ctx := context.Background()
 	email := mail.Email{
@@ -117,7 +124,7 @@ func TestSender_Extended_WithDefaultFrom(t *testing.T) {
 	}
 
 	sender := smtpadapter.NewSender(cfg)
-	defer sender.Close()
+	defer closeSender(t, sender)
 
 	ctx := context.Background()
 	email := mail.Email{
@@ -143,7 +150,7 @@ func TestSender_Extended_ExplicitFromOverridesDefault(t *testing.T) {
 	}
 
 	sender := smtpadapter.NewSender(cfg)
-	defer sender.Close()
+	defer closeSender(t, sender)
 
 	ctx := context.Background()
 	email := mail.Email{
@@ -169,7 +176,7 @@ func TestSender_Extended_MultipleEmails(t *testing.T) {
 	}
 
 	sender := smtpadapter.NewSender(cfg)
-	defer sender.Close()
+	defer closeSender(t, sender)
 
 	ctx := context.Background()
 	emails := []mail.Email{
@@ -209,7 +216,7 @@ func TestSender_Extended_MultipleRecipients(t *testing.T) {
 	}
 
 	sender := smtpadapter.NewSender(cfg)
-	defer sender.Close()
+	defer closeSender(t, sender)
 
 	ctx := context.Background()
 	email := mail.Email{
@@ -247,7 +254,7 @@ func TestSender_Extended_OnlyCcRecipients(t *testing.T) {
 	}
 
 	sender := smtpadapter.NewSender(cfg)
-	defer sender.Close()
+	defer closeSender(t, sender)
 
 	ctx := context.Background()
 	email := mail.Email{
@@ -273,7 +280,7 @@ func TestSender_Extended_OnlyBccRecipients(t *testing.T) {
 	}
 
 	sender := smtpadapter.NewSender(cfg)
-	defer sender.Close()
+	defer closeSender(t, sender)
 
 	ctx := context.Background()
 	email := mail.Email{
@@ -299,7 +306,7 @@ func TestSender_Extended_HTMLWithMultipart(t *testing.T) {
 	}
 
 	sender := smtpadapter.NewSender(cfg)
-	defer sender.Close()
+	defer closeSender(t, sender)
 
 	ctx := context.Background()
 	email := mail.Email{
@@ -326,7 +333,7 @@ func TestSender_Extended_MultipleCustomHeaders(t *testing.T) {
 	}
 
 	sender := smtpadapter.NewSender(cfg)
-	defer sender.Close()
+	defer closeSender(t, sender)
 
 	ctx := context.Background()
 	email := mail.Email{
@@ -359,7 +366,7 @@ func TestSender_Extended_EmptySubject(t *testing.T) {
 	}
 
 	sender := smtpadapter.NewSender(cfg)
-	defer sender.Close()
+	defer closeSender(t, sender)
 
 	ctx := context.Background()
 	email := mail.Email{
@@ -385,7 +392,7 @@ func TestSender_Extended_LongSubject(t *testing.T) {
 	}
 
 	sender := smtpadapter.NewSender(cfg)
-	defer sender.Close()
+	defer closeSender(t, sender)
 
 	ctx := context.Background()
 	longSubject := strings.Repeat("This is a very long subject line. ", 20)
@@ -413,7 +420,7 @@ func TestSender_Extended_SpecialCharactersInBody(t *testing.T) {
 	}
 
 	sender := smtpadapter.NewSender(cfg)
-	defer sender.Close()
+	defer closeSender(t, sender)
 
 	ctx := context.Background()
 	email := mail.Email{
@@ -439,7 +446,7 @@ func TestSender_Extended_UnicodeContent(t *testing.T) {
 	}
 
 	sender := smtpadapter.NewSender(cfg)
-	defer sender.Close()
+	defer closeSender(t, sender)
 
 	ctx := context.Background()
 	email := mail.Email{
@@ -465,7 +472,7 @@ func TestSender_Extended_SenderConcurrency(t *testing.T) {
 	}
 
 	sender := smtpadapter.NewSender(cfg)
-	defer sender.Close()
+	defer closeSender(t, sender)
 
 	ctx := context.Background()
 	const numGoroutines = 10
@@ -509,7 +516,7 @@ func TestSender_Extended_ConnectionRefused(t *testing.T) {
 	}
 
 	sender := smtpadapter.NewSender(cfg)
-	defer sender.Close()
+	defer closeSender(t, sender)
 
 	ctx := context.Background()
 	email := mail.Email{
@@ -536,7 +543,7 @@ func TestSender_Extended_InvalidHost(t *testing.T) {
 	}
 
 	sender := smtpadapter.NewSender(cfg)
-	defer sender.Close()
+	defer closeSender(t, sender)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
@@ -564,7 +571,7 @@ func TestSender_Extended_ContextTimeout(t *testing.T) {
 	}
 
 	sender := smtpadapter.NewSender(cfg)
-	defer sender.Close()
+	defer closeSender(t, sender)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
 	defer cancel()
@@ -589,7 +596,9 @@ func TestSender_Extended_SMTPDirect(t *testing.T) {
 
 	client, err := smtp.Dial(addr)
 	require.NoError(t, err)
-	defer client.Close()
+	defer func() {
+		require.NoError(t, client.Close())
+	}()
 
 	err = client.Noop()
 	require.NoError(t, err)
@@ -644,7 +653,7 @@ func TestSender_Extended_BodyOnlyNoHTML(t *testing.T) {
 	}
 
 	sender := smtpadapter.NewSender(cfg)
-	defer sender.Close()
+	defer closeSender(t, sender)
 
 	ctx := context.Background()
 	email := mail.Email{
@@ -670,7 +679,7 @@ func TestSender_Extended_HTMLNoBody(t *testing.T) {
 	}
 
 	sender := smtpadapter.NewSender(cfg)
-	defer sender.Close()
+	defer closeSender(t, sender)
 
 	ctx := context.Background()
 	email := mail.Email{

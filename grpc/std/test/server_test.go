@@ -18,7 +18,7 @@ func freePort(t *testing.T) int {
 	l, err := net.Listen("tcp", "localhost:0")
 	require.NoError(t, err)
 	port := l.Addr().(*net.TCPAddr).Port
-	l.Close()
+	require.NoError(t, l.Close())
 	return port
 }
 
@@ -31,7 +31,9 @@ func TestServer_Start_ListenOnAvailablePort(t *testing.T) {
 
 	err := s.Start()
 	require.NoError(t, err)
-	defer s.Close()
+	defer func() {
+		require.NoError(t, s.Close())
+	}()
 }
 
 func TestServer_Start_AcceptsConnections(t *testing.T) {
@@ -44,14 +46,16 @@ func TestServer_Start_AcceptsConnections(t *testing.T) {
 
 	err := s.Start()
 	require.NoError(t, err)
-	defer s.Close()
+	defer func() {
+		require.NoError(t, s.Close())
+	}()
 
 	conn, err := grpc.NewClient(
 		fmt.Sprintf("localhost:%d", port),
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 	)
 	require.NoError(t, err)
-	conn.Close()
+	require.NoError(t, conn.Close())
 }
 
 func TestServer_Close_StopsServer(t *testing.T) {

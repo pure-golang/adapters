@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"go.opentelemetry.io/otel"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	"go.opentelemetry.io/otel/trace"
@@ -13,6 +14,11 @@ import (
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 )
+
+func shutdownTracerProvider(t *testing.T, tp *sdktrace.TracerProvider) {
+	t.Helper()
+	require.NoError(t, tp.Shutdown(context.Background()))
+}
 
 // TestSplitMethodName_ValidPath tests splitMethodName with valid method paths
 func TestSplitMethodName_ValidPath(t *testing.T) {
@@ -260,7 +266,7 @@ func TestTracingUnaryInterceptor_CreatesSpan(t *testing.T) {
 	assert.Equal(t, "success", resp)
 
 	// Cleanup
-	_ = tp.Shutdown(context.Background())
+	require.NoError(t, tp.Shutdown(context.Background()))
 }
 
 // TestTracingUnaryInterceptor_WithError tests that TracingUnaryInterceptor handles errors
@@ -290,7 +296,7 @@ func TestTracingUnaryInterceptor_WithError(t *testing.T) {
 	assert.Equal(t, codes.NotFound, status.Code(err))
 
 	// Cleanup
-	_ = tp.Shutdown(context.Background())
+	require.NoError(t, tp.Shutdown(context.Background()))
 }
 
 // TestTracingUnaryInterceptor_ExtractsTraceContext tests trace context extraction
@@ -300,7 +306,7 @@ func TestTracingUnaryInterceptor_ExtractsTraceContext(t *testing.T) {
 		sdktrace.WithSyncer(exporter),
 	)
 	defer func() {
-		_ = tp.Shutdown(context.Background())
+		shutdownTracerProvider(t, tp)
 	}()
 
 	otel.SetTracerProvider(tp)
@@ -372,7 +378,7 @@ func TestTracingUnaryInterceptor_NoMetadata(t *testing.T) {
 	assert.Equal(t, "success", resp)
 
 	// Cleanup
-	_ = tp.Shutdown(context.Background())
+	shutdownTracerProvider(t, tp)
 }
 
 // mockServerStreamForTracing is a mock implementation of grpc.ServerStream for tracing tests
@@ -415,7 +421,7 @@ func TestTracingStreamInterceptor_CreatesSpan(t *testing.T) {
 	assert.NoError(t, err)
 
 	// Cleanup
-	_ = tp.Shutdown(context.Background())
+	shutdownTracerProvider(t, tp)
 }
 
 // TestTracingStreamInterceptor_WithError tests that TracingStreamInterceptor handles errors
@@ -425,7 +431,7 @@ func TestTracingStreamInterceptor_WithError(t *testing.T) {
 		sdktrace.WithSyncer(exporter),
 	)
 	defer func() {
-		_ = tp.Shutdown(context.Background())
+		shutdownTracerProvider(t, tp)
 	}()
 
 	otel.SetTracerProvider(tp)
@@ -457,7 +463,7 @@ func TestTracingStreamInterceptor_DetectsStreamType(t *testing.T) {
 		sdktrace.WithSyncer(exporter),
 	)
 	defer func() {
-		_ = tp.Shutdown(context.Background())
+		shutdownTracerProvider(t, tp)
 	}()
 
 	otel.SetTracerProvider(tp)
@@ -521,7 +527,7 @@ func TestTracingStreamInterceptor_ExtractsTraceContext(t *testing.T) {
 		sdktrace.WithSyncer(exporter),
 	)
 	defer func() {
-		_ = tp.Shutdown(context.Background())
+		shutdownTracerProvider(t, tp)
 	}()
 
 	otel.SetTracerProvider(tp)
@@ -570,7 +576,7 @@ func TestTracingUnaryInterceptor_SpanAttributes(t *testing.T) {
 		sdktrace.WithSyncer(exporter),
 	)
 	defer func() {
-		_ = tp.Shutdown(context.Background())
+		shutdownTracerProvider(t, tp)
 	}()
 
 	otel.SetTracerProvider(tp)
@@ -603,7 +609,7 @@ func TestTracingStreamInterceptor_SpanAttributes(t *testing.T) {
 		sdktrace.WithSyncer(exporter),
 	)
 	defer func() {
-		_ = tp.Shutdown(context.Background())
+		shutdownTracerProvider(t, tp)
 	}()
 
 	otel.SetTracerProvider(tp)
@@ -654,7 +660,7 @@ func TestTracingUnaryInterceptor_DifferentStatusCodes(t *testing.T) {
 
 	// Cleanup after test
 	defer func() {
-		_ = tp.Shutdown(context.Background())
+		shutdownTracerProvider(t, tp)
 	}()
 
 	interceptor := TracingUnaryInterceptor()
@@ -702,7 +708,7 @@ func TestMetadataTextMapPropagator_Propagation(t *testing.T) {
 	// Create a span to inject
 	tp := sdktrace.NewTracerProvider()
 	defer func() {
-		_ = tp.Shutdown(context.Background())
+		shutdownTracerProvider(t, tp)
 	}()
 	otel.SetTracerProvider(tp)
 

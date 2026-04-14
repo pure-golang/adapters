@@ -20,6 +20,31 @@ type miniSMTPServer struct {
 	messages [][]byte
 }
 
+func closeTestConn(t *testing.T, conn net.Conn) {
+	t.Helper()
+	if err := conn.Close(); err != nil {
+		t.Errorf("failed to close connection: %v", err)
+	}
+}
+
+func writeSMTPResponses(t *testing.T, writer *bufio.Writer, responses ...string) {
+	t.Helper()
+	for _, response := range responses {
+		if _, err := writer.WriteString(response); err != nil {
+			t.Errorf("failed to write SMTP response: %v", err)
+			return
+		}
+	}
+	if err := writer.Flush(); err != nil {
+		t.Errorf("failed to flush SMTP response: %v", err)
+	}
+}
+
+func closeTestSender(t *testing.T, sender *Sender) {
+	t.Helper()
+	require.NoError(t, sender.Close())
+}
+
 // startMiniSMTPServer starts a minimal SMTP server on localhost
 func startMiniSMTPServer(t *testing.T, port int) *miniSMTPServer {
 	addr := fmt.Sprintf("127.0.0.1:%d", port)
@@ -44,7 +69,7 @@ func (s *miniSMTPServer) handleConnections(t *testing.T) {
 		}
 
 		go func() {
-			defer conn.Close()
+			defer closeTestConn(t, conn)
 			s.handleSMTP(t, conn)
 		}()
 	}
@@ -55,8 +80,7 @@ func (s *miniSMTPServer) handleSMTP(t *testing.T, conn net.Conn) {
 	writer := bufio.NewWriter(conn)
 
 	// Send greeting
-	_, _ = writer.WriteString("220 localhost ESMTP Test Server\r\n")
-	writer.Flush()
+	writeSMTPResponses(t, writer, "220 localhost ESMTP Test Server\r\n")
 
 	for {
 		line, err := reader.ReadString('\n')
@@ -68,17 +92,13 @@ func (s *miniSMTPServer) handleSMTP(t *testing.T, conn net.Conn) {
 
 		switch {
 		case strings.HasPrefix(line, "EHLO") || strings.HasPrefix(line, "HELO"):
-			_, _ = writer.WriteString("250-localhost\r\n250-SIZE 10240000\r\n250 HELP\r\n")
-			writer.Flush()
+			writeSMTPResponses(t, writer, "250-localhost\r\n250-SIZE 10240000\r\n250 HELP\r\n")
 		case strings.HasPrefix(line, "MAIL FROM:"):
-			_, _ = writer.WriteString("250 OK\r\n")
-			writer.Flush()
+			writeSMTPResponses(t, writer, "250 OK\r\n")
 		case strings.HasPrefix(line, "RCPT TO:"):
-			_, _ = writer.WriteString("250 OK\r\n")
-			writer.Flush()
+			writeSMTPResponses(t, writer, "250 OK\r\n")
 		case line == "DATA":
-			_, _ = writer.WriteString("354 End data with <CR><LF>.<CR><LF>\r\n")
-			writer.Flush()
+			writeSMTPResponses(t, writer, "354 End data with <CR><LF>.<CR><LF>\r\n")
 
 			// Read the message
 			var msg strings.Builder
@@ -93,26 +113,24 @@ func (s *miniSMTPServer) handleSMTP(t *testing.T, conn net.Conn) {
 			}
 
 			s.messages = append(s.messages, []byte(msg.String()))
-			_, _ = writer.WriteString("250 OK\r\n")
-			writer.Flush()
+			writeSMTPResponses(t, writer, "250 OK\r\n")
 		case line == "QUIT":
-			_, _ = writer.WriteString("221 localhost closing connection\r\n")
-			writer.Flush()
+			writeSMTPResponses(t, writer, "221 localhost closing connection\r\n")
 			return
 		case line == "NOOP":
-			_, _ = writer.WriteString("250 OK\r\n")
-			writer.Flush()
+			writeSMTPResponses(t, writer, "250 OK\r\n")
 		default:
 			// Unknown command
-			_, _ = writer.WriteString("500 Syntax error\r\n")
-			writer.Flush()
+			writeSMTPResponses(t, writer, "500 Syntax error\r\n")
 		}
 	}
 }
 
 func (s *miniSMTPServer) close() {
 	if s.listener != nil {
-		s.listener.Close()
+		if err := s.listener.Close(); err != nil {
+			return
+		}
 	}
 }
 
@@ -133,7 +151,7 @@ func TestSender_MiniSMTPServer_Success(t *testing.T) {
 	}
 
 	sender := NewSender(cfg)
-	defer sender.Close()
+	defer closeTestSender(t, sender)
 
 	ctx := context.Background()
 	email := mail.Email{
@@ -164,7 +182,7 @@ func TestSender_MiniSMTPServer_MultipleEmails(t *testing.T) {
 	}
 
 	sender := NewSender(cfg)
-	defer sender.Close()
+	defer closeTestSender(t, sender)
 
 	ctx := context.Background()
 	emails := []mail.Email{
@@ -199,7 +217,7 @@ func TestSender_MiniSMTPServer_HTMLMessage(t *testing.T) {
 	}
 
 	sender := NewSender(cfg)
-	defer sender.Close()
+	defer closeTestSender(t, sender)
 
 	ctx := context.Background()
 	email := mail.Email{
@@ -227,7 +245,7 @@ func TestSender_MiniSMTPServer_MultipleRecipients(t *testing.T) {
 	}
 
 	sender := NewSender(cfg)
-	defer sender.Close()
+	defer closeTestSender(t, sender)
 
 	ctx := context.Background()
 	email := mail.Email{
@@ -264,7 +282,7 @@ func TestSender_MiniSMTPServer_WithDefaultFrom(t *testing.T) {
 	}
 
 	sender := NewSender(cfg)
-	defer sender.Close()
+	defer closeTestSender(t, sender)
 
 	ctx := context.Background()
 	email := mail.Email{
@@ -291,7 +309,7 @@ func TestSender_MiniSMTPServer_WithCustomHeaders(t *testing.T) {
 	}
 
 	sender := NewSender(cfg)
-	defer sender.Close()
+	defer closeTestSender(t, sender)
 
 	ctx := context.Background()
 	email := mail.Email{
@@ -322,7 +340,7 @@ func TestSender_MiniSMTPServer_OnlyBccRecipients(t *testing.T) {
 	}
 
 	sender := NewSender(cfg)
-	defer sender.Close()
+	defer closeTestSender(t, sender)
 
 	ctx := context.Background()
 	email := mail.Email{
@@ -349,7 +367,7 @@ func TestSender_MiniSMTPServer_OnlyCcRecipients(t *testing.T) {
 	}
 
 	sender := NewSender(cfg)
-	defer sender.Close()
+	defer closeTestSender(t, sender)
 
 	ctx := context.Background()
 	email := mail.Email{
@@ -376,7 +394,7 @@ func TestSender_MiniSMTPServer_EmptySubject(t *testing.T) {
 	}
 
 	sender := NewSender(cfg)
-	defer sender.Close()
+	defer closeTestSender(t, sender)
 
 	ctx := context.Background()
 	email := mail.Email{

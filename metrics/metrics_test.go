@@ -96,7 +96,7 @@ func TestNew_CreatesHTTPServer(t *testing.T) {
 
 	assert.NotNil(t, m)
 	assert.NotNil(t, m.server)
-	assert.IsType(t, &http.Server{}, m.server) //nolint:gosec
+	assert.IsType(t, &http.Server{}, m.server) //nolint:gosec // Проверяем только тип http.Server в unit-тесте.
 }
 
 func TestMetrics_ImplementsCloser(t *testing.T) {

@@ -14,6 +14,15 @@ import (
 	"github.com/pure-golang/adapters/executor/cli"
 )
 
+func cleanupExecutor(t *testing.T, executor interface{ Close() error }) {
+	t.Helper()
+	t.Cleanup(func() {
+		if err := executor.Close(); err != nil {
+			t.Errorf("failed to close executor: %v", err)
+		}
+	})
+}
+
 func TestExecutor_Run(t *testing.T) {
 	if testing.Short() {
 		t.Skip("integration test")
@@ -24,9 +33,7 @@ func TestExecutor_Run(t *testing.T) {
 	}
 
 	executor := cli.New(cfg, nil, nil)
-	t.Cleanup(func() {
-		executor.Close()
-	})
+	cleanupExecutor(t, executor)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	t.Cleanup(cancel)
@@ -46,9 +53,7 @@ func TestExecutor_Run_WithError(t *testing.T) {
 	}
 
 	executor := cli.New(cfg, nil, nil)
-	t.Cleanup(func() {
-		executor.Close()
-	})
+	cleanupExecutor(t, executor)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	t.Cleanup(cancel)
@@ -71,9 +76,7 @@ func TestExecutor_Run_WithWriter(t *testing.T) {
 	}
 
 	executor := cli.New(cfg, &stdout, &stderr)
-	t.Cleanup(func() {
-		executor.Close()
-	})
+	cleanupExecutor(t, executor)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	t.Cleanup(cancel)
@@ -95,9 +98,7 @@ func TestExecutor_Run_WithTimeout(t *testing.T) {
 	}
 
 	executor := cli.New(cfg, nil, nil)
-	t.Cleanup(func() {
-		executor.Close()
-	})
+	cleanupExecutor(t, executor)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
 	defer cancel()
@@ -118,9 +119,7 @@ func TestExecutor_Run_WithCancelledContext(t *testing.T) {
 	}
 
 	executor := cli.New(cfg, nil, nil)
-	t.Cleanup(func() {
-		executor.Close()
-	})
+	cleanupExecutor(t, executor)
 
 	ctx, cancel := context.WithCancel(context.Background())
 
@@ -147,9 +146,7 @@ func TestExecutor_ConcurrentExecution(t *testing.T) {
 	}
 
 	executor := cli.New(cfg, nil, nil)
-	t.Cleanup(func() {
-		executor.Close()
-	})
+	cleanupExecutor(t, executor)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	t.Cleanup(cancel)
@@ -179,9 +176,7 @@ func TestExecutor_ConcurrentExecutionWithDifferentArgs(t *testing.T) {
 	}
 
 	executor := cli.New(cfg, nil, nil)
-	t.Cleanup(func() {
-		executor.Close()
-	})
+	cleanupExecutor(t, executor)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	t.Cleanup(cancel)
@@ -211,9 +206,7 @@ func TestExecutor_RaceCondition(t *testing.T) {
 	}
 
 	executor := cli.New(cfg, nil, nil)
-	t.Cleanup(func() {
-		executor.Close()
-	})
+	cleanupExecutor(t, executor)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	t.Cleanup(cancel)
@@ -223,7 +216,9 @@ func TestExecutor_RaceCondition(t *testing.T) {
 
 	for range numGoroutines {
 		go func() {
-			_ = executor.Execute(ctx, "test")
+			if err := executor.Execute(ctx, "test"); err != nil {
+				t.Errorf("unexpected execute error: %v", err)
+			}
 			done <- struct{}{}
 		}()
 	}
@@ -242,10 +237,9 @@ func TestExecutor_ConcurrentExecutionDifferentCommands(t *testing.T) {
 	cfg2 := cli.Config{Command: "printf"}
 
 	exec1 := cli.New(cfg1, nil, nil)
-	defer exec1.Close()
-
 	exec2 := cli.New(cfg2, nil, nil)
-	defer exec2.Close()
+	cleanupExecutor(t, exec1)
+	cleanupExecutor(t, exec2)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	t.Cleanup(cancel)
@@ -276,7 +270,7 @@ func TestExecutor_LongRunningCommand(t *testing.T) {
 	}
 
 	executor := cli.New(cfg, nil, nil)
-	defer executor.Close()
+	cleanupExecutor(t, executor)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	t.Cleanup(cancel)
@@ -300,7 +294,7 @@ func TestExecutor_ExecuteWithMultipleArgs(t *testing.T) {
 	}
 
 	executor := cli.New(cfg, nil, nil)
-	defer executor.Close()
+	cleanupExecutor(t, executor)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	t.Cleanup(cancel)
@@ -322,7 +316,7 @@ func TestExecutor_ExecuteWithStderrWriter(t *testing.T) {
 	}
 
 	executor := cli.New(cfg, nil, &stderrBuf)
-	defer executor.Close()
+	cleanupExecutor(t, executor)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	t.Cleanup(cancel)
@@ -343,7 +337,7 @@ func TestExecutor_ExecuteWithComplexCommand(t *testing.T) {
 	}
 
 	executor := cli.New(cfg, nil, nil)
-	defer executor.Close()
+	cleanupExecutor(t, executor)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	t.Cleanup(cancel)
@@ -363,7 +357,7 @@ func TestExecutor_StartAndExecute(t *testing.T) {
 	}
 
 	executor := cli.New(cfg, nil, nil)
-	defer executor.Close()
+	cleanupExecutor(t, executor)
 
 	err := executor.Start()
 	require.NoError(t, err)
@@ -384,8 +378,8 @@ func TestExecutor_MultipleExecutors(t *testing.T) {
 
 	exec1 := cli.New(cfg1, nil, nil)
 	exec2 := cli.New(cfg2, nil, nil)
-	defer exec1.Close()
-	defer exec2.Close()
+	cleanupExecutor(t, exec1)
+	cleanupExecutor(t, exec2)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	t.Cleanup(cancel)
@@ -411,7 +405,7 @@ func TestExecutor_ExecuteWithVeryLongArgs(t *testing.T) {
 	}
 
 	executor := cli.New(cfg, nil, nil)
-	defer executor.Close()
+	cleanupExecutor(t, executor)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	t.Cleanup(cancel)
@@ -460,7 +454,7 @@ func TestExecutor_ExecuteWithEmptyArgs(t *testing.T) {
 	}
 
 	executor := cli.New(cfg, nil, nil)
-	defer executor.Close()
+	cleanupExecutor(t, executor)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	t.Cleanup(cancel)
@@ -479,7 +473,7 @@ func TestExecutor_ExecuteWithSpecialChars(t *testing.T) {
 	}
 
 	executor := cli.New(cfg, nil, nil)
-	defer executor.Close()
+	cleanupExecutor(t, executor)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	t.Cleanup(cancel)

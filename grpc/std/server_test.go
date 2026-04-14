@@ -103,7 +103,9 @@ func TestNew_WithTLSConfig(t *testing.T) {
 	// Create temporary test certificate files
 	tmpDir, err := os.MkdirTemp("", "grpc-test")
 	require.NoError(t, err)
-	defer os.RemoveAll(tmpDir)
+	defer func() {
+		require.NoError(t, os.RemoveAll(tmpDir))
+	}()
 
 	// Create invalid cert/key paths (server should still be created but log error)
 	certPath := tmpDir + "/cert.pem"
@@ -400,7 +402,7 @@ func TestServer_Run_StartsInGoroutine(t *testing.T) {
 	time.Sleep(100 * time.Millisecond)
 
 	// Clean up
-	s.Close()
+	require.NoError(t, s.Close())
 }
 
 func TestServer_ImplementsRunableProvider(t *testing.T) {
@@ -617,7 +619,7 @@ func TestServer_Run_Panics(t *testing.T) {
 	// Give it time
 	time.Sleep(50 * time.Millisecond)
 
-	s.Close()
+	require.NoError(t, s.Close())
 }
 
 func TestNew_WithValidTLSFiles(t *testing.T) {
@@ -625,7 +627,9 @@ func TestNew_WithValidTLSFiles(t *testing.T) {
 	// Create temporary test certificate files
 	tmpDir, err := os.MkdirTemp("", "grpc-test-tls")
 	require.NoError(t, err)
-	defer os.RemoveAll(tmpDir)
+	defer func() {
+		require.NoError(t, os.RemoveAll(tmpDir))
+	}()
 
 	// Create minimal cert/key files (these won't be valid certs but files exist)
 	certPath := tmpDir + "/cert.pem"

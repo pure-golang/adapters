@@ -34,7 +34,9 @@ func TestNewProviderBuilderWithValidConfig(t *testing.T) {
 	} else {
 		assert.IsType(t, &Provider{}, provider)
 		// Clean up
-		_ = provider.Close()
+		if closeErr := provider.Close(); closeErr != nil {
+			t.Logf("provider close returned error: %v", closeErr)
+		}
 	}
 }
 
@@ -132,7 +134,9 @@ func TestProviderCloseSuccess(t *testing.T) {
 	// no span processors, which is fine for testing
 	// The important thing is that Close doesn't panic
 	assert.NotPanics(t, func() {
-		_ = provider.Close()
+		if closeErr := provider.Close(); closeErr != nil {
+			t.Logf("provider close returned error: %v", closeErr)
+		}
 	})
 
 	// Verify the error wrapping works as expected

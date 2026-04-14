@@ -10,7 +10,7 @@ const DefaultEnvFile = ".env"
 
 func InitConfig(config any) error {
 	// Try to load .env file, but don't fail if it doesn't exist
-	// nolint:errcheck // .env file is optional, failure is acceptable
+	//nolint:errcheck // .env file is optional, failure is acceptable
 	_ = godotenv.Load(DefaultEnvFile)
 
 	if err := envconfig.Process("", config); err != nil {

@@ -44,19 +44,25 @@ func TestMain(m *testing.M) {
 
 	host, err := container.Host(ctx)
 	if err != nil {
-		_ = container.Terminate(ctx)
+		if terminateErr := container.Terminate(ctx); terminateErr != nil {
+			fmt.Fprintf(os.Stderr, "failed to terminate container: %v\n", terminateErr)
+		}
 		panic(fmt.Sprintf("could not get container host: %s", err))
 	}
 
 	port, err := container.MappedPort(ctx, "1025")
 	if err != nil {
-		_ = container.Terminate(ctx)
+		if terminateErr := container.Terminate(ctx); terminateErr != nil {
+			fmt.Fprintf(os.Stderr, "failed to terminate container: %v\n", terminateErr)
+		}
 		panic(fmt.Sprintf("could not get container port: %s", err))
 	}
 
 	portNum, err := strconv.Atoi(port.Port())
 	if err != nil {
-		_ = container.Terminate(ctx)
+		if terminateErr := container.Terminate(ctx); terminateErr != nil {
+			fmt.Fprintf(os.Stderr, "failed to terminate container: %v\n", terminateErr)
+		}
 		panic(fmt.Sprintf("could not parse port number: %s", err))
 	}
 
@@ -71,7 +77,9 @@ func TestMain(m *testing.M) {
 	code := m.Run()
 
 	if testSender != nil {
-		testSender.Close()
+		if err := testSender.Close(); err != nil {
+			fmt.Fprintf(os.Stderr, "failed to close sender: %v\n", err)
+		}
 	}
 
 	if err := container.Terminate(ctx); err != nil {

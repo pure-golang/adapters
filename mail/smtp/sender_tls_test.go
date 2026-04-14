@@ -56,7 +56,7 @@ func (s *tlsSMTPServer) handleConnections(t *testing.T) {
 		}
 
 		go func() {
-			defer conn.Close()
+			defer closeTestConn(t, conn)
 			s.handleSMTP(t, conn)
 		}()
 	}
@@ -68,13 +68,12 @@ func (s *tlsSMTPServer) handleSMTP(t *testing.T, conn net.Conn) {
 	var tlsConn *tls.Conn
 	defer func() {
 		if tlsConn != nil {
-			tlsConn.Close()
+			closeTestConn(t, tlsConn)
 		}
 	}()
 
 	// Send greeting
-	_, _ = writer.WriteString("220 localhost ESMTP Test Server\r\n")
-	writer.Flush()
+	writeSMTPResponses(t, writer, "220 localhost ESMTP Test Server\r\n")
 
 	for {
 		line, err := reader.ReadString('\n')
@@ -88,14 +87,12 @@ func (s *tlsSMTPServer) handleSMTP(t *testing.T, conn net.Conn) {
 		case strings.HasPrefix(line, "EHLO") || strings.HasPrefix(line, "HELO"):
 			// Advertise STARTTLS support
 			if s.useTLS && strings.HasPrefix(line, "EHLO") {
-				_, _ = writer.WriteString("250-localhost\r\n250-STARTTLS\r\n250 HELP\r\n")
+				writeSMTPResponses(t, writer, "250-localhost\r\n250-STARTTLS\r\n250 HELP\r\n")
 			} else {
-				_, _ = writer.WriteString("250 localhost\r\n")
+				writeSMTPResponses(t, writer, "250 localhost\r\n")
 			}
-			writer.Flush()
 		case strings.HasPrefix(line, "STARTTLS"):
-			_, _ = writer.WriteString("220 Ready to start TLS\r\n")
-			writer.Flush()
+			writeSMTPResponses(t, writer, "220 Ready to start TLS\r\n")
 
 			// Upgrade to TLS
 			if s.cert == nil {
@@ -118,14 +115,11 @@ func (s *tlsSMTPServer) handleSMTP(t *testing.T, conn net.Conn) {
 			writer = bufio.NewWriter(tlsConn)
 			conn = tlsConn
 		case strings.HasPrefix(line, "MAIL FROM:"):
-			_, _ = writer.WriteString("250 OK\r\n")
-			writer.Flush()
+			writeSMTPResponses(t, writer, "250 OK\r\n")
 		case strings.HasPrefix(line, "RCPT TO:"):
-			_, _ = writer.WriteString("250 OK\r\n")
-			writer.Flush()
+			writeSMTPResponses(t, writer, "250 OK\r\n")
 		case line == "DATA":
-			_, _ = writer.WriteString("354 End data with <CR><LF>.<CR><LF>\r\n")
-			writer.Flush()
+			writeSMTPResponses(t, writer, "354 End data with <CR><LF>.<CR><LF>\r\n")
 
 			// Read the message until "."
 			scanner := bufio.NewScanner(reader)
@@ -135,24 +129,19 @@ func (s *tlsSMTPServer) handleSMTP(t *testing.T, conn net.Conn) {
 				}
 			}
 
-			_, _ = writer.WriteString("250 OK\r\n")
-			writer.Flush()
+			writeSMTPResponses(t, writer, "250 OK\r\n")
 		case line == "QUIT":
-			_, _ = writer.WriteString("221 localhost closing connection\r\n")
-			writer.Flush()
+			writeSMTPResponses(t, writer, "221 localhost closing connection\r\n")
 			return
 		case line == "NOOP":
-			_, _ = writer.WriteString("250 OK\r\n")
-			writer.Flush()
+			writeSMTPResponses(t, writer, "250 OK\r\n")
 		default:
 			// Unknown command - might be AUTH
 			if strings.HasPrefix(line, "AUTH") {
 				// Accept AUTH but don't require it
-				_, _ = writer.WriteString("235 OK\r\n")
-				writer.Flush()
+				writeSMTPResponses(t, writer, "235 OK\r\n")
 			} else {
-				_, _ = writer.WriteString("500 Syntax error\r\n")
-				writer.Flush()
+				writeSMTPResponses(t, writer, "500 Syntax error\r\n")
 			}
 		}
 	}
@@ -160,7 +149,9 @@ func (s *tlsSMTPServer) handleSMTP(t *testing.T, conn net.Conn) {
 
 func (s *tlsSMTPServer) close() {
 	if s.listener != nil {
-		s.listener.Close()
+		if err := s.listener.Close(); err != nil {
+			return
+		}
 	}
 }
 
@@ -179,7 +170,7 @@ func TestSender_TLS_ConnectionError(t *testing.T) {
 	}
 
 	sender := NewSender(cfg)
-	defer sender.Close()
+	defer closeTestSender(t, sender)
 
 	ctx := context.Background()
 	email := mail.Email{
@@ -205,7 +196,7 @@ func TestSender_TLS_ContextCanceled(t *testing.T) {
 	}
 
 	sender := NewSender(cfg)
-	defer sender.Close()
+	defer closeTestSender(t, sender)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel() // Cancel before sending
@@ -230,7 +221,7 @@ func TestSender_TLS_ConnectionTimeout(t *testing.T) {
 	}
 
 	sender := NewSender(cfg)
-	defer sender.Close()
+	defer closeTestSender(t, sender)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
 	defer cancel()
@@ -256,7 +247,7 @@ func TestSender_TLS_ServerNotRunning(t *testing.T) {
 	}
 
 	sender := NewSender(cfg)
-	defer sender.Close()
+	defer closeTestSender(t, sender)
 
 	ctx := context.Background()
 	email := mail.Email{
@@ -285,7 +276,7 @@ func TestSender_TLS_WithAuthentication(t *testing.T) {
 	}
 
 	sender := NewSender(cfg)
-	defer sender.Close()
+	defer closeTestSender(t, sender)
 
 	ctx := context.Background()
 	email := mail.Email{
@@ -310,7 +301,7 @@ func TestSender_TLS_InvalidHost(t *testing.T) {
 	}
 
 	sender := NewSender(cfg)
-	defer sender.Close()
+	defer closeTestSender(t, sender)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
@@ -336,7 +327,7 @@ func TestSender_TLS_ConnectionRefusedImmediate(t *testing.T) {
 	}
 
 	sender := NewSender(cfg)
-	defer sender.Close()
+	defer closeTestSender(t, sender)
 
 	ctx := context.Background()
 	email := mail.Email{
@@ -361,7 +352,7 @@ func TestSender_TLS_WithDefaultFrom(t *testing.T) {
 	}
 
 	sender := NewSender(cfg)
-	defer sender.Close()
+	defer closeTestSender(t, sender)
 
 	ctx := context.Background()
 	email := mail.Email{
@@ -636,7 +627,7 @@ func TestSender_Config_AllTLSCombinations(t *testing.T) {
 			sender := NewSender(tt.cfg)
 			assert.Equal(t, tt.wantTLS, sender.cfg.TLS)
 			assert.Equal(t, tt.wantInsec, sender.cfg.Insecure)
-			_ = sender.Close()
+			assert.NoError(t, sender.Close())
 		})
 	}
 }
@@ -648,7 +639,7 @@ func TestSender_NewSender_Variations(t *testing.T) {
 		sender := NewSender(cfg)
 		assert.NotNil(t, sender)
 		assert.False(t, sender.closed)
-		_ = sender.Close()
+		assert.NoError(t, sender.Close())
 	})
 
 	t.Run("full config", func(t *testing.T) {
@@ -669,6 +660,6 @@ func TestSender_NewSender_Variations(t *testing.T) {
 		assert.Equal(t, "from@example.com", sender.cfg.From)
 		assert.True(t, sender.cfg.TLS)
 		assert.True(t, sender.cfg.Insecure)
-		_ = sender.Close()
+		assert.NoError(t, sender.Close())
 	})
 }

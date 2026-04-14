@@ -107,7 +107,8 @@ func TestNewDefault_LevelFiltering(t *testing.T) {
 func TestNewDefault_JSONOutput(t *testing.T) {
 	// Redirect stdout to capture output
 	oldStdout := os.Stdout
-	r, w, _ := os.Pipe()
+	r, w, err := os.Pipe()
+	require.NoError(t, err)
 	os.Stdout = w
 
 	l := NewDefault(slog.LevelInfo)
@@ -115,17 +116,18 @@ func TestNewDefault_JSONOutput(t *testing.T) {
 	l.Info("json test", "service", "test", "version", 1)
 
 	// Restore stdout
-	w.Close()
+	require.NoError(t, w.Close())
 	os.Stdout = oldStdout
 
 	// Read captured output
 	var buf bytes.Buffer
-	_, _ = buf.ReadFrom(r)
+	_, err = buf.ReadFrom(r)
+	require.NoError(t, err)
 	output := buf.String()
 
 	// Verify it's valid JSON
 	var result map[string]any
-	err := json.Unmarshal([]byte(output), &result)
+	err = json.Unmarshal([]byte(output), &result)
 	assert.NoError(t, err)
 	assert.Contains(t, strings.ToLower(output), "json test")
 }
