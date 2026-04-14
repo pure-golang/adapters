@@ -159,7 +159,7 @@ func TestServer_Close_WithContextCancellation(t *testing.T) {
 	cancel() // Cancel immediately
 
 	// Shutdown with cancelled context - may succeed if server is idle
-	_ = server.server.Shutdown(ctx)
+	require.NoError(t, server.server.Shutdown(ctx))
 	// The important thing is it doesn't panic
 }
 

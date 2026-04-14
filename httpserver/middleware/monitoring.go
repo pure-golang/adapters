@@ -24,10 +24,13 @@ import (
 
 var (
 	meter = otel.GetMeterProvider().Meter("github.com/pure-golang/adapters/httpserver/middleware")
-	// nolint:errcheck // Sync OpenTelemetry instruments never return errors
-	requestsCount, _       = meter.Int64Counter("http.request_count")
-	requestTimeHist, _     = meter.Int64Histogram("http.request_time", metric.WithUnit("ms"))
-	requestBodyLenHist, _  = meter.Int64Histogram("http.request_body_len", metric.WithUnit("KB"))
+	//nolint:errcheck // Sync OpenTelemetry instruments never return errors
+	requestsCount, _ = meter.Int64Counter("http.request_count")
+	//nolint:errcheck // Sync OpenTelemetry instruments never return errors
+	requestTimeHist, _ = meter.Int64Histogram("http.request_time", metric.WithUnit("ms"))
+	//nolint:errcheck // Sync OpenTelemetry instruments never return errors
+	requestBodyLenHist, _ = meter.Int64Histogram("http.request_body_len", metric.WithUnit("KB"))
+	//nolint:errcheck // Sync OpenTelemetry instruments never return errors
 	responseBodyLenHist, _ = meter.Int64Histogram("http.response_body_len", metric.WithUnit("KB"))
 	tracer                 = otel.Tracer("github.com/pure-golang/adapters/httpserver/middleware")
 )
@@ -52,9 +55,10 @@ func Monitoring(paths ...string) func(http.Handler) http.Handler {
 			uriWithoutParameters := strings.Split(r.RequestURI, "?")[0]
 			ctx, span := tracer.Start(ctx, uriWithoutParameters, trace.WithSpanKind(trace.SpanKindServer))
 			defer span.End()
-			metricLabels := []attribute.KeyValue{
+			metricLabels := make([]attribute.KeyValue, 0, 2)
+			metricLabels = append(metricLabels,
 				attribute.String("http.method", r.Method),
-			}
+			)
 
 			traceID := span.SpanContext().TraceID().String()
 

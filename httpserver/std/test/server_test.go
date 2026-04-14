@@ -35,20 +35,21 @@ func TestServer_Start_ListenAndServe(t *testing.T) {
 
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		_, _ = w.Write([]byte("OK"))
+		_, err := w.Write([]byte("OK"))
+		require.NoError(t, err)
 	})
 
 	port, addr := freePort(t)
 	server := std.New(std.Config{Host: "127.0.0.1", Port: port}, handler)
 
 	require.NoError(t, server.Start())
-	t.Cleanup(func() { server.Close() })
+	t.Cleanup(func() { require.NoError(t, server.Close()) })
 
 	time.Sleep(100 * time.Millisecond)
 
-	resp, err := http.Get("http://" + addr + "/") //nolint:noctx
+	resp, err := http.Get("http://" + addr + "/") //nolint:noctx // Тест intentionally uses the package-level helper for a simple local probe.
 	require.NoError(t, err, "should be able to connect to server")
-	t.Cleanup(func() { resp.Body.Close() })
+	t.Cleanup(func() { require.NoError(t, resp.Body.Close()) })
 
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 
@@ -86,7 +87,7 @@ func TestServer_Start_AddressInUse(t *testing.T) {
 	// Занимаем порт
 	listener, err := net.Listen("tcp", "127.0.0.1:0")
 	require.NoError(t, err)
-	t.Cleanup(func() { listener.Close() })
+	t.Cleanup(func() { require.NoError(t, listener.Close()) })
 
 	_, portStr, err := net.SplitHostPort(listener.Addr().String())
 	require.NoError(t, err)
@@ -119,14 +120,14 @@ func TestServer_Run_AcceptsConnections(t *testing.T) {
 
 	// Run блокирующий — запускаем в горутине
 	go server.Run()
-	t.Cleanup(func() { server.Close() })
+	t.Cleanup(func() { require.NoError(t, server.Close()) })
 
 	time.Sleep(100 * time.Millisecond)
 
 	client := &http.Client{Timeout: 500 * time.Millisecond}
-	resp, err := client.Get("http://" + addr + "/") //nolint:noctx
+	resp, err := client.Get("http://" + addr + "/") //nolint:noctx // Тест intentionally uses a short-lived local HTTP client request.
 	require.NoError(t, err)
-	t.Cleanup(func() { resp.Body.Close() })
+	t.Cleanup(func() { require.NoError(t, resp.Body.Close()) })
 
 	select {
 	case <-handlerCalled:
@@ -161,9 +162,9 @@ func TestServer_Close_TimeoutExceeded(t *testing.T) {
 	// Отправляем запрос, который заблокирует соединение
 	client := &http.Client{Timeout: 5 * time.Second}
 	go func() {
-		resp, err := client.Get("http://" + addr + "/") //nolint:noctx
+		resp, err := client.Get("http://" + addr + "/") //nolint:noctx // Тест intentionally uses a short-lived local HTTP client request.
 		if err == nil {
-			resp.Body.Close()
+			require.NoError(t, resp.Body.Close())
 		}
 	}()
 

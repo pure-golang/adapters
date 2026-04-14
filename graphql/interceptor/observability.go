@@ -24,8 +24,9 @@ var (
 	tracer = otel.Tracer("github.com/pure-golang/adapters/graphql/interceptor")
 	meter  = otel.GetMeterProvider().Meter("github.com/pure-golang/adapters/graphql/interceptor")
 
-	// nolint:errcheck // Синхронные инструменты OpenTelemetry никогда не возвращают ошибки.
-	graphqlRequestsCount, _   = meter.Int64Counter("graphql.request_count")
+	//nolint:errcheck // Синхронные инструменты OpenTelemetry никогда не возвращают ошибки.
+	graphqlRequestsCount, _ = meter.Int64Counter("graphql.request_count")
+	//nolint:errcheck // Синхронные инструменты OpenTelemetry никогда не возвращают ошибки.
 	graphqlRequestTimeHist, _ = meter.Int64Histogram("graphql.request_time", metric.WithUnit("ms"))
 )
 

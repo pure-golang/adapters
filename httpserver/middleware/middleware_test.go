@@ -14,7 +14,8 @@ import (
 func TestChain_NoMiddleware(t *testing.T) {
 	originalHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		_, _ = w.Write([]byte("original"))
+		_, err := w.Write([]byte("original"))
+		assert.NoError(t, err)
 	})
 
 	// Chain with no middlewares
@@ -33,7 +34,8 @@ func TestChain_NoMiddleware(t *testing.T) {
 func TestChain_SingleMiddleware(t *testing.T) {
 	originalHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		_, _ = w.Write([]byte("handler"))
+		_, err := w.Write([]byte("handler"))
+		assert.NoError(t, err)
 	})
 
 	// Middleware that adds a header
@@ -60,7 +62,8 @@ func TestChain_SingleMiddleware(t *testing.T) {
 func TestChain_MultipleMiddlewares(t *testing.T) {
 	originalHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		_, _ = w.Write([]byte("handler"))
+		_, err := w.Write([]byte("handler"))
+		assert.NoError(t, err)
 	})
 
 	// Middleware 1
@@ -230,7 +233,8 @@ func TestChain_MiddlewareCanModifyRequest(t *testing.T) {
 // TestChain_MiddlewareCanModifyResponse tests middleware modifying the response
 func TestChain_MiddlewareCanModifyResponse(t *testing.T) {
 	originalHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		_, _ = w.Write([]byte("original body"))
+		_, err := w.Write([]byte("original body"))
+		assert.NoError(t, err)
 	})
 
 	middleware := func(next http.Handler) http.Handler {
@@ -260,7 +264,8 @@ func TestChain_MiddlewareCanModifyResponse(t *testing.T) {
 func TestChain_EmptyMiddlewareSlice(t *testing.T) {
 	originalHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusCreated)
-		_, _ = w.Write([]byte("created"))
+		_, err := w.Write([]byte("created"))
+		assert.NoError(t, err)
 	})
 
 	// Chain with empty middleware slice
@@ -437,7 +442,8 @@ func TestChain_MultipleHandlersInChain(t *testing.T) {
 func TestChain_ChainOfChains(t *testing.T) {
 	baseHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		_, _ = w.Write([]byte("base"))
+		_, err := w.Write([]byte("base"))
+		assert.NoError(t, err)
 	})
 
 	middlewareA := func(next http.Handler) http.Handler {

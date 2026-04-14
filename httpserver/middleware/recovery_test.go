@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/pure-golang/adapters/logger"
 	"github.com/pure-golang/adapters/logger/noop"
@@ -95,7 +96,8 @@ func TestRecovery_WithoutPanic(t *testing.T) {
 	// Create a normal handler
 	successHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		_, _ = w.Write([]byte("success"))
+		_, err := w.Write([]byte("success"))
+		require.NoError(t, err)
 	})
 
 	handler := Recovery(successHandler)
@@ -395,7 +397,8 @@ func TestRecovery_RequestBodyHandling(t *testing.T) {
 	panicHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Try to read body before panicking
 		body := make([]byte, 10)
-		_, _ = r.Body.Read(body)
+		_, err := r.Body.Read(body)
+		require.NoError(t, err)
 		panic("body read panic")
 	})
 

@@ -2,7 +2,7 @@ package std
 
 import (
 	"context"
-	stdErr "errors"
+	stderrors "errors"
 	"fmt"
 	"log/slog"
 	"net"
@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
+
 	"github.com/pure-golang/adapters/httpserver"
 )
 
@@ -105,7 +106,7 @@ func (s *Server) Shutdown() error {
 		err = nil
 	}
 	if err != nil {
-		err = stdErr.Join(err, errors.Wrapf(s.server.Close(), "failed to close server"))
+		err = stderrors.Join(err, errors.Wrapf(s.server.Close(), "failed to close server"))
 	}
 
 	s.logger.Info("server closed")

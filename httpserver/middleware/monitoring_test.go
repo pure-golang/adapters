@@ -37,7 +37,8 @@ func TestMonitoring_MiddlewareCreatesSpan(t *testing.T) {
 
 		// Verify trace_id is added to logger
 		w.WriteHeader(http.StatusOK)
-		_, _ = w.Write([]byte("OK"))
+		_, err := w.Write([]byte("OK"))
+		require.NoError(t, err)
 	})
 
 	handler := Monitoring("/test/*")(nextHandler)
@@ -104,7 +105,8 @@ func TestMonitoring_MiddlewareWithResponseBody(t *testing.T) {
 	responseBody := `{"result": "success"}`
 	nextHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		_, _ = w.Write([]byte(responseBody))
+		_, err := w.Write([]byte(responseBody))
+		require.NoError(t, err)
 	})
 
 	handler := Monitoring("/test")(nextHandler)
@@ -239,7 +241,8 @@ func TestMonitoring_StatefulRespWriterBodyCapture(t *testing.T) {
 	srw := newStatefulRespWriter(underlying)
 
 	writeData := []byte("response body data")
-	_, _ = srw.Write(writeData)
+	_, err := srw.Write(writeData)
+	require.NoError(t, err)
 
 	assert.Equal(t, writeData, srw.body)
 }
@@ -249,8 +252,10 @@ func TestMonitoring_StatefulRespWriterMultipleWrites(t *testing.T) {
 	underlying := httptest.NewRecorder()
 	srw := newStatefulRespWriter(underlying)
 
-	_, _ = srw.Write([]byte("first"))
-	_, _ = srw.Write([]byte("second"))
+	_, err := srw.Write([]byte("first"))
+	require.NoError(t, err)
+	_, err = srw.Write([]byte("second"))
+	require.NoError(t, err)
 
 	// body should only contain the last write
 	assert.Equal(t, []byte("second"), srw.body)
@@ -358,7 +363,8 @@ func TestMonitoring_MiddlewareChain(t *testing.T) {
 
 	nextHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		_, _ = w.Write([]byte("OK"))
+		_, err := w.Write([]byte("OK"))
+		require.NoError(t, err)
 	})
 
 	// Chain: middleware1 -> monitoring -> handler
@@ -506,7 +512,8 @@ func TestMonitoring_LargeResponseBody(t *testing.T) {
 
 	nextHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		_, _ = w.Write(largeBody)
+		_, err := w.Write(largeBody)
+		require.NoError(t, err)
 	})
 
 	handler := Monitoring("/test")(nextHandler)
