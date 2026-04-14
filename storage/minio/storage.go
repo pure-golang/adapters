@@ -363,7 +363,11 @@ func (s *Storage) GetFileHeader(ctx context.Context, bucket, key string) ([]byte
 		span.SetStatus(codes.Error, err.Error())
 		return nil, toStorageError(err, bucket, key)
 	}
-	defer obj.Close()
+	defer func() {
+		if closeErr := obj.Close(); closeErr != nil && err == nil {
+			err = closeErr
+		}
+	}()
 
 	head := make([]byte, 4096)
 	n, err := io.ReadFull(obj, head)

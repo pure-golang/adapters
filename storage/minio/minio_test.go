@@ -588,7 +588,7 @@ func TestListMultipartUploads(t *testing.T) {
 		}
 		stor := NewStorage(client, nil)
 
-		// nolint:errcheck // Test is skipped, error intentionally ignored
+		//nolint:errcheck // Test is skipped, error intentionally ignored
 		_, _ = stor.ListMultipartUploads(context.Background(), "bucket")
 	})
 }
@@ -603,17 +603,19 @@ func ExampleStorage() {
 		Secure:    false,
 	}
 
-	storage, err := NewDefault(cfg)
+	stor, err := NewDefault(cfg)
 	if err != nil {
 		panic(err)
 	}
 	defer func() {
-		if err := storage.Close(); err != nil {
+		if err := stor.Close(); err != nil {
 			// Log error in production
 		}
 	}()
 
-	_ = storage.Put(context.Background(), "bucket", "key", nil, nil)
+	if err := stor.Put(context.Background(), "bucket", "key", nil, nil); err != nil {
+		panic(err)
+	}
 }
 
 // TestStorage_GetFileHeader tests the GetFileHeader method.

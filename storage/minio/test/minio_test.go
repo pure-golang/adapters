@@ -30,7 +30,9 @@ func TestIntegrationWithTestcontainers(t *testing.T) {
 		tcminio.WithPassword("minioadmin"),
 	)
 	require.NoError(t, err)
-	defer minioContainer.Terminate(ctx) // nolint:errcheck
+	defer func() {
+		require.NoError(t, minioContainer.Terminate(ctx))
+	}()
 
 	endpoint, err := minioContainer.Endpoint(ctx, "")
 	require.NoError(t, err)
@@ -45,7 +47,9 @@ func TestIntegrationWithTestcontainers(t *testing.T) {
 
 	client, err := minio.NewClient(cfg)
 	require.NoError(t, err)
-	defer client.Close()
+	defer func() {
+		require.NoError(t, client.Close())
+	}()
 
 	bucket := "test-bucket"
 	err = client.GetMinioClient().MakeBucket(ctx, bucket, miniogo.MakeBucketOptions{})
@@ -66,7 +70,9 @@ func TestIntegrationWithTestcontainers(t *testing.T) {
 
 		rc, info, err := stor.Get(ctx, bucket, key)
 		require.NoError(t, err)
-		defer rc.Close()
+		defer func() {
+			require.NoError(t, rc.Close())
+		}()
 
 		assert.Equal(t, int64(len(content)), info.Size)
 		assert.Equal(t, "text/plain", info.ContentType)
@@ -232,7 +238,9 @@ func TestIntegrationWithTestcontainers(t *testing.T) {
 		cfgWithDefault.DefaultBucket = bucket
 		client2, err := minio.NewClient(cfgWithDefault)
 		require.NoError(t, err)
-		defer client2.Close()
+		defer func() {
+			require.NoError(t, client2.Close())
+		}()
 
 		stor2 := minio.NewStorage(client2, nil)
 
@@ -245,7 +253,9 @@ func TestIntegrationWithTestcontainers(t *testing.T) {
 
 		rc, info, err := stor2.Get(ctx, "", key)
 		require.NoError(t, err)
-		defer rc.Close()
+		defer func() {
+			require.NoError(t, rc.Close())
+		}()
 		assert.NotNil(t, info)
 		assert.NotNil(t, rc)
 
@@ -303,7 +313,7 @@ func TestIntegrationWithTestcontainers(t *testing.T) {
 		_, err = stor.ListMultipartUploads(ctx, bucket)
 		require.NoError(t, err)
 
-		_ = stor.AbortMultipartUpload(ctx, bucket, key1, upload1.UploadID)
+		require.NoError(t, stor.AbortMultipartUpload(ctx, bucket, key1, upload1.UploadID))
 	})
 
 	t.Run("ListMultipartUploadsWithEmptyBucket", func(t *testing.T) {
@@ -313,7 +323,9 @@ func TestIntegrationWithTestcontainers(t *testing.T) {
 		cfgWithDefault.DefaultBucket = bucket
 		client3, err := minio.NewClient(cfgWithDefault)
 		require.NoError(t, err)
-		defer client3.Close()
+		defer func() {
+			require.NoError(t, client3.Close())
+		}()
 
 		stor3 := minio.NewStorage(client3, nil)
 
@@ -348,7 +360,9 @@ func TestIntegrationWithTestcontainers(t *testing.T) {
 
 		rc, info, err := stor.Get(ctx, bucket, key)
 		require.NoError(t, err)
-		defer rc.Close()
+		defer func() {
+			require.NoError(t, rc.Close())
+		}()
 
 		assert.Equal(t, int64(len(largeContent)), info.Size)
 

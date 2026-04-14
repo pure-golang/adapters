@@ -378,7 +378,7 @@ func TestCompleteMultipartUpload_Extended(t *testing.T) {
 		parts := make([]storage.UploadedPart, 10000)
 		for i := range 10000 {
 			parts[i] = storage.UploadedPart{
-				PartNumber: int32(i + 1), //nolint:gosec
+				PartNumber: int32(i + 1), //nolint:gosec // Номер части генерируется в тесте и не является credential.
 				ETag:       "etag" + string(rune(i)),
 				Size:       5 * 1024 * 1024,
 			}

@@ -306,7 +306,9 @@ func TestClient_Close_Extended(t *testing.T) {
 
 		// Closing with nil logger will panic due to logger.Info call
 		assert.Panics(t, func() {
-			_ = client.Close()
+			if err := client.Close(); err != nil {
+				t.Logf("unexpected close error before panic: %v", err)
+			}
 		})
 	})
 
