@@ -30,7 +30,11 @@ func TestNewPusher(t *testing.T) {
 	if err != nil {
 		t.Fatalf("NewPusher() failed: %v", err)
 	}
-	t.Cleanup(func() { pusher.Close() })
+	t.Cleanup(func() {
+		if closeErr := pusher.Close(); closeErr != nil {
+			t.Errorf("failed to close pusher: %v", closeErr)
+		}
+	})
 
 	if pusher == nil {
 		t.Fatal("NewPusher() returned nil pusher")
@@ -59,7 +63,11 @@ func TestNewPusher_WithJSON(t *testing.T) {
 	if err != nil {
 		t.Fatalf("NewPusher() failed: %v", err)
 	}
-	t.Cleanup(func() { pusher.Close() })
+	t.Cleanup(func() {
+		if closeErr := pusher.Close(); closeErr != nil {
+			t.Errorf("failed to close pusher: %v", closeErr)
+		}
+	})
 
 	if pusher == nil {
 		t.Fatal("NewPusher() returned nil pusher")

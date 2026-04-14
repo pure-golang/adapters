@@ -8,22 +8,32 @@ import (
 	"github.com/pure-golang/adapters/push/fcm"
 )
 
+func newExamplePusher(ctx context.Context) (*fcm.Pusher, error) {
+	return fcm.NewPusher(ctx, fcm.Config{
+		CredentialsFile: "firebase-admin.json",
+	})
+}
+
+func closeExamplePusher(pusher *fcm.Pusher) {
+	if err := pusher.Close(); err != nil {
+		log.Printf("Failed to close pusher: %v", err)
+	}
+}
+
 // Example_usage demonstrates how to use the FCM pusher with unified messaging.
 func Example_usage() {
 	ctx := context.Background()
 
 	// Initialize pusher
-	pusher, err := fcm.NewPusher(ctx, fcm.Config{
-		CredentialsFile: "firebase-admin.json",
-	})
+	pusher, err := newExamplePusher(ctx)
 	if err != nil {
 		log.Fatalf("Failed to create pusher: %v", err)
 	}
-	defer pusher.Close()
+	defer closeExamplePusher(pusher)
 
 	// Simple notification (works on all platforms)
 	err = pusher.Push(ctx, fcm.Notification{
-		Token: "device-fcm-token",
+		Token: "example-device",
 		Title: "Hello!",
 		Body:  "This is a test notification",
 	})
@@ -35,13 +45,15 @@ func Example_usage() {
 // Example_androidNotification demonstrates Android-specific configuration.
 func Example_androidNotification() {
 	ctx := context.Background()
-	pusher, _ := fcm.NewPusher(ctx, fcm.Config{
-		CredentialsFile: "firebase-admin.json",
-	})
-	defer pusher.Close()
+	pusher, err := newExamplePusher(ctx)
+	if err != nil {
+		log.Printf("Failed to create pusher: %v", err)
+		return
+	}
+	defer closeExamplePusher(pusher)
 
-	err := pusher.Push(ctx, fcm.Notification{
-		Token:           "android-fcm-token",
+	err = pusher.Push(ctx, fcm.Notification{
+		Token:           "android-device",
 		Title:           "Android Notification",
 		Body:            "This is Android-specific",
 		AndroidPriority: "high",
@@ -61,13 +73,15 @@ func Example_androidNotification() {
 // Example_iosNotification demonstrates iOS-specific configuration.
 func Example_iosNotification() {
 	ctx := context.Background()
-	pusher, _ := fcm.NewPusher(ctx, fcm.Config{
-		CredentialsFile: "firebase-admin.json",
-	})
-	defer pusher.Close()
+	pusher, err := newExamplePusher(ctx)
+	if err != nil {
+		log.Printf("Failed to create pusher: %v", err)
+		return
+	}
+	defer closeExamplePusher(pusher)
 
-	err := pusher.Push(ctx, fcm.Notification{
-		Token:       "ios-fcm-token",
+	err = pusher.Push(ctx, fcm.Notification{
+		Token:       "ios-device",
 		Title:       "iOS Notification",
 		Body:        "This is iOS-specific",
 		IOSBadge:    1,
@@ -86,14 +100,16 @@ func Example_iosNotification() {
 // Firebase automatically determines the platform based on the token format.
 func Example_unifiedNotification() {
 	ctx := context.Background()
-	pusher, _ := fcm.NewPusher(ctx, fcm.Config{
-		CredentialsFile: "firebase-admin.json",
-	})
-	defer pusher.Close()
+	pusher, err := newExamplePusher(ctx)
+	if err != nil {
+		log.Printf("Failed to create pusher: %v", err)
+		return
+	}
+	defer closeExamplePusher(pusher)
 
 	// This single notification works on BOTH Android and iOS!
 	// Firebase SDK automatically applies the correct platform-specific config.
-	err := pusher.Push(ctx, fcm.Notification{
+	err = pusher.Push(ctx, fcm.Notification{
 		Title: "New Message",
 		Body:  "You have a new message from John",
 		Image: "https://example.com/avatar.jpg",
@@ -121,30 +137,32 @@ func Example_unifiedNotification() {
 // Example_batchNotifications demonstrates sending multiple notifications.
 func Example_batchNotifications() {
 	ctx := context.Background()
-	pusher, _ := fcm.NewPusher(ctx, fcm.Config{
-		CredentialsFile: "firebase-admin.json",
-	})
-	defer pusher.Close()
+	pusher, err := newExamplePusher(ctx)
+	if err != nil {
+		log.Printf("Failed to create pusher: %v", err)
+		return
+	}
+	defer closeExamplePusher(pusher)
 
 	notifications := []fcm.Notification{
 		{
-			Token: "token-1",
+			Token: "device-1",
 			Title: "Notification 1",
 			Body:  "First notification",
 		},
 		{
-			Token: "token-2",
+			Token: "device-2",
 			Title: "Notification 2",
 			Body:  "Second notification",
 		},
 		{
-			Token: "token-3",
+			Token: "device-3",
 			Title: "Notification 3",
 			Body:  "Third notification",
 		},
 	}
 
-	err := pusher.Push(ctx, notifications...)
+	err = pusher.Push(ctx, notifications...)
 	if err != nil {
 		log.Printf("Failed to send batch: %v", err)
 	}
@@ -153,13 +171,15 @@ func Example_batchNotifications() {
 // Example_topicMessaging demonstrates sending to a topic.
 func Example_topicMessaging() {
 	ctx := context.Background()
-	pusher, _ := fcm.NewPusher(ctx, fcm.Config{
-		CredentialsFile: "firebase-admin.json",
-	})
-	defer pusher.Close()
+	pusher, err := newExamplePusher(ctx)
+	if err != nil {
+		log.Printf("Failed to create pusher: %v", err)
+		return
+	}
+	defer closeExamplePusher(pusher)
 
 	// Send to all users subscribed to "updates" topic
-	err := pusher.Push(ctx, fcm.Notification{
+	err = pusher.Push(ctx, fcm.Notification{
 		Topic: "updates",
 		Title: "System Update",
 		Body:  "A new version is available",
@@ -176,13 +196,15 @@ func Example_topicMessaging() {
 // Example_conditionMessaging demonstrates conditional topic messaging.
 func Example_conditionMessaging() {
 	ctx := context.Background()
-	pusher, _ := fcm.NewPusher(ctx, fcm.Config{
-		CredentialsFile: "firebase-admin.json",
-	})
-	defer pusher.Close()
+	pusher, err := newExamplePusher(ctx)
+	if err != nil {
+		log.Printf("Failed to create pusher: %v", err)
+		return
+	}
+	defer closeExamplePusher(pusher)
 
 	// Send to users who are subscribed to EITHER 'tech' OR 'news' topics
-	err := pusher.Push(ctx, fcm.Notification{
+	err = pusher.Push(ctx, fcm.Notification{
 		Condition: "'tech' in topics || 'news' in topics",
 		Title:     "Breaking News",
 		Body:      "Important announcement",
@@ -195,14 +217,16 @@ func Example_conditionMessaging() {
 // Example_silentNotification demonstrates a silent/background notification (iOS).
 func Example_silentNotification() {
 	ctx := context.Background()
-	pusher, _ := fcm.NewPusher(ctx, fcm.Config{
-		CredentialsFile: "firebase-admin.json",
-	})
-	defer pusher.Close()
+	pusher, err := newExamplePusher(ctx)
+	if err != nil {
+		log.Printf("Failed to create pusher: %v", err)
+		return
+	}
+	defer closeExamplePusher(pusher)
 
 	// Silent notification for background data sync
-	err := pusher.Push(ctx, fcm.Notification{
-		Token:               "ios-token",
+	err = pusher.Push(ctx, fcm.Notification{
+		Token:               "ios-device",
 		IOSContentAvailable: true, // Enables background fetch
 		Data: map[string]string{
 			"sync_type": "full",
@@ -217,14 +241,16 @@ func Example_silentNotification() {
 // Example_badgeCount demonstrates updating iOS badge count.
 func Example_badgeCount() {
 	ctx := context.Background()
-	pusher, _ := fcm.NewPusher(ctx, fcm.Config{
-		CredentialsFile: "firebase-admin.json",
-	})
-	defer pusher.Close()
+	pusher, err := newExamplePusher(ctx)
+	if err != nil {
+		log.Printf("Failed to create pusher: %v", err)
+		return
+	}
+	defer closeExamplePusher(pusher)
 
 	// Set badge to 5
-	err := pusher.Push(ctx, fcm.Notification{
-		Token:    "ios-token",
+	err = pusher.Push(ctx, fcm.Notification{
+		Token:    "ios-device",
 		Title:    "5 unread messages",
 		Body:     "You have 5 unread messages",
 		IOSBadge: 5,
@@ -235,7 +261,7 @@ func Example_badgeCount() {
 
 	// Clear badge (set to 0)
 	err = pusher.Push(ctx, fcm.Notification{
-		Token:    "ios-token",
+		Token:    "ios-device",
 		Title:    "Messages read",
 		IOSBadge: 0,
 	})
@@ -265,7 +291,7 @@ func Example_withCredentialsJSON() {
 	if err != nil {
 		log.Fatalf("Failed: %v", err)
 	}
-	defer pusher.Close()
+	defer closeExamplePusher(pusher)
 
 	// Use pusher...
 }
@@ -277,10 +303,12 @@ func background() context.Context {
 // Example_realWorldNotification demonstrates a real-world notification scenario.
 func Example_realWorldNotification() {
 	ctx := context.Background()
-	pusher, _ := fcm.NewPusher(ctx, fcm.Config{
-		CredentialsFile: "firebase-admin.json",
-	})
-	defer pusher.Close()
+	pusher, err := newExamplePusher(ctx)
+	if err != nil {
+		log.Printf("Failed to create pusher: %v", err)
+		return
+	}
+	defer closeExamplePusher(pusher)
 
 	// Scenario: New like on user's post
 	notification := fcm.Notification{
@@ -310,7 +338,7 @@ func Example_realWorldNotification() {
 	// - Web browsers (Webpush config would be applied)
 	// Firebase determines the platform automatically from the token!
 
-	err := pusher.Push(ctx, notification)
+	err = pusher.Push(ctx, notification)
 	if err != nil {
 		log.Printf("Failed to send like notification: %v", err)
 	} else {

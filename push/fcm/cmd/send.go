@@ -30,10 +30,14 @@ func main() {
 	}
 
 	if err := run(pusher); err != nil {
-		_ = pusher.Close()
+		if closeErr := pusher.Close(); closeErr != nil {
+			log.Printf("Failed to close pusher: %v", closeErr)
+		}
 		os.Exit(1)
 	}
-	_ = pusher.Close()
+	if err := pusher.Close(); err != nil {
+		log.Printf("Failed to close pusher: %v", err)
+	}
 }
 
 func run(pusher *fcm.Pusher) error {

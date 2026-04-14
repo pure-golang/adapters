@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	firebaseLib "firebase.google.com/go/v4"
+	"firebase.google.com/go/v4"
 	"firebase.google.com/go/v4/messaging"
 	"google.golang.org/api/option"
 )
@@ -22,7 +22,7 @@ type firebaseAppInterface interface {
 
 // firebaseAppFactory defines the interface for creating Firebase apps
 type firebaseAppFactory interface {
-	NewApp(ctx context.Context, config *firebaseLib.Config, opts ...option.ClientOption) (firebaseAppInterface, error)
+	NewApp(ctx context.Context, config *firebase.Config, opts ...option.ClientOption) (firebaseAppInterface, error)
 }
 
 // Notification represents a push notification message for FCM.
@@ -67,7 +67,7 @@ func (r *realMessagingClient) Send(ctx context.Context, msg *messaging.Message) 
 
 // realFirebaseApp wraps the real Firebase App
 type realFirebaseApp struct {
-	app *firebaseLib.App
+	app *firebase.App
 }
 
 func (r *realFirebaseApp) Messaging(ctx context.Context) (messagingClient, error) {
@@ -81,8 +81,8 @@ func (r *realFirebaseApp) Messaging(ctx context.Context) (messagingClient, error
 // realFirebaseAppFactory is the default implementation using real Firebase
 type realFirebaseAppFactory struct{}
 
-func (f *realFirebaseAppFactory) NewApp(ctx context.Context, config *firebaseLib.Config, opts ...option.ClientOption) (firebaseAppInterface, error) {
-	app, err := firebaseLib.NewApp(ctx, config, opts...)
+func (f *realFirebaseAppFactory) NewApp(ctx context.Context, config *firebase.Config, opts ...option.ClientOption) (firebaseAppInterface, error) {
+	app, err := firebase.NewApp(ctx, config, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -124,7 +124,7 @@ func NewPusherWithFactory(ctx context.Context, cfg Config, factory firebaseAppFa
 	}
 
 	// Initialize Firebase app
-	app, err := factory.NewApp(ctx, &firebaseLib.Config{
+	app, err := factory.NewApp(ctx, &firebase.Config{
 		ProjectID: cfg.ProjectID,
 	}, opts...)
 	if err != nil {

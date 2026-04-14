@@ -3,9 +3,10 @@ package fcm
 import (
 	"context"
 	"errors"
+	"path/filepath"
 	"testing"
 
-	firebaseLib "firebase.google.com/go/v4"
+	"firebase.google.com/go/v4"
 	"firebase.google.com/go/v4/messaging"
 	"github.com/stretchr/testify/mock"
 	"google.golang.org/api/option"
@@ -39,7 +40,7 @@ type MockFirebaseAppFactory struct {
 	mock.Mock
 }
 
-func (m *MockFirebaseAppFactory) NewApp(ctx context.Context, config *firebaseLib.Config, opts ...option.ClientOption) (firebaseAppInterface, error) {
+func (m *MockFirebaseAppFactory) NewApp(ctx context.Context, config *firebase.Config, opts ...option.ClientOption) (firebaseAppInterface, error) {
 	args := m.Called(ctx, config, opts)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
@@ -413,8 +414,8 @@ func TestNewPusher(t *testing.T) {
 	}{
 		{
 			name: "success with credentials file",
-			cfg: Config{ //nolint:gosec
-				CredentialsFile: "/path/to/credentials.json",
+			cfg: Config{
+				CredentialsFile: filepath.Join("testdata", "firebase.json"),
 				ProjectID:       "test-project",
 			},
 			setupMocks: func(factory *MockFirebaseAppFactory, app *MockFirebaseApp, client *MockMessagingClient) {
@@ -448,8 +449,8 @@ func TestNewPusher(t *testing.T) {
 		},
 		{
 			name: "error - factory returns error",
-			cfg: Config{ //nolint:gosec
-				CredentialsFile: "/path/to/credentials.json",
+			cfg: Config{
+				CredentialsFile: filepath.Join("testdata", "firebase.json"),
 			},
 			setupMocks: func(factory *MockFirebaseAppFactory, app *MockFirebaseApp, client *MockMessagingClient) {
 				factory.On("NewApp", mock.Anything, mock.Anything, mock.Anything).Return(nil, errors.New("firebase error"))
@@ -459,8 +460,8 @@ func TestNewPusher(t *testing.T) {
 		},
 		{
 			name: "error - messaging client error",
-			cfg: Config{ //nolint:gosec
-				CredentialsFile: "/path/to/credentials.json",
+			cfg: Config{
+				CredentialsFile: filepath.Join("testdata", "firebase.json"),
 			},
 			setupMocks: func(factory *MockFirebaseAppFactory, app *MockFirebaseApp, client *MockMessagingClient) {
 				factory.On("NewApp", mock.Anything, mock.Anything, mock.Anything).Return(app, nil)
@@ -513,13 +514,13 @@ func TestNewPusherWithFactory_EmptyProjectID(t *testing.T) {
 	app := new(MockFirebaseApp)
 	client := new(MockMessagingClient)
 
-	factory.On("NewApp", mock.Anything, mock.MatchedBy(func(c *firebaseLib.Config) bool {
+	factory.On("NewApp", mock.Anything, mock.MatchedBy(func(c *firebase.Config) bool {
 		return c.ProjectID == ""
 	}), mock.Anything).Return(app, nil)
 	app.On("Messaging", mock.Anything).Return(client, nil)
 
 	cfg := Config{
-		CredentialsFile: "/path/to/credentials.json",
+		CredentialsFile: filepath.Join(t.TempDir(), "firebase.json"),
 	}
 
 	pusher, err := NewPusherWithFactory(ctx, cfg, factory)
@@ -943,7 +944,7 @@ func TestRealFirebaseAppFactory(t *testing.T) {
 	factory := &realFirebaseAppFactory{}
 
 	// Try to create an app with no credentials - should fail
-	_, err := factory.NewApp(ctx, &firebaseLib.Config{ProjectID: "test-project"})
+	_, err := factory.NewApp(ctx, &firebase.Config{ProjectID: "test-project"})
 
 	// We expect an error since we don't have valid credentials
 	// This exercises line 86-87 in NewApp (the error return path)
@@ -961,7 +962,7 @@ func TestRealFirebaseApp(t *testing.T) {
 	factory := &realFirebaseAppFactory{}
 
 	// Create a real app with no credentials (will fail)
-	app, err := factory.NewApp(ctx, &firebaseLib.Config{ProjectID: "test-project"})
+	app, err := factory.NewApp(ctx, &firebase.Config{ProjectID: "test-project"})
 	if err != nil {
 		// Expected to fail, which exercises NewApp error path
 		return
