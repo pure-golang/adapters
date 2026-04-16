@@ -35,9 +35,11 @@
 //	unary := middleware.RecoveryInterceptor(logger)
 //	stream := middleware.RecoveryStreamInterceptor(logger)
 //
-// Порядок интерцепторов (важно):
-//  1. Recovery — перехват паник
-//  2. Tracing — создание span'ов
-//  3. Metrics — сбор метрик
+// Порядок интерцепторов (от внешнего к внутреннему):
+//  1. Tracing — создание span'ов
+//  2. Metrics — сбор метрик
+//  3. Recovery — перехват паник, возврат ошибки
 //  4. Logging — логирование запросов
+//
+// Tracing и Metrics ПЕРЕД Recovery: паника → Recovery возвращает ошибку → Tracing/Metrics фиксируют её.
 package middleware
