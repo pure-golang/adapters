@@ -22,11 +22,3 @@ L0 - Мониторинг:
 L1 - Драйвера сервисов:
 - Postgres
 - RabbitMQ
-
-## Старт
-
-```bash
-make
-task test
-task claude
-```
